@@ -3,10 +3,10 @@ import * as semver from "semver"
 import type { PolicyDefinition, RuleTuple } from "./policyDefinition.ts"
 import { DISABLED, effectiveAnyAction, effectiveAnySubject } from "./wildcards.ts"
 import type { Action } from "../action/index.ts"
+import type { AnyCondition } from "../conditions/condition.ts"
 import { BUILTIN_OPERATOR_NAMES } from "../conditions/conditionResolver.ts"
-import type { Condition } from "../conditions/index.ts"
 import { ConditionResolver } from "../conditions/index.ts"
-import type { Operator } from "../conditions/operators/operator.ts"
+import type { AnyOperator } from "../conditions/operators/operator.ts"
 import { PolicyError, PolicyLoadException, PolicyVersionException } from "../errors/index.ts"
 import type { Subject } from "../subject/index.ts"
 import { KEYCARD_POLICY_VERSION } from "../version.ts"
@@ -23,13 +23,13 @@ const COMPATIBLE_RANGE = `>=${SUPPORTED_MAJOR}.0.0 <${SUPPORTED_MAJOR}.${SUPPORT
  * anywhere in a Conditions tree - used to enforce `meta.operators`
  * coverage at construction time (§3.2.3, EC-13).
  */
-function collectCustomOperators(condition: Condition | undefined, out: Set<string>): void {
+function collectCustomOperators(condition: AnyCondition | undefined, out: Set<string>): void {
   if (condition === undefined || condition === null || typeof condition !== "object") return
 
   for (const [key, value] of Object.entries(condition)) {
     if (key.startsWith("$")) {
       if (key === "$or" || key === "$and") {
-        if (Array.isArray(value)) value.forEach((c: Condition) => collectCustomOperators(c, out))
+        if (Array.isArray(value)) value.forEach((c: AnyCondition) => collectCustomOperators(c, out))
       } else if (key === "$not") {
         collectCustomOperators(value, out)
       } else if (key === "$field" && Array.isArray(value) && value.length === 2) {
@@ -43,21 +43,26 @@ function collectCustomOperators(condition: Condition | undefined, out: Set<strin
   }
 }
 
+export interface PolicyOptions<TOperators extends AnyOperator = never> {
+  operators?: TOperators[]
+}
+
 export class Policy<
   TActions extends Action = Action,
   TSubjects extends Subject = Subject,
+  TOperators extends AnyOperator = never,
 > {
   private readonly definition: PolicyDefinition
   private readonly resolver: ConditionResolver
 
   constructor(
     definition: PolicyDefinition,
-    operators: Operator[] = [],
+    options: PolicyOptions<TOperators> = {},
   ) {
     Policy.validateVersion(definition.version)
 
     this.definition = definition
-    this.resolver = new ConditionResolver(operators)
+    this.resolver = new ConditionResolver(options.operators)
     Policy.validateOperatorsRegistered(definition, this.resolver)
     Policy.validateRules(definition)
   }
@@ -71,22 +76,12 @@ export class Policy<
   static from<
     TActions extends Action = Action,
     TSubjects extends Subject = Subject,
+    TOperators extends AnyOperator = never,
   >(
     definition: PolicyDefinition,
-    operators: Operator[] = [],
-  ): Policy<TActions, TSubjects> {
-    return new Policy(definition, operators)
-  }
-
-  /** Alias of {@link from}. */
-  static fromDto<
-    TActions extends Action = Action,
-    TSubjects extends Subject = Subject,
-  >(
-    definition: PolicyDefinition,
-    operators: Operator[] = [],
-  ): Policy<TActions, TSubjects> {
-    return Policy.from(definition, operators)
+    options: PolicyOptions<TOperators> = {},
+  ): Policy<TActions, TSubjects, TOperators> {
+    return new Policy(definition, options)
   }
 
   private static validateVersion(version: string): void {
@@ -184,19 +179,8 @@ export class Policy<
     }
   }
 
-  /** Returns the PolicyDefinition backing this policy. */
-  toDefinition(): PolicyDefinition {
-    return this.definition
-  }
-
-  /** Alias of {@link toDefinition}. */
-  toDto(): PolicyDefinition {
-    return this.toDefinition()
-  }
-
-  /** Alias of {@link toDefinition}. */
   def(): PolicyDefinition {
-    return this.toDefinition()
+    return this.definition
   }
 
   can(action: TActions, subject: TSubjects): boolean {

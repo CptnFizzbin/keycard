@@ -1,20 +1,29 @@
 import { PolicyTypeMismatchError } from "../../errors/policyTypeMismatchError.ts"
 import type { JsonValue } from "../../lib/json.ts"
 import { getLogger } from "../../lib/logger.ts"
+import type { Condition } from "../condition.ts"
 
 export interface OperatorContext {
-  resolveSubcondition: (subject: unknown, condition: JsonValue) => boolean
+  resolveSubcondition<TSubject>(subject: TSubject, condition: Condition<TSubject>): boolean
 }
 
-export interface Operator {
+export interface Operator<TSubject, TValue = JsonValue> {
   name: `$${string}`
-  resolve: (subject: unknown, value: JsonValue, ctx: OperatorContext) => boolean
+  resolve: (subject: TSubject, value: TValue, ctx: OperatorContext) => boolean
 }
 
-export function createOperator(
-  name: Operator["name"],
-  resolver: Operator["resolve"],
-): Operator {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyOperator = Operator<any, any>
+
+export type InferCondition<TOperator extends AnyOperator> =
+  TOperator extends Operator<infer _, infer TValue>
+    ? { [key in TOperator["name"]]: TValue }
+    : never
+
+export function createOperator<TSubject, TValue = JsonValue>(
+  name: Operator<TSubject, TValue>["name"],
+  resolver: Operator<TSubject, TValue>["resolve"],
+): Operator<TSubject, TValue> {
   return {
     name,
     resolve: (subject, value, ctx) => {

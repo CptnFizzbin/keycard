@@ -34,14 +34,15 @@
     "semver": "^7.8.5"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^26.5.0",
     "@types/semver": "^7.8.0",
-    "@vitest/ui": "^4.1.11",
+    "@vitest/ui": "^5.0.0",
     "eslint": "^10.10.0",
     "tsdown": "^0.23.0",
     "typescript": "npm:@typescript/typescript6@^6.0.0",
     "typescript-7": "npm:typescript@^7.0.0",
-    "vitest": "^4.1.11",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0",
     "yaml": "^2.9.0"
   },
   "files": [

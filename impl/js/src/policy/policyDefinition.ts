@@ -1,4 +1,4 @@
-import type { Condition } from "../conditions/index.ts"
+import type { AnyCondition } from "../conditions/condition.ts"
 
 /** SPEC_V1-0-0.md §3.3: a rule's effect - allow it, or deny it. */
 export type Effect = "allow" | "deny"
@@ -15,7 +15,7 @@ export type Effect = "allow" | "deny"
  */
 export type RuleTuple =
   | [Effect, string, string]
-  | [Effect, string, string, Condition]
+  | [Effect, string, string, AnyCondition]
 
 /** SPEC_V1-0-0.md §3.2: the optional `meta` object, grouping six independent, all-optional fields. */
 export interface Meta {

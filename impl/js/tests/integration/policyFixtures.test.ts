@@ -82,17 +82,11 @@ describe.each(fixtures)("policy fixture: $policyName", ({ policyName, policyPath
     expect(Array.isArray(policyDef.rules)).toBe(true);
   });
 
-  test("Policy.from(definition).toDefinition() deeply equals the parsed definition", () => {
+  test("Policy.from(definition).def() deeply equals the parsed definition", () => {
     const policyDef = loadPolicyDef(rawYaml);
-    const policy = Policy.from(policyDef, customConditions);
+    const policy = Policy.from(policyDef, { operators: customConditions });
 
-    expect(policy.toDefinition()).toEqual(policyDef);
-  });
-
-  test("fromDto/toDto aliases behave identically to from/toDefinition", () => {
-    const policyDef = loadPolicyDef(rawYaml);
-
-    expect(Policy.fromDto(policyDef, customConditions).toDto()).toEqual(policyDef);
+    expect(policy.def()).toEqual(policyDef);
   });
 
   if (!fs.existsSync(testPath)) {
@@ -101,7 +95,7 @@ describe.each(fixtures)("policy fixture: $policyName", ({ policyName, policyPath
   }
 
   const { tests: cases } = YAML.parse(fs.readFileSync(testPath, "utf-8")) as { tests: TestCase[] };
-  const policy = Policy.from(loadPolicyDef(rawYaml), customConditions);
+  const policy = Policy.from(loadPolicyDef(rawYaml), { operators: customConditions });
 
   test.each(cases)("resolves test case: $name", (testCase) => {
     expect(policy.can(actionArgFor(testCase), subjectArgFor(testCase))).toBe(testCase.expected);

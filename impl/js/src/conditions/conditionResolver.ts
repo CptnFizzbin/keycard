@@ -3,7 +3,7 @@ import { PolicyLoadException } from "../errors/index.ts"
 import type { JsonValue } from "../lib/json.ts"
 import { DefaultOperators } from "./operators/defaultOperators.ts"
 import { hasField, isBareNe } from "./operators/field/fieldAccess.ts"
-import type { Operator } from "./operators/operator.ts"
+import type { AnyOperator } from "./operators/operator.ts"
 
 /** Every operator name {@link ConditionResolver} understands out of the box - the single source of truth for "is this name built-in". */
 export const BUILTIN_OPERATOR_NAMES: ReadonlySet<string> = new Set(DefaultOperators.map((op) => op.name))
@@ -17,7 +17,7 @@ export const BUILTIN_OPERATOR_NAMES: ReadonlySet<string> = new Set(DefaultOperat
  * bare field name.
  */
 export class ConditionResolver {
-  private operatorRegistry = new Map<string, Operator>()
+  private operatorRegistry = new Map<string, AnyOperator>()
 
   /**
    * @param operators custom operators to register alongside the built-ins
@@ -27,7 +27,7 @@ export class ConditionResolver {
    *   in `operators`) MUST throw a {@link PolicyLoadException} immediately
    *   - never a silent overwrite (SPEC_V1-0-0.md §3.2.3, EC-16).
    */
-  constructor(operators: Operator[] = []) {
+  constructor(operators: AnyOperator[] = []) {
     for (const operator of DefaultOperators) {
       this.operatorRegistry.set(operator.name, operator)
     }
@@ -55,76 +55,34 @@ export class ConditionResolver {
     for (const name of names) {
       if (!this.operatorRegistry.has(name)) {
         throw new PolicyLoadException(
-          `meta.operators declares "${name}" but no operator with that name is registered (built-in or custom) (SPEC_V1-0-0.md §3.2.3, EC-15).`,
+          `meta.operators declares "${name}" but no operator with that name is registered.`,
         )
       }
     }
   }
 
-  evaluate(subject: unknown, condition: Condition): boolean {
-    if (
-      typeof condition === "string"
-      || typeof condition === "number"
-      || typeof condition === "boolean"
-      || condition === null
-    ) {
-      condition = { $eq: condition }
+  evaluate<TSubject>(subject: TSubject, condition: Condition<TSubject>): boolean {
+    if (!condition) {
+      return this.evaluateOperator(subject, "$eq", condition)
     }
 
-    if (typeof condition !== "object") {
-      return false
+    if (typeof condition === "object") {
+      return Object.entries(condition).every(([key, value]) => {
+        if (key.startsWith("$")) {
+          return this.evaluateOperator(subject, key, value)
+        }
+
+        return hasField(subject, key) ? this.evaluate(subject[key], value) : isBareNe(value)
+      })
     }
 
-    // §7.5: every key MUST be evaluated and ANDed together - no key may
-    // "consume" the whole object or cause sibling keys to be ignored.
-    for (const [key, value] of Object.entries(condition)) {
-      if (!this.evaluateKey(subject, key, value)) {
-        return false
-      }
-    }
-
-    return true
+    return this.evaluateOperator(subject, "$eq", condition)
   }
 
-  /**
-   * §7.4.12, §7.5: any key starting with "$" is an operator lookup, never
-   * a field name - built-in and custom operators are both resolved the
-   * same way, by name, against the same registry.
-   */
-  private evaluateKey(subject: unknown, key: string, value: JsonValue): boolean {
-    if (!key.startsWith("$")) {
-      return this.fieldCheck(subject, key, value)
-    }
+  private evaluateOperator<TSubject>(subject: TSubject, operatorName: string, value: JsonValue): boolean {
+    const operator = this.operatorRegistry.get(operatorName)
+    if (!operator) return false
 
-    const operator = this.operatorRegistry.get(key)
-    if (!operator) {
-      // §7.4.12, EC-13: an operator with no checker registered (built-in or
-      // custom) MUST evaluate to false - never a no-op true, and never
-      // treated as a field name, and never itself a required §7.1
-      // diagnostic (an unrecognized name is ordinary unmatched vocabulary,
-      // not a type issue). A cataloged-but-unregistered name (EC-15) can no
-      // longer even reach this branch: `Policy` now enforces meta.operators
-      // registration in full at construction time, so any name still
-      // unregistered here was never cataloged.
-      return false
-    }
-
-    return operator.resolve(
-      subject,
-      value,
-      {
-        resolveSubcondition: this.evaluate,
-      },
-    )
-  }
-
-  /**
-   * §7.4.10, §7.3: a missing field (or a non-object subject) makes the
-   * whole field-condition false - absence, not a type issue - with one
-   * exception: `$ne` (§7.4.2), which MUST evaluate to true on a missing
-   * field instead. See {@link isBareNe}.
-   */
-  private fieldCheck(subject: unknown, fieldName: string, condition: Condition): boolean {
-    return hasField(subject, fieldName) ? this.evaluate(subject[fieldName], condition) : isBareNe(condition)
+    return operator.resolve(subject, value, { resolveSubcondition: this.evaluate })
   }
 }

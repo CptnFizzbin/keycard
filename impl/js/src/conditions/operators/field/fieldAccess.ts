@@ -24,7 +24,7 @@ export function hasField(subject: unknown, fieldName: string): subject is Record
  * "exact negation" contract `$ne` does (§7.4.9). Undecided whether that
  * should change; not addressed here.
  */
-export function isBareNe(condition: Condition): boolean {
+export function isBareNe<TSubject>(condition: Condition<TSubject>): boolean {
   return (
     typeof condition === "object"
     && condition !== null
