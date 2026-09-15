@@ -2,7 +2,7 @@ name: Java
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
       - "impl/java/**"
       - "test/fixtures/v1/**"
@@ -19,9 +19,9 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
