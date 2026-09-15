@@ -1,4 +1,4 @@
-export { PolicyError } from "./PolicyError";
-export { PolicyLoadException } from "./PolicyLoadException";
-export { PolicyVersionException } from "./PolicyVersionException";
-export { PolicyArgumentError } from "./PolicyArgumentError";
+export { PolicyError } from "./policyError.ts"
+export { PolicyLoadException } from "./policyLoadException.ts"
+export { PolicyVersionException } from "./policyVersionException.ts"
+export { PolicyArgumentError } from "./policyArgumentError.ts"

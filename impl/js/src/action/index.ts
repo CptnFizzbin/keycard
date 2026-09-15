@@ -1,3 +1,3 @@
-export type { Action } from "./Action";
-export { createAction } from "./ActionFactory";
-export type { InferActions } from "./InferActions";
+export type { Action } from "./action.ts"
+export { createAction } from "./actionFactory.ts"
+export type { InferActions } from "./inferActions.ts"

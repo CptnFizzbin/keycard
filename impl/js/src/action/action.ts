@@ -6,6 +6,6 @@
  * as a compile-time one.
  */
 export interface Action<T extends string = string> {
-  readonly name: T;
-  readonly __brand: "action";
+  readonly name: T
+  readonly __brand: "action"
 }

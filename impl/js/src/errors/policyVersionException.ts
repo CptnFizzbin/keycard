@@ -7,7 +7,7 @@
  */
 export class PolicyVersionException extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = "PolicyVersionException";
+    super(message)
+    this.name = "PolicyVersionException"
   }
 }

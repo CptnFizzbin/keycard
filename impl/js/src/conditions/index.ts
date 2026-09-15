@@ -1,4 +1,4 @@
-export type { Condition } from "./Condition";
-export { ConditionResolver } from "./ConditionResolver";
-export type { Operator, OperatorContext } from "./operators/operator";
-export { createOperator } from "./operators/operator";
+export type { Condition } from "./condition"
+export { ConditionResolver } from "./conditionResolver.ts"
+export type { Operator, OperatorContext } from "./operators/operator"
+export { createOperator } from "./operators/operator.ts"

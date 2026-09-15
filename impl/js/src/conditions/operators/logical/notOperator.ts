@@ -1,4 +1,4 @@
-import {createOperator} from "../operator";
+import { createOperator } from "../operator.ts"
 
 /**
  * §7.4.9: `$not` - the exact negation of evaluating the sub-condition
@@ -6,6 +6,6 @@ import {createOperator} from "../operator";
  * type issue surfaces from evaluating the nested condition, not from
  * `$not` itself.
  */
-export const NotOperator = createOperator("$not", (subject, condition, {resolveSubcondition}) =>
-  !resolveSubcondition(subject, condition)
+export const NotOperator = createOperator("$not", (subject, condition, { resolveSubcondition }) =>
+  !resolveSubcondition(subject, condition),
 )

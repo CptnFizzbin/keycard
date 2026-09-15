@@ -1,4 +1,4 @@
-import type { Action } from "./Action";
+import type { Action } from "./action"
 
 /**
  * Infers the union of `Action` types expected by `PolicyBuilder`/`Policy`
@@ -14,4 +14,4 @@ import type { Action } from "./Action";
  * type AppActions = InferActions<typeof Actions>;
  * new PolicyBuilder<AppActions, AppSubjects>()
  */
-export type InferActions<T extends Record<string, Action>> = T[keyof T];
+export type InferActions<T extends Record<string, Action>> = T[keyof T]

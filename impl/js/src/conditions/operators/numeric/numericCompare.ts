@@ -1,4 +1,4 @@
-import {PolicyTypeMismatchError} from "../../../errors/PolicyTypeMismatchError";
+import { PolicyTypeMismatchError } from "../../../errors/policyTypeMismatchError.ts"
 
 /**
  * §7.4.3: the numeric comparison shared by `$gt`/`$gte`/`$lt`/`$lte` -
@@ -10,13 +10,13 @@ import {PolicyTypeMismatchError} from "../../../errors/PolicyTypeMismatchError";
 export function numericCompare(
   subject: unknown,
   value: unknown,
-  cmp: (a: number, b: number) => boolean
+  cmp: (a: number, b: number) => boolean,
 ): boolean {
   if (typeof subject !== "number") {
-    throw new PolicyTypeMismatchError({subject: {expected: "number", received: typeof subject}})
+    throw new PolicyTypeMismatchError({ subject: { expected: "number", received: typeof subject } })
   }
   if (typeof value !== "number") {
-    throw new PolicyTypeMismatchError({value: {expected: "number", received: typeof value}})
+    throw new PolicyTypeMismatchError({ value: { expected: "number", received: typeof value } })
   }
 
   return cmp(subject, value)

@@ -7,7 +7,7 @@
  */
 export class PolicyArgumentError extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = "PolicyArgumentError";
+    super(message)
+    this.name = "PolicyArgumentError"
   }
 }

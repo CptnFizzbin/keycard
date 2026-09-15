@@ -1,4 +1,4 @@
-import {createOperator} from "../operator";
+import { createOperator } from "../operator.ts"
 
 /**
  * §7.4.1: `$eq` - value equality for primitives, not reference/identity

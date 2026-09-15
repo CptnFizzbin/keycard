@@ -1,5 +1,5 @@
-import {createOperator} from "../operator";
-import {PolicyTypeMismatchError} from "../../../errors/PolicyTypeMismatchError";
+import { PolicyTypeMismatchError } from "../../../errors/policyTypeMismatchError.ts"
+import { createOperator } from "../operator.ts"
 
 export const AndOperator = createOperator("$and", (subject, subConditions, { resolveSubcondition }) => {
   if (subject === null || subject === undefined) return false
@@ -7,8 +7,8 @@ export const AndOperator = createOperator("$and", (subject, subConditions, { res
   if (!Array.isArray(subConditions)) throw new PolicyTypeMismatchError({
     value: {
       expected: "array",
-      received: typeof subConditions
-    }
+      received: typeof subConditions,
+    },
   })
 
   return subConditions.every((condition) => {

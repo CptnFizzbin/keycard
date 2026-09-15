@@ -1,7 +1,7 @@
-import { Condition } from "../conditions";
+import type { Condition } from "../conditions/index.ts"
 
 /** SPEC_V1-0-0.md §3.3: a rule's effect - allow it, or deny it. */
-export type Effect = "allow" | "deny";
+export type Effect = "allow" | "deny"
 
 /**
  * `[Effect, Action, Subject, Conditions?]` - SPEC_V1-0-0.md §3.3. Action
@@ -15,7 +15,7 @@ export type Effect = "allow" | "deny";
  */
 export type RuleTuple =
   | [Effect, string, string]
-  | [Effect, string, string, Condition];
+  | [Effect, string, string, Condition]
 
 /** SPEC_V1-0-0.md §3.2: the optional `meta` object, grouping six independent, all-optional fields. */
 export interface Meta {
@@ -24,28 +24,28 @@ export interface Meta {
    * `"_ANY_"`. Explicit `null` -> disables the action wildcard entirely
    * (no string, including `"_ANY_"`, has special meaning).
    */
-  anyAction?: string | null;
+  anyAction?: string | null
   /** The subject wildcard token (§3.2.1, §5), symmetric with `anyAction` in every respect. */
-  anySubject?: string | null;
+  anySubject?: string | null
   /** Declared action vocabulary; when present, enforced at construction (§3.2.2, EC-8). */
-  actions?: string[];
+  actions?: string[]
   /** Declared subject vocabulary; when present, enforced at construction (§3.2.2, EC-8). */
-  subjects?: string[];
+  subjects?: string[]
   /** Declared custom `$`-operator vocabulary; when present, enforced at construction (§3.2.3, EC-13). */
-  operators?: string[];
+  operators?: string[]
   /** Opaque application data - never validated, enforced, or cross-checked (§3.2.4). */
-  application?: unknown;
+  application?: unknown
 }
 
 /** The `PolicyDefinition` document shape - SPEC_V1-0-0.md §3. */
 export interface PolicyDefinition {
   /** Required SemVer string, e.g. `"1.0.0"` - see SPEC_V1-0-0.md §2. */
-  version: string;
+  version: string
   /** Informational only - plays no role in evaluation. */
-  name?: string;
+  name?: string
   /** Informational only - plays no role in evaluation. */
-  description?: string;
-  meta?: Meta;
+  description?: string
+  meta?: Meta
   /** Ordered; declaration order is significant (§3.3, §6). MAY be empty. */
-  rules: RuleTuple[];
+  rules: RuleTuple[]
 }

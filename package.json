@@ -10,9 +10,19 @@
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.2",
+    "@dword-design/eslint-plugin-import-alias": "^8.1.8",
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^20.0.0",
+    "eslint": "^10.10.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-check-file": "^3.3.2",
+    "eslint-plugin-import-x": "^4.17.1",
+    "globals": "^17.12.0",
+    "jiti": "^2.7.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.2.0"
+    "typescript": "^5.2.0",
+    "typescript-eslint": "^8.70.0"
   },
   "packageManager": "yarn@4.18.0+sha512.fcb8716fe7cd0eece141ffc18b92193a9df9204c1ba83189c288835223fc0bbe64af473bab0d5e9927a7daeb5caf2bb07eb2787cc9338ca040ea125f2a1f2f7e"
 }

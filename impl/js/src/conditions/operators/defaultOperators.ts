@@ -1,16 +1,16 @@
-import {EqOperator} from "./equality/eqOperator";
-import {NeOperator} from "./equality/neOperator";
-import {GtOperator} from "./numeric/gtOperator";
-import {GteOperator} from "./numeric/gteOperator";
-import {LtOperator} from "./numeric/ltOperator";
-import {LteOperator} from "./numeric/lteOperator";
-import {InOperator} from "./collection/inOperator";
-import {HasOperator} from "./collection/hasOperator";
-import {SubstrOperator} from "./string/substrOperator";
-import {OrOperator} from "./logical/orOperator";
-import {AndOperator} from "./logical/andOperator";
-import {NotOperator} from "./logical/notOperator";
-import {FieldOperator} from "./field/fieldOperator";
+import { HasOperator } from "./collection/hasOperator.ts"
+import { InOperator } from "./collection/inOperator.ts"
+import { EqOperator } from "./equality/eqOperator.ts"
+import { NeOperator } from "./equality/neOperator.ts"
+import { FieldOperator } from "./field/fieldOperator.ts"
+import { AndOperator } from "./logical/andOperator.ts"
+import { NotOperator } from "./logical/notOperator.ts"
+import { OrOperator } from "./logical/orOperator.ts"
+import { GtOperator } from "./numeric/gtOperator.ts"
+import { GteOperator } from "./numeric/gteOperator.ts"
+import { LtOperator } from "./numeric/ltOperator.ts"
+import { LteOperator } from "./numeric/lteOperator.ts"
+import { SubstrOperator } from "./string/substrOperator.ts"
 
 /** Every operator {@link ConditionResolver} understands natively (SPEC_V1-0-0.md §7.4.1-§7.4.11). */
 export const DefaultOperators = [

@@ -7,9 +7,9 @@
  * runtime discriminant, symmetric with `Action`'s.
  */
 export interface Subject<TData = unknown> {
-  readonly name: string;
-  readonly instance?: TData;
-  readonly __brand: "subject";
+  readonly name: string
+  readonly instance?: TData
+  readonly __brand: "subject"
   /** Returns a new Subject of the same name, wrapping `obj` as its instance. */
-  wrap(obj: TData): Subject<TData>;
+  wrap(obj: TData): Subject<TData>
 }

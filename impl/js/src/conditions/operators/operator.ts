@@ -1,6 +1,6 @@
-import {JsonValue} from "../../lib/json";
-import {PolicyTypeMismatchError} from "../../errors/PolicyTypeMismatchError";
-import {getLogger} from "../../lib/logger";
+import { PolicyTypeMismatchError } from "../../errors/policyTypeMismatchError.ts"
+import type { JsonValue } from "../../lib/json.ts"
+import { getLogger } from "../../lib/logger.ts"
 
 export interface OperatorContext {
   resolveSubcondition: (subject: unknown, condition: JsonValue) => boolean
@@ -11,10 +11,9 @@ export interface Operator {
   resolve: (subject: unknown, value: JsonValue, ctx: OperatorContext) => boolean
 }
 
-
 export function createOperator(
-  name: Operator['name'],
-  resolver: Operator['resolve']
+  name: Operator["name"],
+  resolver: Operator["resolve"],
 ): Operator {
   return {
     name,
@@ -33,6 +32,6 @@ export function createOperator(
 
         throw e
       }
-    }
+    },
   }
 }

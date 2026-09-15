@@ -8,7 +8,7 @@
  */
 export class PolicyLoadException extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = "PolicyLoadException";
+    super(message)
+    this.name = "PolicyLoadException"
   }
 }

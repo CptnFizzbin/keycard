@@ -5,7 +5,7 @@ description: >
   declared and no checker registered at runtime, it MUST evaluate to false -
   never a no-op true, and never treated as a field name.
 rules:
-  - [allow, Read, Article, { $hasRole: admin }]
+  - [ allow, Read, Article, { $hasRole: admin } ]
 
 cases:
   - name: "unregistered custom operator: denied"
@@ -25,7 +25,7 @@ cases:
 # PolicyLoadException at construction time, not merely log a diagnostic at
 # evaluation time (SPEC_V1-0-0.md §4.2.3) - see each implementation's
 # own construction-time unit tests (e.g. impl/java's PolicyValidationTest,
-# impl/js's Policy.test.ts) instead.
+# impl/js's policy.test.ts) instead.
 
 ---
 version: "1.0.0"
@@ -36,7 +36,7 @@ description: >
   and an unregistered operator is always false regardless of what data the
   subject carries.
 rules:
-  - [allow, Read, Article, { $hasRole: admin }]
+  - [ allow, Read, Article, { $hasRole: admin } ]
 
 cases:
   - name: "a literal $hasRole field on the subject is not consulted"

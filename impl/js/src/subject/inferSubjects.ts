@@ -1,4 +1,4 @@
-import type { Subject } from "./Subject";
+import type { Subject } from "./subject.ts"
 
 /**
  * Infers the union of `Subject` types expected by `PolicyBuilder`/`Policy`
@@ -13,4 +13,4 @@ import type { Subject } from "./Subject";
  * type AppSubjects = InferSubjects<typeof Subjects>;
  * new PolicyBuilder<AppActions, AppSubjects>()
  */
-export type InferSubjects<T extends Record<string, Subject>> = T[keyof T];
+export type InferSubjects<T extends Record<string, Subject>> = T[keyof T]

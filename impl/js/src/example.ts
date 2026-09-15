@@ -1,6 +1,7 @@
-import type {InferActions, InferSubjects} from "./index";
-import {createAction, createSubject, Policy, PolicyBuilder} from "./index";
-import {getLogger} from "./lib/logger";
+import { createAction, createSubject, Policy, PolicyBuilder } from "./index.ts"
+import { getLogger } from "./lib/logger.ts"
+
+import type { InferActions, InferSubjects } from "./index"
 
 const logger = getLogger()
 
@@ -10,44 +11,44 @@ const Actions = {
   Read: createAction("Read"),
   Update: createAction("Update"),
   Delete: createAction("Delete"),
-} as const;
+} as const
 
-type AppActions = InferActions<typeof Actions>;
+type AppActions = InferActions<typeof Actions>
 
 // Define your subject types
 const Subjects = {
-  Article: createSubject<{ id: number; owner_id: number; status: string }>("Article"),
-  ListItem: createSubject<{ id: number; title: string; owner_id: number }>("ListItem"),
-} as const;
+  Article: createSubject<{ id: number, owner_id: number, status: string }>("Article"),
+  ListItem: createSubject<{ id: number, title: string, owner_id: number }>("ListItem"),
+} as const
 
-type AppSubjects = InferSubjects<typeof Subjects>;
+type AppSubjects = InferSubjects<typeof Subjects>
 
 // Build a policy using the type-safe definitions
 const policyDef = new PolicyBuilder<AppActions, AppSubjects>()
   .allow(Actions.Create, Subjects.Article)
   .allow(Actions.Read, Subjects.Article)
-  .allow(Actions.Update, Subjects.Article, {owner_id: 1})
-  .deny(Actions.Delete, Subjects.Article, {status: {$not: "archived"}})
-  .buildDef();
+  .allow(Actions.Update, Subjects.Article, { owner_id: 1 })
+  .deny(Actions.Delete, Subjects.Article, { status: { $not: "archived" } })
+  .buildDef()
 
 // Create a policy instance
-const policy = new Policy<AppActions, AppSubjects>(policyDef);
+const policy = new Policy<AppActions, AppSubjects>(policyDef)
 
 // Type-safe permission checks
-const article = Subjects.Article.wrap({id: 1, owner_id: 1, status: "published"});
+const article = Subjects.Article.wrap({ id: 1, owner_id: 1, status: "published" })
 
 if (policy.can(Actions.Create, Subjects.Article)) {
-  logger.info("✓ Can create articles");
+  logger.info("✓ Can create articles")
 }
 
 if (policy.can(Actions.Update, article)) {
-  logger.info("✓ Can update own article");
+  logger.info("✓ Can update own article")
 }
 
 if (policy.can(Actions.Delete, article)) {
-  logger.info("✓ Can delete article");
+  logger.info("✓ Can delete article")
 } else {
-  logger.info("✗ Cannot delete non-archived article");
+  logger.info("✗ Cannot delete non-archived article")
 }
 
 // Type safety: these would be caught at compile time

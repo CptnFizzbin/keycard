@@ -1,1 +1,1 @@
-export { PolicyBuilder } from "./PolicyBuilder";
+export { PolicyBuilder } from "./policyBuilder.ts"

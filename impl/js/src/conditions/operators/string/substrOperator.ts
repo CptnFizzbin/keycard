@@ -1,6 +1,6 @@
-import {createOperator} from "../operator";
-import {PolicyTypeMismatchError} from "../../../errors/PolicyTypeMismatchError";
-import {escapeRegExp} from "../../../lib/regex";
+import { PolicyTypeMismatchError } from "../../../errors/policyTypeMismatchError.ts"
+import { escapeRegExp } from "../../../lib/regex.ts"
+import { createOperator } from "../operator.ts"
 
 /**
  * §7.4.6: `$substr` - a small, deliberately non-regex substring pattern
@@ -18,8 +18,8 @@ export const SubstrOperator = createOperator("$substr", (subject, pattern) => {
   if (typeof pattern !== "string") throw new PolicyTypeMismatchError({
     value: {
       expected: "string",
-      received: typeof pattern
-    }
+      received: typeof pattern,
+    },
   })
 
   let regexPattern = ""
@@ -42,14 +42,14 @@ export const SubstrOperator = createOperator("$substr", (subject, pattern) => {
         // Only meaningful as the pattern's first character - anywhere
         // else it's a structurally invalid pattern (§7.4.6).
         if (i !== 0) throw new PolicyTypeMismatchError({
-          value: {expected: "'^' only as the first character", received: `'^' at position ${i}`}
+          value: { expected: "'^' only as the first character", received: `'^' at position ${i}` },
         })
         regexPattern += "^"
         break
       case "$":
         // Only meaningful as the pattern's last character.
         if (i !== pattern.length - 1) throw new PolicyTypeMismatchError({
-          value: {expected: "'$' only as the last character", received: `'$' at position ${i}`}
+          value: { expected: "'$' only as the last character", received: `'$' at position ${i}` },
         })
         regexPattern += "$"
         break

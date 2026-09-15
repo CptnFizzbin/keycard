@@ -1,4 +1,4 @@
-import {Condition} from "../../Condition";
+import type { Condition } from "../../condition.ts"
 
 /**
  * §7.4.10, §7.3: true when `subject` is a non-null object carrying
@@ -8,7 +8,7 @@ import {Condition} from "../../Condition";
  * the explicit `$field` operator (§7.4.11), which narrow the same way.
  */
 export function hasField(subject: unknown, fieldName: string): subject is Record<string, unknown> {
-  return subject !== null && typeof subject === "object" && fieldName in subject;
+  return subject !== null && typeof subject === "object" && fieldName in subject
 }
 
 /**
@@ -26,10 +26,10 @@ export function hasField(subject: unknown, fieldName: string): subject is Record
  */
 export function isBareNe(condition: Condition): boolean {
   return (
-    typeof condition === "object" &&
-    condition !== null &&
-    !Array.isArray(condition) &&
-    Object.keys(condition).length === 1 &&
-    "$ne" in condition
-  );
+    typeof condition === "object"
+    && condition !== null
+    && !Array.isArray(condition)
+    && Object.keys(condition).length === 1
+    && "$ne" in condition
+  )
 }

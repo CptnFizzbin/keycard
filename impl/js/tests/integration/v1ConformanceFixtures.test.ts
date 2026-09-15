@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
-import { describe, test, expect } from "vitest";
-import { createOperator, Operator, Policy, PolicyDefinition } from "../../src";
-import { KEYCARD_POLICY_VERSION } from "../../src/version";
-import { listYamlFiles, actionArgFor, subjectArgFor, isIncluded } from "./complianceFixtures";
+import {describe, expect, test} from "vitest";
+import {createOperator, Operator, Policy, PolicyDefinition} from "../../src";
+import {KEYCARD_POLICY_VERSION} from "../../src/version";
+import {actionArgFor, isIncluded, listYamlFiles, subjectArgFor} from "./complianceFixtures";
 
 /**
  * Reads the v1 conformance suite under test/fixtures/v1 (see the README
@@ -14,7 +14,7 @@ import { listYamlFiles, actionArgFor, subjectArgFor, isIncluded } from "./compli
  * `{ name, rules, cases }` test suite in the v1 `PolicyDefinition` shape.
  *
  * impl/js now natively implements the v1 `rules`/`meta` schema (see
- * ../../src/policy/PolicyDefinition.ts), so each parsed suite is a
+ * ../../src/policy/policyDefinition.ts), so each parsed suite is a
  * PolicyDefinition already and is handed straight to `Policy.from(...)` -
  * no adapter needed.
  *
@@ -60,7 +60,7 @@ interface FixtureFile {
 }
 
 function discoverFixtureFiles(): FixtureFile[] {
-  return listYamlFiles(FIXTURES_DIR).map((filePath) => ({ fileName: path.basename(filePath), filePath }));
+  return listYamlFiles(FIXTURES_DIR).map((filePath) => ({fileName: path.basename(filePath), filePath}));
 }
 
 /**
@@ -91,7 +91,7 @@ test("discovers at least one v1 conformance fixture file", () => {
   expect(fixtureFiles.length).toBeGreaterThan(0);
 });
 
-describe.each(fixtureFiles)("v1 conformance fixture: $fileName", ({ fileName, filePath }) => {
+describe.each(fixtureFiles)("v1 conformance fixture: $fileName", ({fileName, filePath}) => {
   const suites = loadSuites(filePath);
   const operators = CUSTOM_OPERATORS[fileName] ?? [];
 
