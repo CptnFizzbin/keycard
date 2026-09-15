@@ -1,3 +1,4 @@
+import type { AnyCondition } from "../../condition.ts"
 import { createOperator } from "../operator.ts"
 
 /**
@@ -6,6 +7,6 @@ import { createOperator } from "../operator.ts"
  * type issue surfaces from evaluating the nested condition, not from
  * `$not` itself.
  */
-export const NotOperator = createOperator("$not", (subject, condition, { resolveSubcondition }) =>
+export const NotOperator = createOperator<unknown, AnyCondition>("$not", (subject, condition, { resolveSubcondition }) =>
   !resolveSubcondition(subject, condition),
 )

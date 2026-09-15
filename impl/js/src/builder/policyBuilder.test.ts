@@ -55,6 +55,7 @@ describe("PolicyBuilder: meta.actions/subjects/operators are derived from usage"
   test("still catches EC-6 at addRule time with the options constructor", () => {
     expect(() =>
       new PolicyBuilder({ anyAction: "*", anySubject: "*" })
+        // @ts-expect-error -- specifically testing an invalid type
         .allow(createAction("*"), createSubject("*"), { owner_id: 1 }),
     ).toThrow(PolicyArgumentError)
   })

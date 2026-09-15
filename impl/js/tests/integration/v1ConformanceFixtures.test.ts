@@ -2,9 +2,10 @@ import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
 import {describe, expect, test} from "vitest";
-import {createOperator, Operator, Policy, PolicyDefinition} from "../../src";
+import {createOperator, Policy, PolicyDefinition} from "../../src";
 import {KEYCARD_POLICY_VERSION} from "../../src/version";
 import {actionArgFor, isIncluded, listYamlFiles, subjectArgFor} from "./complianceFixtures";
+import {AnyOperator} from "../../src/conditions/operators/operator";
 
 /**
  * Reads the v1 conformance suite under test/fixtures/v1 (see the README
@@ -69,7 +70,7 @@ function discoverFixtureFiles(): FixtureFile[] {
  * suite) can implement; declaring it in meta.operators documents it but
  * doesn't wire up behavior. Keyed by fixture file name.
  */
-const CUSTOM_OPERATORS: Record<string, Operator[]> = {
+const CUSTOM_OPERATORS: Record<string, AnyOperator[]> = {
   "11-worked-example.yaml": [
     // Mirrors the spec Appendix's own suggested implementation: "one that
     // checks subject.roles.includes('admin')".
@@ -108,7 +109,7 @@ describe.each(fixtureFiles)("v1 conformance fixture: $fileName", ({fileName, fil
     // exceeds this suite's own baked-in COMPLIANT_VERSION - see
     // complianceFixtures.ts's isIncluded.
     describe.skipIf(!isIncluded(suite.version, COMPLIANT_VERSION))(`version ${suite.version}`, () => {
-      const policy = Policy.from(suite, operators);
+      const policy = Policy.from(suite, {operators});
       const cases = suite.cases.map((c) => ({
         ...c,
         name: c.name ?? `${c.action} / ${c.subject} -> ${c.expected}`,

@@ -10,10 +10,11 @@ import { GtOperator } from "./numeric/gtOperator.ts"
 import { GteOperator } from "./numeric/gteOperator.ts"
 import { LtOperator } from "./numeric/ltOperator.ts"
 import { LteOperator } from "./numeric/lteOperator.ts"
+import type { AnyOperator } from "./operator.ts"
 import { SubstrOperator } from "./string/substrOperator.ts"
 
 /** Every operator {@link ConditionResolver} understands natively (SPEC_V1-0-0.md §7.4.1-§7.4.11). */
-export const DefaultOperators = [
+export const DefaultOperators: AnyOperator[] = [
   EqOperator,
   NeOperator,
   GtOperator,

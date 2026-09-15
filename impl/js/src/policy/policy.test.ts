@@ -123,7 +123,11 @@ describe("Policy: construction-time validation", () => {
     expect(() =>
       Policy.from(
         { version: "1.0.0", rules: [] },
-        [createOperator("$eq", () => true)],
+        {
+          operators: [
+            createOperator("$eq", () => true),
+          ],
+        },
       ),
     ).toThrow(PolicyLoadException)
   })
@@ -132,7 +136,12 @@ describe("Policy: construction-time validation", () => {
     expect(() =>
       Policy.from(
         { version: "1.0.0", rules: [] },
-        [createOperator("$hasRole", () => true), createOperator("$hasRole", () => false)],
+        {
+          operators: [
+            createOperator("$hasRole", () => true),
+            createOperator("$hasRole", () => false),
+          ],
+        },
       ),
     ).toThrow(PolicyLoadException)
   })
@@ -163,7 +172,11 @@ describe("Policy: construction-time validation", () => {
     expect(() =>
       Policy.from(
         { version: "1.0.0", meta: { operators: ["$hasRole"] }, rules: [] },
-        [createOperator("$hasRole", () => true)],
+        {
+          operators: [
+            createOperator("$hasRole", () => true),
+          ],
+        },
       ),
     ).not.toThrow()
   })
