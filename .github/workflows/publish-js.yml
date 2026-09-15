@@ -49,6 +49,6 @@ jobs:
         run: npm pkg set version=${{ steps.version.outputs.version }}
 
       - name: Publish to npm
-        run: npm stage publish --access public
+        run: yarn npm publish --access public
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
