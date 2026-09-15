@@ -17,9 +17,9 @@
  *
  * This script only edits files - it never commits, tags, or pushes.
  */
-import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import {execSync} from "node:child_process";
+import {readFileSync, writeFileSync} from "node:fs";
+import {resolve} from "node:path";
 
 const ROOT = resolve(import.meta.dirname, "..");
 
@@ -86,13 +86,10 @@ function versionOf(impl: Impl): string {
 const before = new Map(IMPLS.map((impl) => [impl.dir, versionOf(impl)]));
 
 console.log("Running `changeset version`...\n");
-execFileSync(resolve(ROOT, "node_modules/.bin/changeset"), ["version"], {
-  cwd: ROOT,
-  stdio: "inherit",
-});
+execSync("yarn changeset version", {cwd: ROOT, stdio: "inherit"});
 
-const changed = IMPLS.map((impl) => ({ impl, from: before.get(impl.dir)!, to: versionOf(impl) })).filter(
-  ({ from, to }) => from !== to
+const changed = IMPLS.map((impl) => ({impl, from: before.get(impl.dir)!, to: versionOf(impl)})).filter(
+  ({from, to}) => from !== to
 );
 
 if (changed.length === 0) {
@@ -101,7 +98,7 @@ if (changed.length === 0) {
 }
 
 console.log("\nSyncing bumped versions into non-npm files...");
-for (const { impl, from, to } of changed) {
+for (const {impl, from, to} of changed) {
   if (impl.syncVersionInto) {
     impl.syncVersionInto(to);
     console.log(`  ${impl.dir}: ${from} -> ${to} (pom.xml + README.md updated)`);
@@ -114,7 +111,7 @@ console.log("\nReady to release. Next steps:");
 console.log("  1. Review the diff (version bumps + CHANGELOG.md entries).");
 console.log("  2. Commit it and merge to main.");
 console.log("  3. Push the tag(s) below to trigger each package's publish workflow:\n");
-for (const { impl, to } of changed) {
+for (const {impl, to} of changed) {
   console.log(`     git tag ${impl.tagPrefix}${to} && git push origin ${impl.tagPrefix}${to}`);
   console.log(`       # ${impl.label}`);
 }

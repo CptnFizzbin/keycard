@@ -1,31 +1,35 @@
 # KeyCard - Java
 
-Java access control library inspired by CASL.js. Provides type-safe, composable authorization policies.
+Cross-language access control library inspired by CASL.js. Provides type-safe,
+composable authorization policies.
 
 ## Features
 
 - **Type-safe**: Generics ensure only valid actions and subjects are used
 - **Composable**: Build complex policies from simple rules using fluent API
-- **Flexible conditions**: Support for comparison, pattern matching, and logical operators
+- **Flexible conditions**: Support for comparison, pattern matching, and logical
+  operators
 - **Cross-platform**: PolicyDefinitions serialize to JSON for cross-language use
-- **Zero runtime overhead**: Type safety enforced at compile-time via Java generics
+- **Zero runtime overhead**: Type safety enforced at compile-time via Java
+  generics
 
 ## Installation
 
 Add to your `pom.xml`:
 
 ```xml
+
 <dependency>
     <groupId>com.cptnfizzbin</groupId>
     <artifactId>keycard</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
 
 Or with Gradle:
 
 ```gradle
-implementation 'com.cptnfizzbin:keycard:0.0.1'
+implementation 'com.cptnfizzbin:keycard:0.0.2'
 ```
 
 ## Quick Start
@@ -108,11 +112,13 @@ policy.can(create, "Article");      // ✗ Compiler error - subject must be a Su
 - `$lte` - Less than or equal
 - `$in` - Value in collection
 - `$has` - Collection contains value
-- `$substr` - Substring pattern match (a small, non-regex pattern language - see SPEC_V1-0-0.md §7.4.6)
+- `$substr` - Substring pattern match (a small, non-regex pattern language - see
+  SPEC_V1-0-0.md §7.4.6)
 - `$or` - Logical OR
 - `$and` - Logical AND
 - `$not` - Logical NOT
-- `$field` - Explicit field access, for a field whose name itself starts with "$"
+- `$field` - Explicit field access, for a field whose name itself starts with "$
+  "
 - Field conditions - Check nested properties
 
 ## API
@@ -120,6 +126,7 @@ policy.can(create, "Article");      // ✗ Compiler error - subject must be a Su
 ### ActionFactory
 
 Create type-safe actions:
+
 ```java
 Action<String> create = ActionFactory.create("Create");
 ```
@@ -127,6 +134,7 @@ Action<String> create = ActionFactory.create("Create");
 ### SubjectFactory
 
 Create type-safe subjects:
+
 ```java
 Subject<Article> article = SubjectFactory.create("Article");
 ```
@@ -135,13 +143,16 @@ Subject<Article> article = SubjectFactory.create("Article");
 
 A single type covering both a bare subject (no instance) and a wrapped
 instance - `getInstance()` is empty until `.wrap()` is called.
+
 - `getName()` - Get subject name
 - `getInstance()` - Get the wrapped object, if any, as an `Optional<T>`
-- `wrap(T obj)` - Returns a new `Subject<T>` of the same name, with its instance set
+- `wrap(T obj)` - Returns a new `Subject<T>` of the same name, with its instance
+  set
 
 ### PolicyBuilder
 
 Build policies with fluent API:
+
 - `allow(action, subject)` - Allow action
 - `allow(action, subject, conditions)` - Allow with conditions
 - `deny(action, subject)` - Deny action
@@ -152,6 +163,7 @@ Build policies with fluent API:
 ### Policy
 
 Check permissions:
+
 - `can(action, subject)` - Check if action is allowed
 - `cannot(action, subject)` - Check negation
 - `require(action, subject)` - Require permission (throws on denial)
@@ -160,14 +172,18 @@ Check permissions:
 ### ConditionResolver
 
 Evaluates conditions:
+
 - `evaluate(subject, condition)` - Evaluate a condition
 
 ### PolicyDefinition
 
 Serializable policy, per SPEC_V1-0-0.md §3:
+
 - `getVersion()` - Get the SemVer spec version, e.g. `"1.0.0"`
-- `getMeta()` - Get the optional `meta` object (wildcard tokens, catalogs, application data)
-- `getRules()` - Get the ordered list of `[effect, action, subject, conditions?]` rules
+- `getMeta()` - Get the optional `meta` object (wildcard tokens, catalogs,
+  application data)
+- `getRules()` - Get the ordered list of
+  `[effect, action, subject, conditions?]` rules
 
 ### PolicyException
 
@@ -235,12 +251,14 @@ String json = gson.toJson(policy.getDefinition());
 ## Building and Testing
 
 Build with Maven:
+
 ```bash
 mvn clean package
 mvn test
 ```
 
 Run the example:
+
 ```bash
 mvn exec:java -Dexec.mainClass="com.cptnfizzbin.keycard.Example"
 ```
