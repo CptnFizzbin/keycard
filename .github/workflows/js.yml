@@ -6,10 +6,16 @@ on:
     paths:
       - "impl/js/**"
       - "test/fixtures/v1/**"
+      - "package.json"
+      - "yarn.lock"
+      - ".yarnrc.yml"
   pull_request:
     paths:
       - "impl/js/**"
       - "test/fixtures/v1/**"
+      - "package.json"
+      - "yarn.lock"
+      - ".yarnrc.yml"
 
 defaults:
   run:

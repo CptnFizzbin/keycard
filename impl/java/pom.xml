@@ -6,12 +6,35 @@
 
     <groupId>com.cptnfizzbin</groupId>
     <artifactId>keycard</artifactId>
-    <version>0.1.0</version>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
 
     <name>KeyCard</name>
-    <description>Type-safe authorization library for Java</description>
-    <url>https://github.com/cptnfizzbin/keycard</url>
+    <description>Cross-language access control libary</description>
+    <url>https://github.com/CptnFizzbin/keycard</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/CptnFizzbin/keycard/blob/main/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>cptnfizzbin</id>
+            <name>CptnFizzbin</name>
+            <url>https://github.com/CptnFizzbin</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/CptnFizzbin/keycard.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/CptnFizzbin/keycard.git</developerConnection>
+        <url>https://github.com/CptnFizzbin/keycard</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -73,4 +96,75 @@
             </plugin>
         </plugins>
     </build>
+
+    <!--
+      Activated only for publishing to Maven Central (`mvn -Prelease deploy`),
+      via the "Publish Java (Maven Central)" GitHub Actions workflow. Kept out
+      of the default build so plain `mvn verify` (used by CI on every push/PR)
+      never needs a GPG key or Central credentials.
+    -->
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <quiet>true</quiet>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

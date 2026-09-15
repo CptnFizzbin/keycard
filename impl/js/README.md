@@ -13,14 +13,14 @@ TypeScript access control library inspired by CASL.js. Provides strongly-typed, 
 ## Installation
 
 ```bash
-npm install @cptnfizzbin/keycard
+npm install @cptn-fizzbin/keycard
 ```
 
 ## Quick Start
 
 ```typescript
-import { createAction, createSubject, PolicyBuilder, Policy } from '@cptnfizzbin/keycard';
-import type { InferActions, InferSubjects } from '@cptnfizzbin/keycard';
+import { createAction, createSubject, PolicyBuilder, Policy } from '@cptn-fizzbin/keycard';
+import type { InferActions, InferSubjects } from '@cptn-fizzbin/keycard';
 
 // Define your action and subject types
 const Actions = {
@@ -132,4 +132,3 @@ See `src/example.ts` for a complete working example.
 - [SPEC.md](../SPEC.md) - Complete specification
 - [TYPE_SAFETY.md](../TYPE_SAFETY.md) - Type safety deep dive
 - [Rust implementation](../rust)
-

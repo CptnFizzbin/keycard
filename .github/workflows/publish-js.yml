@@ -1,0 +1,54 @@
+name: Publish JS (npm)
+
+# Triggered by pushing a tag like `js-v1.2.3`. The version after `js-v`
+# becomes the released package version (it does not need to match the
+# version committed in package.json — that value is overwritten below).
+on:
+  push:
+    tags:
+      - "js-v*"
+
+defaults:
+  run:
+    working-directory: impl/js
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive release version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#js-v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag '$TAG' does not match js-vX.Y.Z" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
+
+      - name: Test
+        run: yarn test run
+
+      - name: Set release version
+        run: npm pkg set version=${{ steps.version.outputs.version }}
+
+      - name: Publish to npm
+        run: yarn npm publish --access public
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

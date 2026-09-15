@@ -1,7 +1,7 @@
 {
-  "name": "@cptnfizzbin/keycard",
-  "version": "0.1.0",
-  "description": "TypeScript access control library, strongly inspired by CASL.js",
+  "name": "@cptn-fizzbin/keycard",
+  "version": "0.0.1",
+  "description": "Cross-language access control library",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -33,6 +33,5 @@
     "typescript-7": "npm:typescript@^7.0.0",
     "vitest": "^4.1.11",
     "yaml": "^2.9.0"
-  },
-  "packageManager": "yarn@4.18.0+sha512.fcb8716fe7cd0eece141ffc18b92193a9df9204c1ba83189c288835223fc0bbe64af473bab0d5e9927a7daeb5caf2bb07eb2787cc9338ca040ea125f2a1f2f7e"
+  }
 }
