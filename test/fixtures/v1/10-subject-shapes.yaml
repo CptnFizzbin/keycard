@@ -1,5 +1,5 @@
 version: "1.0.0"
-name: "bare type vs. wrapped instance (EC-7, EC-9)"
+name: "bare type vs. wrapped instance"
 description: >
   A conditional rule can never be satisfied by a bare-type/no-instance
   check: there's no instance data for the condition to inspect against, so
@@ -20,7 +20,7 @@ cases:
     subjectData: { id: 1, owner_id: 2 }
     expected: allow
 
-  - name: "a conditional rule cannot match a bare type with no instance data (EC-7)"
+  - name: "a conditional rule cannot match a bare type with no instance data"
     action: Update
     subject: Article
     expected: deny

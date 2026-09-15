@@ -29,10 +29,10 @@ Each `*.yaml` file is a sequence of one or more YAML documents (separated by
 `---`), one per test suite:
 
 ```yaml
-version: "1.0.0"          # required — a v1 PolicyDefinition, per SPEC_V1-0-0.md §3
+version: "1.0.0"          # required — a v1 PolicyDefinition, per SPEC_V1-0-0.md §4
 name: name of the test suite
 description: string       # optional
-meta:                      # optional — see SPEC_V1-0-0.md §3.2
+meta:                      # optional — see SPEC_V1-0-0.md §4.2
   anyAction: ...
   anySubject: ...
   actions: [...]
@@ -53,10 +53,10 @@ name: next suite
 ```
 
 `subject` names the subject's type; `subjectData`, when present, is the
-wrapped instance's value (a `SubjectRef`, per §5) and makes the check
+wrapped instance's value (a `SubjectRef`, per §6.2.2) and makes the check
 conditional-rule-eligible. Omitting `subjectData` checks a bare type (no
-instance — a `SubjectDef`/EC-9 style check): any rule carrying a `Conditions`
-element cannot match such a check (EC-7).
+instance — a `SubjectDef`-style check, §6.2.2): any rule carrying a
+`Conditions` element cannot match such a check.
 
 ## Filtering by version
 
@@ -66,7 +66,7 @@ adapter is actually written against
 (`v1ConformanceFixtures.test.ts`'s `COMPLIANT_VERSION`,
 `V1ConformanceFixtureTest`'s `COMPLIANT_VERSION`) — and a fixture whose
 declared `version` exceeds it is skipped, not failed, mirroring the
-compatibility rule in SPEC_V1-0-0.md §2 (same `MAJOR`, `MINOR` no higher
+compatibility rule in SPEC_V1-0-0.md §4.1 (same `MAJOR`, `MINOR` no higher
 than what's supported; `PATCH` never matters). This is automatic: once
 fixtures for a newer `MINOR` version are added, a compliance suite whose
 adapter hasn't caught up yet skips them with no configuration required,
@@ -91,43 +91,42 @@ something newer than a given suite's baked-in ceiling.
 ## Scope
 
 This format only expresses *evaluation* outcomes (`can` returning `allow`/
-`deny`), so it covers §4 through §7 and the evaluation-facing edge cases
-(EC-1 through EC-9, EC-12 through EC-14) of the edge-case catalogue in §8.
-It does **not** cover the purely construction-time validation requirements
-(malformed rule tuples — EC-10, `version` incompatibility — EC-11, a
-both-sides-wildcarded rule carrying a `Conditions` element,
-`meta.actions`/`meta.subjects`/`meta.operators` catalog-coverage enforcement
-— EC-8/EC-13's `PolicyLoadException` half, a `meta.operators` entry with
-nothing registered for it — EC-15, now a construction-time throw rather
-than a runtime diagnostic, or a duplicate operator name across the
-built-ins and whatever custom operators were supplied — EC-16), since those
-are expected to *throw* at construction rather than resolve to an
-`allow`/`deny` outcome. Those requirements should be covered separately,
-e.g. by implementation-specific unit tests asserting the right exception
-type.
+`deny`), so it covers action/subject matching (§4.2.1, §6.2.2), the
+rule-evaluation algorithm (§6.2.2), and the condition/operator language
+(§5). It does **not** cover the purely construction-time validation
+requirements — malformed rule tuples (§4.3), `version` incompatibility
+(§4.1), a both-sides-wildcarded rule carrying a `Conditions` element (§4.3,
+§6.2.1), `meta.actions`/`meta.subjects`/`meta.operators`
+catalog-coverage enforcement (§4.2.2, §4.2.3), a `meta.operators` entry
+with nothing registered for it (§4.2.3), or a duplicate operator name
+across the built-ins and whatever custom operators were supplied (§4.2.3)
+— since those are expected to *throw* at construction rather than resolve
+to an `allow`/`deny` outcome. Those requirements should be covered
+separately, e.g. by implementation-specific unit tests asserting the right
+exception type.
 
 ## Files
 
 - `01-action-subject-matching.yaml` — exact action/subject matching, case
-  sensitivity (EC-12), default deny (EC-1, EC-2).
+  sensitivity, default deny.
 - `02-rule-ordering.yaml` — last-rule-wins, blanket rules being overridden or
-  overriding (EC-3, EC-4, EC-5).
+  overriding.
 - `03-wildcards.yaml` — `_ANY_` default, a custom wildcard token, and
-  disabling the wildcard mechanism via `null` (§4, §5, §6 property 4, EC-6,
-  EC-14).
-- `04-conditions-fields.yaml` — bare-value shorthand (§7.2), missing field vs.
-  explicit `null` (§7.3), nested field conditions and `$field` (§7.4.10,
-  §7.4.11).
+  disabling the wildcard mechanism via `null` (§4.2.1, §6.2.2
+  property 4).
+- `04-conditions-fields.yaml` — bare-value shorthand (§5.2), missing field vs.
+  explicit `null` (§5.3), nested field conditions and `$field` (§5.4.10,
+  §5.4.11).
 - `05-operators-comparison.yaml` — `$eq`, `$ne`, `$gt`/`$gte`/`$lt`/`$lte`
-  (§7.4.1–§7.4.3).
-- `06-operators-collections.yaml` — `$in`, `$has` (§7.4.4, §7.4.5).
-- `07-operators-substr.yaml` — `$substr`'s pattern language (§7.4.6).
+  (§5.4.1–§5.4.3).
+- `06-operators-collections.yaml` — `$in`, `$has` (§5.4.4, §5.4.5).
+- `07-operators-substr.yaml` — `$substr`'s pattern language (§5.4.6).
 - `08-operators-logic.yaml` — `$or`, `$and`, `$not`, and multi-key AND
-  (§7.4.7–§7.4.9, §7.5).
+  (§5.4.7–§5.4.9, §5.6).
 - `09-custom-operators.yaml` — unregistered, uncataloged custom operators
-  always evaluate to `false` (§7.4.12, EC-13). The cataloged-but-never-
-  registered case (EC-15) is no longer expressible here now that it's a
-  construction-time throw - see the file's own comment.
-- `10-subject-shapes.yaml` — bare type vs. wrapped instance (EC-7, EC-9).
+  always evaluate to `false` (§5.5). The cataloged-but-never-registered
+  case is no longer expressible here now that it's a construction-time
+  throw - see the file's own comment.
+- `10-subject-shapes.yaml` — bare type vs. wrapped instance.
 - `11-worked-example.yaml` — an end-to-end mirror of the spec's own Appendix
   policy.

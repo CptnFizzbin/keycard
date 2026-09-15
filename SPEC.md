@@ -49,8 +49,8 @@ an action/subject/condition wins, not "any deny beats any allow." Every
 policy has a default wildcard token, `_ANY_`, for both actions and
 subjects (e.g. `[allow, _ANY_, _ANY_]` matches anything); a policy MAY
 override either via `meta.anyAction`/`meta.anySubject`. See
-[`SPEC_V1-0-0.md`](SPEC_V1-0-0.md) §6 for the exact algorithm, and
-§2/§4/§5 for `meta` and the wildcards.
+[`SPEC_V1-0-0.md`](SPEC_V1-0-0.md) §6.2.2 for the exact algorithm, and
+§4.2.1 for `meta` and the wildcards.
 
 Condition
 ---------
@@ -72,8 +72,8 @@ Condition =
   | FieldCondition = { [key]: Condition } //=> Condition(TSubject[key]), key MUST NOT start with "$"
   | ExplicitFieldCondition = { $field: [key, Condition] } //=> Condition(TSubject[key]), required when key starts with "$"
 
-See [`SPEC_V1-0-0.md`](SPEC_V1-0-0.md) §7 for full operator semantics,
-including `$substr`'s pattern language (§7.4.6) and why regex matching
+See [`SPEC_V1-0-0.md`](SPEC_V1-0-0.md) §5 for full operator semantics,
+including `$substr`'s pattern language (§5.4.6) and why regex matching
 (`$rgx`) isn't part of v1.
 
 Policy

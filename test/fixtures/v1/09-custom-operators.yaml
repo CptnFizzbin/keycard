@@ -1,5 +1,5 @@
 version: "1.0.0"
-name: "unregistered, undeclared custom operator always evaluates false (§7.4.12, EC-13)"
+name: "unregistered, undeclared custom operator always evaluates false (§5.5)"
 description: >
   $hasRole isn't a built-in operator. With no meta.operators catalog
   declared and no checker registered at runtime, it MUST evaluate to false -
@@ -19,17 +19,17 @@ cases:
     subject: Article
     expected: deny
 
-# A cataloged-but-never-registered custom operator (§7.4.12, EC-15) is no
-# longer expressible as an allow/deny case here: declaring $hasRole in
-# meta.operators without registering a checker for it now MUST throw a
+# A cataloged-but-never-registered custom operator (§5.5) is not
+# expressible as an allow/deny case here: declaring $hasRole in
+# meta.operators without registering a checker for it MUST throw a
 # PolicyLoadException at construction time, not merely log a diagnostic at
-# evaluation time (SPEC_V1-0-0.md §3.2.3, EC-15) - see each implementation's
+# evaluation time (SPEC_V1-0-0.md §4.2.3) - see each implementation's
 # own construction-time unit tests (e.g. impl/java's PolicyValidationTest,
 # impl/js's Policy.test.ts) instead.
 
 ---
 version: "1.0.0"
-name: "a $-prefixed key is always an operator, never a field name, even if unregistered (§7.4.12, §7.5)"
+name: "a $-prefixed key is always an operator, never a field name, even if unregistered (§5.5, §5.6)"
 description: >
   A subject that happens to have a literal "$hasRole" field is irrelevant -
   the condition key is resolved as an operator lookup, not a field lookup,

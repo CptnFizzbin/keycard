@@ -1,7 +1,7 @@
 version: "1.0.0"
 name: "exact action/subject matching"
 description: >
-  §4/§5: action and subject-name matching is an exact string comparison.
+  §6.2.2: action and subject-name matching is an exact string comparison.
   No rule uses a wildcard here.
 rules:
   - [allow, Read, Article]
@@ -12,29 +12,29 @@ cases:
     subject: Article
     expected: allow
 
-  - name: "unrelated subject is denied (EC-2: no rule matches)"
+  - name: "unrelated subject is denied: no rule matches"
     action: Read
     subject: Comment
     expected: deny
 
-  - name: "unrelated action is denied (EC-2: no rule matches)"
+  - name: "unrelated action is denied: no rule matches"
     action: Update
     subject: Article
     expected: deny
 
-  - name: "action matching is case-sensitive (EC-12)"
+  - name: "action matching is case-sensitive"
     action: read
     subject: Article
     expected: deny
 
-  - name: "subject matching is case-sensitive (EC-12)"
+  - name: "subject matching is case-sensitive"
     action: Read
     subject: article
     expected: deny
 
 ---
 version: "1.0.0"
-name: "empty rule list (EC-1)"
+name: "empty rule list"
 description: "rules: [] denies everything; there is nothing to match."
 rules: []
 

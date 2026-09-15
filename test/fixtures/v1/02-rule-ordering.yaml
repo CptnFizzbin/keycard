@@ -1,5 +1,5 @@
 version: "1.0.0"
-name: "last matching rule wins (EC-4)"
+name: "last matching rule wins"
 description: >
   Each rule's condition is evaluated independently against the same
   instance; only the last-declared rule among those whose conditions are
@@ -35,7 +35,7 @@ cases:
 
 ---
 version: "1.0.0"
-name: "a later, narrower allow reopens what an earlier deny closed (EC-3, EC-5)"
+name: "a later, narrower allow reopens what an earlier deny closed"
 rules:
   - [allow, Delete, Article, { owner_id: 1 }]
   - [deny, Delete, Article, { status: archived }]
@@ -68,11 +68,11 @@ cases:
 
 ---
 version: "1.0.0"
-name: "a trailing blanket deny shadows every earlier rule for the same action/subject (EC-3)"
+name: "a trailing blanket deny shadows every earlier rule for the same action/subject"
 description: >
   A blanket (unconditional) rule declared after other rules for the same
-  action/subject makes them unreachable — the documented anti-pattern EC-3
-  warns about. This is still required, spec-correct behavior, not a bug:
+  action/subject makes them unreachable — the documented anti-pattern the
+  spec warns about. This is still required, spec-correct behavior, not a bug:
   place a blanket rule first if it's meant to be overridden by more specific
   rules declared after it.
 rules:
@@ -95,7 +95,7 @@ cases:
 version: "1.0.0"
 name: "double-wildcard unconditional rule ordering"
 description: >
-  An unconditional [allow, _ANY_, _ANY_] rule is a legal, single rule (§6
+  An unconditional [allow, _ANY_, _ANY_] rule is a legal, single rule (§6.2.2
   property 5) whose position relative to other rules still follows
   last-rule-wins like any other rule.
 rules:

@@ -2,7 +2,7 @@ version: "1.0.0"
 name: "default _ANY_ wildcard"
 description: >
   meta/meta.anyAction/meta.anySubject are all absent, so the wildcard token
-  defaults to "_ANY_" for both positions (§4, §5).
+  defaults to "_ANY_" for both positions (§4.2.1).
 rules:
   - [allow, Read, _ANY_]
   - [allow, _ANY_, Article, { owner_id: 1 }]
@@ -55,8 +55,8 @@ version: "1.0.0"
 name: "a custom wildcard token for actions only"
 description: >
   meta.anyAction overrides the action wildcard token; meta.anySubject is
-  left at its "_ANY_" default. The two positions are independent (EC-14):
-  since anyAction no longer means "_ANY_", the literal string "_ANY_" is now
+  left at its "_ANY_" default. The two positions are independent: since
+  anyAction no longer means "_ANY_", the literal string "_ANY_" is now
   just an ordinary action name for this policy.
 meta:
   anyAction: "ALL_ACTIONS"
@@ -91,7 +91,7 @@ name: "disabling the subject wildcard entirely"
 description: >
   meta.anySubject: null disables the wildcard mechanism for the subject
   position — every rule's Subject, including the literal string "_ANY_", is
-  now matched purely literally (§5, EC-6, EC-14).
+  now matched purely literally (§4.2.1).
 meta:
   anySubject: null
 rules:
