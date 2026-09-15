@@ -16,8 +16,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://cptnfizzbin.github.io',
-  baseUrl: '/keycard/',
+  url: 'https://keycard.cptnfizzbin.com',
+  baseUrl: '/',
 
   organizationName: 'CptnFizzbin',
   projectName: 'keycard',
