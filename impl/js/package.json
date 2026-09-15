@@ -1,6 +1,6 @@
 {
   "name": "@cptn-fizzbin/keycard",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cross-language access control library",
   "author": "Cptn Fizzbin",
   "license": "MIT",
@@ -22,8 +22,10 @@
     ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
-  "types": "dist/index.d.ts",
+  "types": "dist/index.d.mts",
   "scripts": {
+    "changeset": "yarn --cwd ../.. run changeset",
+    "prepack": "yarn build",
     "build": "tsdown",
     "test": "vitest",
     "lint": "eslint src --ext .ts"
