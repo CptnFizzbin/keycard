@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.cptnfizzbin</groupId>
+    <artifactId>keycard-spring-security</artifactId>
+    <version>0.0.1</version>
+    <packaging>jar</packaging>
+
+    <name>KeyCard Spring Security</name>
+    <description>Spring Security integration for KeyCard - a PermissionEvaluator and AuthorizationManager backed by KeyCard Policies</description>
+    <url>https://github.com/CptnFizzbin/keycard</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/CptnFizzbin/keycard/blob/main/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>cptnfizzbin</id>
+            <name>CptnFizzbin</name>
+            <url>https://github.com/CptnFizzbin</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/CptnFizzbin/keycard.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/CptnFizzbin/keycard.git</developerConnection>
+        <url>https://github.com/CptnFizzbin/keycard</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <keycard.version>0.0.4</keycard.version>
+        <spring-security.version>6.3.3</spring-security.version>
+    </properties>
+
+    <dependencies>
+        <!-- The KeyCard core library this module adapts to Spring Security. -->
+        <dependency>
+            <groupId>com.cptnfizzbin</groupId>
+            <artifactId>keycard</artifactId>
+            <version>${keycard.version}</version>
+        </dependency>
+
+        <!-- PermissionEvaluator/AuthorizationManager SPIs only - a consumer
+             brings its own Spring Security version at runtime, so this is
+             `provided`, never bundled or forced. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+            <version>${spring-security.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Web-tier types (RequestAuthorizationContext) used only by
+             KeycardAuthorizationManager. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring-security.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- RequestAuthorizationContext wraps a servlet HttpServletRequest;
+             a consumer's servlet container supplies the real implementation
+             at runtime, so this is `provided` like the Spring Security
+             dependencies above. -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- MockHttpServletRequest, used to build a RequestAuthorizationContext in tests. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>6.1.13</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--
+      Activated only for publishing to Maven Central (`mvn -Prelease deploy`).
+      Kept out of the default build so plain `mvn verify` never needs a GPG
+      key or Central credentials. Mirrors impl/java/pom.xml.
+    -->
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <quiet>true</quiet>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

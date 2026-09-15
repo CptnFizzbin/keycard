@@ -1,0 +1,6 @@
+{
+  "name": "@cptn-fizzbin/keycard-impl-java-spring-security",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Version/changelog tracking only - this package is never published to npm. The actual artifact (com.cptnfizzbin:keycard-spring-security) is published to Maven Central; see /RELEASING.md."
+}
