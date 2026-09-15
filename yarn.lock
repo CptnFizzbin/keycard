@@ -245,15 +245,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cptnfizzbin/keycard-impl-java@workspace:impl/java":
+"@cptn-fizzbin/keycard-impl-java@workspace:impl/java":
   version: 0.0.0-use.local
-  resolution: "@cptnfizzbin/keycard-impl-java@workspace:impl/java"
+  resolution: "@cptn-fizzbin/keycard-impl-java@workspace:impl/java"
   languageName: unknown
   linkType: soft
 
-"@cptnfizzbin/keycard-monorepo@workspace:.":
+"@cptn-fizzbin/keycard-monorepo@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@cptnfizzbin/keycard-monorepo@workspace:."
+  resolution: "@cptn-fizzbin/keycard-monorepo@workspace:."
   dependencies:
     "@changesets/cli": "npm:^2.27.1"
     "@types/node": "npm:^20.0.0"
@@ -262,9 +262,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cptnfizzbin/keycard@workspace:impl/js":
+"@cptn-fizzbin/keycard@workspace:impl/js":
   version: 0.0.0-use.local
-  resolution: "@cptnfizzbin/keycard@workspace:impl/js"
+  resolution: "@cptn-fizzbin/keycard@workspace:impl/js"
   dependencies:
     "@types/node": "npm:^20.0.0"
     "@types/semver": "npm:^7.8.0"

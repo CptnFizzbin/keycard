@@ -1,5 +1,5 @@
 {
-  "name": "@cptnfizzbin/keycard",
+  "name": "@cptn-fizzbin/keycard",
   "version": "0.0.1",
   "description": "TypeScript access control library, strongly inspired by CASL.js",
   "type": "module",

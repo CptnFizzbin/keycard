@@ -1,5 +1,5 @@
 {
-  "name": "@cptnfizzbin/keycard-monorepo",
+  "name": "@cptn-fizzbin/keycard-monorepo",
   "private": true,
   "description": "KeyCard monorepo root: cross-implementation release tooling (changesets) only. Each implementation manages its own build/test toolchain independently.",
   "workspaces": [

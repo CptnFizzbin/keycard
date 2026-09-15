@@ -74,7 +74,7 @@ const IMPLS: Impl[] = [
   },
   {
     dir: "impl/js",
-    label: "@cptnfizzbin/keycard (JS, published to npm)",
+    label: "@cptn-fizzbin/keycard (JS, published to npm)",
     tagPrefix: "js-v",
   },
 ];
