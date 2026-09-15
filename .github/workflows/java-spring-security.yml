@@ -1,0 +1,39 @@
+name: Java Spring Security
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "impl/java/**"
+      - "impl/java-spring-security/**"
+  pull_request:
+    paths:
+      - "impl/java/**"
+      - "impl/java-spring-security/**"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: |
+            impl/java/pom.xml
+            impl/java-spring-security/pom.xml
+
+      # keycard-spring-security depends on the core `keycard` artifact -
+      # install it from source rather than resolving from Maven Central, so
+      # this workflow never depends on whether the latest core version has
+      # actually been published yet.
+      - name: Install KeyCard core (impl/java)
+        working-directory: impl/java
+        run: mvn -B -DskipTests install
+
+      - name: Build and test impl/java-spring-security
+        working-directory: impl/java-spring-security
+        run: mvn -B verify
