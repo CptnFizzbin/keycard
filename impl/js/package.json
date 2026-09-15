@@ -1,6 +1,6 @@
 {
   "name": "@cptn-fizzbin/keycard",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Cross-language access control library",
   "author": "Cptn Fizzbin",
   "license": "MIT",

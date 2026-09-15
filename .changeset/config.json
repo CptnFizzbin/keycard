@@ -3,6 +3,12 @@
   "changelog": "@changesets/cli/changelog",
   "baseBranch": "origin/main",
   "updateInternalDependencies": "patch",
+  "linked": [
+    [
+      "@cptn-fizzbin/keycard",
+      "@cptn-fizzbin/keycard-impl-java"
+    ]
+  ],
   "privatePackages": {
     "version": true
   }

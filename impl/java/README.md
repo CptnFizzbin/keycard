@@ -22,14 +22,14 @@ Add to your `pom.xml`:
 <dependency>
     <groupId>com.cptnfizzbin</groupId>
     <artifactId>keycard</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.4</version>
 </dependency>
 ```
 
 Or with Gradle:
 
 ```gradle
-implementation 'com.cptnfizzbin:keycard:0.0.2'
+implementation 'com.cptnfizzbin:keycard:0.0.4'
 ```
 
 ## Quick Start
