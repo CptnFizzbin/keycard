@@ -2,14 +2,9 @@
   "name": "@cptn-fizzbin/keycard",
   "version": "0.0.1",
   "description": "Cross-language access control library",
+  "author": "Cptn Fizzbin",
+  "license": "MIT",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "test": "vitest",
-    "lint": "eslint src --ext .ts"
-  },
   "keywords": [
     "authorization",
     "access-control",
@@ -17,8 +12,22 @@
     "policy",
     "security"
   ],
-  "author": "",
-  "license": "MIT",
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./package.json": "./package.json"
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts"
+  },
   "dependencies": {
     "semver": "^7.8.5"
   },
@@ -29,9 +38,13 @@
     "@typescript-eslint/parser": "^6.0.0",
     "@vitest/ui": "^4.1.11",
     "eslint": "^8.50.0",
+    "tsdown": "^0.23.0",
     "typescript": "npm:@typescript/typescript6@^6.0.0",
     "typescript-7": "npm:typescript@^7.0.0",
     "vitest": "^4.1.11",
     "yaml": "^2.9.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
