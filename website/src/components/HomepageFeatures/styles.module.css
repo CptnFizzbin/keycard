@@ -1,0 +1,31 @@
+.features {
+  padding: 4rem 0 1rem;
+}
+
+.featureCol {
+  margin-bottom: 2rem;
+}
+
+.featureCard {
+  height: 100%;
+  padding: 2rem 1.75rem;
+  border: 1px solid rgba(169, 120, 31, 0.4);
+  border-top: 3px solid var(--deco-gold, #a9781f);
+  transition: border-color 150ms ease;
+}
+
+.featureCard:hover {
+  border-color: var(--deco-gold-bright, #c9932f);
+}
+
+.featureNumber {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2rem;
+  color: var(--deco-gold-bright, #c9932f);
+  margin-bottom: 0.75rem;
+}
+
+.featureTitle {
+  font-size: 1.15rem;
+  margin-bottom: 0.75rem;
+}

@@ -1,0 +1,106 @@
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1px solid rgba(169, 120, 31, 0.6);
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.trigger:hover {
+  border-color: var(--deco-gold-bright);
+}
+
+.triggerBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.2rem;
+  border: 1px solid var(--deco-gold-bright);
+  color: var(--deco-gold-bright);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.chevron {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.7;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  left: auto;
+  min-width: 240px;
+  max-width: calc(100vw - 2rem);
+  margin: 0;
+  padding: 0.4rem 0;
+  list-style: none;
+  background: var(--ifm-navbar-background-color);
+  border: 1px solid var(--deco-gold);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms;
+  z-index: 210;
+}
+
+.menuOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  color: var(--deco-ivory);
+  font-family: 'Josefin Sans', sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.9rem;
+}
+
+.menuItem:hover {
+  background: rgba(169, 120, 31, 0.16);
+  color: var(--deco-gold-bright);
+  text-decoration: none;
+}
+
+.menuItemActive {
+  color: var(--deco-gold-bright);
+  border-left: 3px solid var(--deco-gold-bright);
+  padding-left: calc(1rem - 3px);
+}
+
+.menuBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid currentColor;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+}
