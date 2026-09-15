@@ -2,6 +2,7 @@ import type { Condition } from "./condition.ts"
 import { PolicyLoadException } from "../errors/index.ts"
 import type { JsonValue } from "../lib/json.ts"
 import { DefaultOperators } from "./operators/defaultOperators.ts"
+import { hasField, isBareNe } from "./operators/field/fieldAccess.ts"
 import type { AnyOperator } from "./operators/operator.ts"
 
 /** Every operator name {@link ConditionResolver} understands out of the box - the single source of truth for "is this name built-in". */
@@ -71,7 +72,7 @@ export class ConditionResolver {
           return this.evaluateOperator(subject, key, value)
         }
 
-        return this.evaluateOperator(subject, "$eq", value)
+        return hasField(subject, key) ? this.evaluate(subject[key], value) : isBareNe(value)
       })
     }
 
