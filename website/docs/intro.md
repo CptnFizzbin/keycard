@@ -79,6 +79,6 @@ condition language used in the `conditions` slot of a rule.
 This guide is an informal overview. The exact rule-evaluation algorithm,
 the full condition-operator table, and the catalogue of required
 edge-case behavior live in the normative
-[**v1.0.0 specification**](https://github.com/CptnFizzbin/keycard/blob/main/SPEC_V1-0-0.md),
+[**v1.0.0 specification**](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md),
 which every language implementation is validated against with a shared
 conformance suite.

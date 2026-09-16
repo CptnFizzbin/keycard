@@ -67,7 +67,7 @@ of the host language's regex engine.
 A structurally invalid pattern (a stray `^` or `$` not at a boundary)
 evaluates to `false`. A `null`/`undefined` subject is an ordinary
 non-match, not an error. See
-[§5.4.6 of the v1.0.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/SPEC_V1-0-0.md#546-substr)
+[§5.4.6 of the v1.0.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#546-substr)
 for the exact decomposition rules.
 
 ## Logical operators
@@ -94,14 +94,36 @@ start with `$`) is treated as a **field name**, and its value is
 evaluated as a condition against that field of the subject:
 
 ```yaml
-{ owner_id: 1 }                 # subject.owner_id == 1
-{ address: { zip: "94107" } }   # subject.address.zip == "94107"
+{ owner_id: 1 }                  # subject.owner_id == 1
+{ author: { $ne: null } }        # subject.author != null
+{ tags: { $has: "featured" } }   # subject.tags contains "featured"
 ```
+
+### v1 supports only top-level field access
+
+A field condition may narrow into a subject's field **exactly once** — the
+`Condition` it narrows into must not itself be another field condition
+(bare-key or `$field`), whether directly or nested inside `$or`/`$and`/`$not`:
+
+```yaml
+{ author: { name: "Alice" } }   # invalid — { name: "Alice" } is itself
+                                 # a field condition, a second level of narrowing
+```
+
+This evaluates to `false` and produces the usual diagnostic, the same as
+any other malformed condition shape. Reaching into a nested object
+(`subject.author.name`) — or a dot-path/array-index shorthand for it — is
+out of scope for v1 and reserved for a future version. Comparison,
+collection, string, logical, and custom operators are unaffected, since
+they don't narrow the subject: `{ author: { $ne: null } }` and
+`{ tags: { $has: "featured" } }` above are both ordinary, valid top-level
+field conditions.
 
 ### `$field` — explicit field access
 
 If a field's name itself starts with `$`, use `$field: [key, Condition]`
-to disambiguate it from an operator:
+to disambiguate it from an operator. The same top-level-only restriction
+applies: `Condition` here must not itself be a field condition.
 
 ```yaml
 { $field: ["$special", { $eq: "value" }] }   # subject["$special"] == "value"
@@ -112,5 +134,5 @@ to disambiguate it from an operator:
 Implementations may support custom, application-defined operators
 (`$op`) in addition to the built-ins above — see each language guide's
 API reference for how to register one, and
-[§5.5 of the v1.0.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/SPEC_V1-0-0.md#55-custom-operators-op)
+[§5.5 of the v1.0.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#55-custom-operators-op)
 for the requirements a custom operator must satisfy.

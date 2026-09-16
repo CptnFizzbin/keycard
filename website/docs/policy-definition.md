@@ -111,4 +111,4 @@ process, or even on the same continent.
 
 For the exact matching algorithm (including case-sensitivity rules and
 how missing/`null` fields are treated), see
-[§6.2.2 of the v1.0.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/SPEC_V1-0-0.md#622-can--cannot--require).
+[§6.2.2 of the v1.0.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#622-can--cannot--require).

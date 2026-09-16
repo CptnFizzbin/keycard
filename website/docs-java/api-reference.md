@@ -61,7 +61,7 @@ Evaluates conditions:
 ## `PolicyDefinition`
 
 Serializable policy, per
-[SPEC_V1-0-0.md §3](https://github.com/CptnFizzbin/keycard/blob/main/SPEC_V1-0-0.md#3-terminology):
+[SPEC_V1-0.md §3](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#3-terminology):
 
 - `getVersion()` — get the SemVer spec version, e.g. `"1.0.0"`
 - `getMeta()` — get the optional `meta` object (wildcard tokens,
