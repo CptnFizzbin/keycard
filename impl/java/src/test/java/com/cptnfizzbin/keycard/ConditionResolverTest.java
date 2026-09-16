@@ -62,7 +62,7 @@ public class ConditionResolverTest {
         assertFalse(resolver.evaluate(article, Conditions.eq(Article::getOwnerId, 99)));
     }
 
-    /** v1 supports only top-level field access (SPEC_V1-0-0.md §5.4.10): a second level of field narrowing always evaluates to false. */
+    /** v1 supports only top-level field access (SPEC_V1-0.md §5.4.10): a second level of field narrowing always evaluates to false. */
     @Test
     public void testNestedFieldConditionIsRejected() {
         Map<String, Object> user = Map.of("name", "james");

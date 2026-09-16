@@ -2,7 +2,7 @@ version: "1.0.0"
 name: "Article Ownership Policy"
 description: >
   End-to-end mirror of the spec's own Appendix worked example
-  (SPEC_V1-0-0.md, "Appendix: worked example"), $hasRole included: this
+  (SPEC_V1-0.md, "Appendix: worked example"), $hasRole included: this
   conformance suite registers a real checker for it (subject.roles contains
   the requested role), so the admin-overrides-an-archive-deny case from the
   narrative appendix is reproduced here for real, not merely described.

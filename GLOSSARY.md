@@ -1,7 +1,7 @@
 # Glossary
 
 Term definitions for KeyCard. See [`SPEC.md`](SPEC.md) for the informal
-overview and [`SPEC_V1-0-0.md`](SPEC_V1-0-0.md) for the normative v1
+overview and [`SPEC_V1-0.md`](docs/spec/SPEC_V1-0.md) for the normative v1
 specification.
 
 - **Claims** - Object(s) that can be used by a builder to create a Policy

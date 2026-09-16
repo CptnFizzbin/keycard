@@ -1,10 +1,10 @@
 import type { AnyCondition } from "../conditions/condition.ts"
 
-/** SPEC_V1-0-0.md §3.3: a rule's effect - allow it, or deny it. */
+/** SPEC_V1-0.md §3.3: a rule's effect - allow it, or deny it. */
 export type Effect = "allow" | "deny"
 
 /**
- * `[Effect, Action, Subject, Conditions?]` - SPEC_V1-0-0.md §3.3. Action
+ * `[Effect, Action, Subject, Conditions?]` - SPEC_V1-0.md §3.3. Action
  * and Subject are always plain strings here: `PolicyDefinition` is the
  * wire format (JSON-serializable, shared across languages), never the
  * ergonomic `Action`/`Subject` objects `PolicyBuilder`/`Policy`'s public
@@ -17,7 +17,7 @@ export type RuleTuple =
   | [Effect, string, string]
   | [Effect, string, string, AnyCondition]
 
-/** SPEC_V1-0-0.md §3.2: the optional `meta` object, grouping six independent, all-optional fields. */
+/** SPEC_V1-0.md §3.2: the optional `meta` object, grouping six independent, all-optional fields. */
 export interface Meta {
   /**
    * The action wildcard token (§3.2.1, §4). Absent -> defaults to
@@ -37,9 +37,9 @@ export interface Meta {
   application?: unknown
 }
 
-/** The `PolicyDefinition` document shape - SPEC_V1-0-0.md §3. */
+/** The `PolicyDefinition` document shape - SPEC_V1-0.md §3. */
 export interface PolicyDefinition {
-  /** Required SemVer string, e.g. `"1.0.0"` - see SPEC_V1-0-0.md §2. */
+  /** Required SemVer string, e.g. `"1.0.0"` - see SPEC_V1-0.md §2. */
   version: string
   /** Informational only - plays no role in evaluation. */
   name?: string

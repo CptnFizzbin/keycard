@@ -23,7 +23,7 @@ const FIXTURES_DIR = path.join(__dirname, "../../../../test/fixtures/policies");
 
 /**
  * Some fixture policies exercise a custom condition operator, which - per
- * SPEC_V1-0-0.md §7.4.12 - only the host application (here, this test
+ * SPEC_V1-0.md §7.4.12 - only the host application (here, this test
  * suite) can implement; declaring it in meta.operators documents it but
  * doesn't wire up behavior. Keyed by fixture file name.
  */
@@ -58,7 +58,7 @@ function discoverFixtures(): FixtureFile[] {
   });
 }
 
-/** Parses a policy.yaml fixture's on-disk shape (the v1 rules/meta schema, per SPEC_V1-0-0.md §3) into a PolicyDefinition. */
+/** Parses a policy.yaml fixture's on-disk shape (the v1 rules/meta schema, per SPEC_V1-0.md §3) into a PolicyDefinition. */
 function loadPolicyDef(rawYaml: string): PolicyDefinition {
   return YAML.parse(rawYaml) as PolicyDefinition;
 }

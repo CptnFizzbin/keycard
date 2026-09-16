@@ -1,7 +1,7 @@
 # v1 conformance fixtures
 
 The YAML files in this directory are a conformance test suite for
-[`SPEC_V1-0-0.md`](../../../SPEC_V1-0-0.md) — the authoritative v1 policy
+[`SPEC_V1-0.md`](../../../docs/spec/SPEC_V1-0.md) — the authoritative v1 policy
 spec. `test/fixtures/policies/` is a separate, format-agnostic fixture set
 (shared between `impl/java` and `impl/js`'s own unit-style suites) that
 also uses this same v1 `rules`/`meta` shape.
@@ -29,10 +29,10 @@ Each `*.yaml` file is a sequence of one or more YAML documents (separated by
 `---`), one per test suite:
 
 ```yaml
-version: "1.0.0"          # required — a v1 PolicyDefinition, per SPEC_V1-0-0.md §4
+version: "1.0.0"          # required — a v1 PolicyDefinition, per SPEC_V1-0.md §4
 name: name of the test suite
 description: string       # optional
-meta:                      # optional — see SPEC_V1-0-0.md §4.2
+meta:                      # optional — see SPEC_V1-0.md §4.2
   anyAction: ...
   anySubject: ...
   actions: [...]
@@ -66,7 +66,7 @@ adapter is actually written against
 (`v1ConformanceFixtures.test.ts`'s `COMPLIANT_VERSION`,
 `V1ConformanceFixtureTest`'s `COMPLIANT_VERSION`) — and a fixture whose
 declared `version` exceeds it is skipped, not failed, mirroring the
-compatibility rule in SPEC_V1-0-0.md §4.1 (same `MAJOR`, `MINOR` no higher
+compatibility rule in SPEC_V1-0.md §4.1 (same `MAJOR`, `MINOR` no higher
 than what's supported; `PATCH` never matters). This is automatic: once
 fixtures for a newer `MINOR` version are added, a compliance suite whose
 adapter hasn't caught up yet skips them with no configuration required,

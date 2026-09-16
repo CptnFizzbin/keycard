@@ -46,7 +46,7 @@ export function subjectArgFor(testCase: ComplianceCase): Subject {
   return testCase.subjectData ? subject.wrap(testCase.subjectData) : subject;
 }
 
-/** A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V1-0-0.md §2. */
+/** A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V1-0.md §2. */
 export interface SemVer {
   major: number;
   minor: number;
@@ -60,7 +60,7 @@ export function parseSemVer(raw: string): SemVer {
 
 /**
  * True when a fixture declaring `fixtureVersion` is compatible with an
- * implementation targeting `maxSupportedVersion`, per SPEC_V1-0-0.md §2:
+ * implementation targeting `maxSupportedVersion`, per SPEC_V1-0.md §2:
  * the same MAJOR, and a MINOR no higher than what's supported. PATCH never
  * affects compatibility.
  */
