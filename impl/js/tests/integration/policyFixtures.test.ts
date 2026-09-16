@@ -1,9 +1,12 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as YAML from "yaml";
-import { describe, test, expect } from "vitest";
-import { createOperator, Operator, Policy, PolicyDefinition } from "../../src";
-import { listYamlFiles, actionArgFor, subjectArgFor } from "./complianceFixtures";
+import * as fs from "fs"
+import * as path from "path"
+
+import { describe, expect, test } from "vitest"
+import * as YAML from "yaml"
+
+import { actionArgFor, listYamlFiles, subjectArgFor } from "./complianceFixtures.ts"
+import type { Operator, PolicyDefinition } from "../../src/index.ts"
+import { createOperator, Policy } from "../../src/index.ts"
 
 /**
  * Metaprogrammed integration suite: every `*.yaml` fixture under
@@ -19,7 +22,7 @@ import { listYamlFiles, actionArgFor, subjectArgFor } from "./complianceFixtures
  * library as a plain PolicyDefinition via `Policy.from(...)`.
  */
 
-const FIXTURES_DIR = path.join(__dirname, "../../../../test/fixtures/policies");
+const FIXTURES_DIR = path.join(__dirname, "../../../../test/fixtures/policies")
 
 /**
  * Some fixture policies exercise a custom condition operator, which - per
@@ -31,73 +34,74 @@ const CUSTOM_CHECKERS: Record<string, Operator[]> = {
   "policy-05-advanced.yaml": [
     createOperator("$startsWithUpper", (subject) => typeof subject === "string" && /^[A-Z]/.test(subject)),
   ],
-};
+}
 
 interface TestCase {
-  name: string;
-  action: string;
-  subject: string;
-  subjectData?: Record<string, unknown>;
-  expected: boolean;
+  name: string
+  action: string
+  subject: string
+  subjectData?: Record<string, unknown>
+  expected: boolean
 }
 
 interface FixtureFile {
-  policyName: string;
-  policyPath: string;
-  testPath: string;
+  policyName: string
+  policyPath: string
+  testPath: string
 }
 
 function discoverFixtures(): FixtureFile[] {
   return listYamlFiles(FIXTURES_DIR, (f) => !f.endsWith(".test.yaml")).map((policyPath) => {
-    const policyFile = path.basename(policyPath);
+    const policyFile = path.basename(policyPath)
     return {
       policyName: policyFile,
       policyPath,
       testPath: path.join(FIXTURES_DIR, policyFile.replace(/\.yaml$/, ".test.yaml")),
-    };
-  });
+    }
+  })
 }
 
 /** Parses a policy.yaml fixture's on-disk shape (the v1 rules/meta schema, per SPEC_V1-0-0.md §3) into a PolicyDefinition. */
 function loadPolicyDef(rawYaml: string): PolicyDefinition {
-  return YAML.parse(rawYaml) as PolicyDefinition;
+  return YAML.parse(rawYaml) as PolicyDefinition
 }
 
-const fixtures = discoverFixtures();
+const fixtures = discoverFixtures()
 
 // Sanity check on the discovery mechanism itself, so a misconfigured
 // FIXTURES_DIR fails loudly instead of silently running zero tests.
 test("discovers at least one policy fixture", () => {
-  expect(fixtures.length).toBeGreaterThan(0);
-});
+  expect(fixtures.length).toBeGreaterThan(0)
+})
 
 describe.each(fixtures)("policy fixture: $policyName", ({ policyName, policyPath, testPath }) => {
-  const rawYaml = fs.readFileSync(policyPath, "utf-8");
-  const customConditions = CUSTOM_CHECKERS[policyName];
+  const rawYaml = fs.readFileSync(policyPath, "utf-8")
+  const customConditions = CUSTOM_CHECKERS[policyName]
 
   test("successfully reads the policy.yaml file", () => {
-    const policyDef = loadPolicyDef(rawYaml);
+    const policyDef = loadPolicyDef(rawYaml)
 
-    expect(typeof policyDef.version).toBe("string");
-    expect(Array.isArray(policyDef.rules)).toBe(true);
-  });
+    expect(typeof policyDef.version).toBe("string")
+    expect(Array.isArray(policyDef.rules)).toBe(true)
+  })
 
   test("Policy.from(definition).def() deeply equals the parsed definition", () => {
-    const policyDef = loadPolicyDef(rawYaml);
-    const policy = Policy.from(policyDef, { operators: customConditions });
+    const policyDef = loadPolicyDef(rawYaml)
+    const policy = Policy.from(policyDef, { operators: customConditions })
 
-    expect(policy.def()).toEqual(policyDef);
-  });
+    expect(policy.def()).toEqual(policyDef)
+  })
 
   if (!fs.existsSync(testPath)) {
-    test.skip(`no companion ${path.basename(testPath)} found`, () => {});
-    return;
+    test.skip(`no companion ${path.basename(testPath)} found`, () => {
+    })
+    return
   }
 
-  const { tests: cases } = YAML.parse(fs.readFileSync(testPath, "utf-8")) as { tests: TestCase[] };
-  const policy = Policy.from(loadPolicyDef(rawYaml), { operators: customConditions });
+  const { tests: cases } = YAML.parse(fs.readFileSync(testPath, "utf-8")) as { tests: TestCase[] }
+  const policy = Policy.from(loadPolicyDef(rawYaml), { operators: customConditions })
 
   test.each(cases)("resolves test case: $name", (testCase) => {
-    expect(policy.can(actionArgFor(testCase), subjectArgFor(testCase))).toBe(testCase.expected);
-  });
-});
+    expect(policy.can(actionArgFor(testCase), subjectArgFor(testCase))).toBe(testCase.expected)
+  })
+})
