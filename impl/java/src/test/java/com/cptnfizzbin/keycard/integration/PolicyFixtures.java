@@ -18,7 +18,7 @@ import java.util.Map;
  * KeyCard itself never reads or writes policy.yaml text; parsing it into a
  * plain PolicyDefinition (via SnakeYaml, a test-only dependency) is this
  * test suite's job, mirroring what an application would do. The on-disk
- * shape is the v1 rules/meta schema, per SPEC_V1-0-0.md §3.
+ * shape is the v1 rules/meta schema, per SPEC_V1-0.md §3.
  *
  * File discovery, YAML parsing, and the per-case shape are shared with
  * every other compliance suite via {@link ComplianceFixtures}.
@@ -30,7 +30,7 @@ final class PolicyFixtures {
 
     /**
      * Some fixture policies exercise a custom condition operator, which -
-     * per SPEC_V1-0-0.md §7.4.12 - only the host application (here, this
+     * per SPEC_V1-0.md §7.4.12 - only the host application (here, this
      * test suite) can implement; declaring it in meta.operators documents
      * it but doesn't wire up behavior. Keyed by fixture file name.
      */

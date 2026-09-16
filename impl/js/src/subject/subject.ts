@@ -1,7 +1,7 @@
 import type { SubjectFieldMapper } from "./subjectFieldMapper.ts"
 
 /**
- * A named, type-safe subject - SPEC_V1-0-0.md §3.3's Subject position.
+ * A named, type-safe subject - SPEC_V1-0.md §3.3's Subject position.
  * Unifies what used to be two separate shapes (a bare type token and a
  * wrapped instance reference) into one: `instance` is `undefined` for a
  * bare type-check (§5, EC-7/EC-9 - no instance data for a Conditions

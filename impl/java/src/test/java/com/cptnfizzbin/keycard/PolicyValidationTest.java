@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-/** Construction-time validation required by SPEC_V1-0-0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section). */
+/** Construction-time validation required by SPEC_V1-0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section). */
 public class PolicyValidationTest {
 
     @Test
@@ -78,7 +78,7 @@ public class PolicyValidationTest {
             ))));
     }
 
-    // --- Issue 3: operator registry collisions (SPEC_V1-0-0.md §3.2.3, EC-16) ---
+    // --- Issue 3: operator registry collisions (SPEC_V1-0.md §3.2.3, EC-16) ---
 
     @Test
     public void throwsPolicyLoadExceptionWhenACustomOperatorCollidesWithABuiltin() {
@@ -127,7 +127,7 @@ public class PolicyValidationTest {
         ); // should not throw
     }
 
-    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch (SPEC_V1-0-0.md §3.2.1) ---
+    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch (SPEC_V1-0.md §3.2.1) ---
 
     @Test
     public void falseDisablesTheActionWildcardJustLikeNull() {

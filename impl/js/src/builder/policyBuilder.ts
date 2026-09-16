@@ -11,7 +11,7 @@ import { DISABLED, effectiveAnyAction, effectiveAnySubject } from "../policy/wil
 import type { Subject } from "../subject/index.ts"
 import { KEYCARD_POLICY_VERSION } from "../version.ts"
 
-/** The v1 SemVer this builder implements - stamped onto every `buildDef()` output, per SPEC_V1-0-0.md §2. */
+/** The v1 SemVer this builder implements - stamped onto every `buildDef()` output, per SPEC_V1-0.md §2. */
 export const BUILDER_VERSION = KEYCARD_POLICY_VERSION
 
 /**
@@ -151,7 +151,7 @@ export class PolicyBuilder<
 
   private addRule(effect: Effect, action: TActions, subject: TSubjects, conditions?: AnyCondition): this {
     if (conditions) {
-      // SPEC_V1-0-0.md §6 property 5, EC-6: a rule wildcarded on both the
+      // SPEC_V1-0.md §6 property 5, EC-6: a rule wildcarded on both the
       // action and the subject MUST NOT carry a Conditions element - the
       // builder MUST catch this immediately, rather than waiting for
       // eventual construction (Policy.from) to catch it.
@@ -162,7 +162,7 @@ export class PolicyBuilder<
         && anySubject !== DISABLED && subject.name === anySubject
       ) {
         throw new PolicyArgumentError(
-          `A rule wildcarded on both the action ("${anyAction}") and the subject ("${anySubject}") MUST NOT carry a Conditions element (SPEC_V1-0-0.md §6 property 5, EC-6).`,
+          `A rule wildcarded on both the action ("${anyAction}") and the subject ("${anySubject}") MUST NOT carry a Conditions element (SPEC_V1-0.md §6 property 5, EC-6).`,
         )
       }
     }

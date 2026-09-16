@@ -21,7 +21,7 @@ import java.util.function.Function;
 public final class Policy {
     /**
      * The highest version this implementation supports natively -
-     * SPEC_V1-0-0.md §2. PATCH never affects compatibility. Parsed from
+     * SPEC_V1-0.md §2. PATCH never affects compatibility. Parsed from
      * {@link KeyCardVersion#KEYCARD_POLICY_VERSION}, the single source
      * of truth {@link com.cptnfizzbin.keycard.builder.PolicyBuilder#BUILDER_VERSION}
      * reads from too, so a builder can never stamp a version this same
@@ -39,7 +39,7 @@ public final class Policy {
 
     /**
      * @param operators custom operators to register alongside the
-     *   built-ins (SPEC_V1-0-0.md §7.4.12) - a single collection-based
+     *   built-ins (SPEC_V1-0.md §7.4.12) - a single collection-based
      *   entry point shared with {@code PolicyBuilder}, so a
      *   builder-produced definition can carry its operators through
      *   consistently.
@@ -157,7 +157,7 @@ public final class Policy {
     }
 
     /**
-     * SPEC_V1-0-0.md §6: reverse scan over `rules`, returning the effect of
+     * SPEC_V1-0.md §6: reverse scan over `rules`, returning the effect of
      * the first (i.e. most-recently-declared) rule whose action, subject,
      * and (if present) conditions all match. There is no independent
      * "allow AND NOT deny" veto and no combination of multiple matching
@@ -210,7 +210,7 @@ public final class Policy {
         if (!parsed.isCompatibleWith(SUPPORTED_VERSION)) {
             throw new PolicyVersionException(
                 "Unsupported policy version \"" + version + "\": this implementation supports up to "
-                    + SUPPORTED_VERSION.major() + "." + SUPPORTED_VERSION.minor() + ".x (SPEC_V1-0-0.md §2)."
+                    + SUPPORTED_VERSION.major() + "." + SUPPORTED_VERSION.minor() + ".x (SPEC_V1-0.md §2)."
             );
         }
     }
@@ -257,14 +257,14 @@ public final class Policy {
             if (!"allow".equals(effect) && !"deny".equals(effect)) {
                 throw new PolicyLoadException(
                     "Malformed rule tuple: effect must be \"allow\" or \"deny\", got " + effect
-                        + " (SPEC_V1-0-0.md §3.3, EC-10)."
+                        + " (SPEC_V1-0.md §3.3, EC-10)."
                 );
             }
             if (action == null) {
-                throw new PolicyLoadException("Malformed rule tuple: action is required (SPEC_V1-0-0.md §3.3, EC-10).");
+                throw new PolicyLoadException("Malformed rule tuple: action is required (SPEC_V1-0.md §3.3, EC-10).");
             }
             if (subjectName == null) {
-                throw new PolicyLoadException("Malformed rule tuple: subject is required (SPEC_V1-0-0.md §3.3, EC-10).");
+                throw new PolicyLoadException("Malformed rule tuple: subject is required (SPEC_V1-0.md §3.3, EC-10).");
             }
 
             boolean isWildcardAction = anyAction instanceof WildcardToken.Named named && action.equals(named.token());
@@ -274,18 +274,18 @@ public final class Policy {
                 throw new PolicyLoadException(
                     "Rule [" + effect + ", " + action + ", " + subjectName
                         + "] is wildcarded on both the action and the subject but carries a Conditions element"
-                        + " - this MUST be unconditional (SPEC_V1-0-0.md §6 property 5, EC-6)."
+                        + " - this MUST be unconditional (SPEC_V1-0.md §6 property 5, EC-6)."
                 );
             }
 
             if (actionsCatalog != null && !isWildcardAction && !actionsCatalog.contains(action)) {
                 throw new PolicyLoadException(
-                    "Rule action \"" + action + "\" is not covered by meta.actions (SPEC_V1-0-0.md §3.2.2, EC-8)."
+                    "Rule action \"" + action + "\" is not covered by meta.actions (SPEC_V1-0.md §3.2.2, EC-8)."
                 );
             }
             if (subjectsCatalog != null && !isWildcardSubject && !subjectsCatalog.contains(subjectName)) {
                 throw new PolicyLoadException(
-                    "Rule subject \"" + subjectName + "\" is not covered by meta.subjects (SPEC_V1-0-0.md §3.2.2, EC-8)."
+                    "Rule subject \"" + subjectName + "\" is not covered by meta.subjects (SPEC_V1-0.md §3.2.2, EC-8)."
                 );
             }
 
@@ -295,7 +295,7 @@ public final class Policy {
                 for (String op : used) {
                     if (!operatorsCatalog.contains(op)) {
                         throw new PolicyLoadException(
-                            "Rule uses custom operator \"" + op + "\" not covered by meta.operators (SPEC_V1-0-0.md §3.2.3, EC-13)."
+                            "Rule uses custom operator \"" + op + "\" not covered by meta.operators (SPEC_V1-0.md §3.2.3, EC-13)."
                         );
                     }
                 }

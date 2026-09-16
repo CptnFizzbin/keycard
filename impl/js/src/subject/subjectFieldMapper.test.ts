@@ -41,10 +41,11 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
     expect(policy.can(Read, post.wrap({ status: "published", author: { name: "Alice" } }))).toBe(false)
   })
 
-  test("does not apply once a field lookup has narrowed into a nested value", () => {
-    // The mapper is keyed for the top-level Post instance - `author.name`
-    // still resolves via plain property access on the narrowed `author`
-    // object, not through the mapper (which isn't even asked about "name").
+  test("a field condition cannot narrow twice even with a mapper in play", () => {
+    // v1 permits only one level of field narrowing (SPEC_V1-0.md §7.4.10) -
+    // a fieldMapper on Post doesn't change that: `author` is a field of
+    // Post, but `author`'s own Condition can't itself be another field
+    // condition (`name`), mapped or not.
     const post = createSubject<Post>("Post", {
       authorName: (instance) => instance.author.name,
     })
@@ -54,7 +55,24 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
       rules: [["allow", "Read", "Post", { author: { name: "Alice" } }]],
     })
 
+    expect(policy.can(Read, post.wrap({ status: "draft", author: { name: "Alice" } }))).toBe(false)
+  })
+
+  test("a mapped field's value can still use non-field operators", () => {
+    // Once resolved through the mapper, `authorName`'s own value (a plain
+    // string here) can still be checked with any non-field operator -
+    // narrowing is what's restricted to one level, not operator use.
+    const post = createSubject<Post>("Post", {
+      authorName: (instance) => instance.author.name,
+    })
+
+    const policy = Policy.from({
+      version: "1.0.0",
+      rules: [["allow", "Read", "Post", { authorName: { $substr: "Ali" } }]],
+    })
+
     expect(policy.can(Read, post.wrap({ status: "draft", author: { name: "Alice" } }))).toBe(true)
+    expect(policy.can(Read, post.wrap({ status: "draft", author: { name: "Bob" } }))).toBe(false)
   })
 
   test("still applies inside $and/$or/$not, which evaluate against the same top-level subject", () => {

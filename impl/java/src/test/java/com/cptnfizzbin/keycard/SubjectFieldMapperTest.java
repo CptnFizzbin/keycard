@@ -69,10 +69,11 @@ public class SubjectFieldMapperTest {
     }
 
     @Test
-    public void doesNotApplyOnceAFieldLookupHasNarrowedIntoANestedValue() {
-        // The mapper is bound to the top-level Post instance - `author.name`
-        // still resolves via reflection on the narrowed `author` object,
-        // not through the mapper (which is never even asked about "name").
+    public void aFieldConditionCannotNarrowTwiceEvenWithAMapperInPlay() {
+        // v1 permits only one level of field narrowing (SPEC_V1-0.md
+        // §7.4.10) - a fieldMapper on Post doesn't change that: `author` is
+        // a field of Post, but `author`'s own Condition can't itself be
+        // another field condition (`name`), mapped or not.
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
         Action<String> read = ActionFactory.create("Read");
 
@@ -80,7 +81,24 @@ public class SubjectFieldMapperTest {
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("author", Map.of("name", "Alice")))
         )));
 
+        assertFalse(policy.can(read, post.wrap(new Post("draft", new Author("Alice")))));
+    }
+
+    @Test
+    public void aMappedFieldsValueCanStillUseNonFieldOperators() {
+        // Once resolved through the mapper, `authorName`'s own value (a
+        // plain String here) can still be checked with any non-field
+        // operator - narrowing is what's restricted to one level, not
+        // operator use in general.
+        Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
+        Action<String> read = ActionFactory.create("Read");
+
+        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+            new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("authorName", Map.of("$substr", "Ali")))
+        )));
+
         assertTrue(policy.can(read, post.wrap(new Post("draft", new Author("Alice")))));
+        assertFalse(policy.can(read, post.wrap(new Post("draft", new Author("Bob")))));
     }
 
     @Test

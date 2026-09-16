@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/** The PolicyDefinition document shape - SPEC_V1-0-0.md §3. */
+/** The PolicyDefinition document shape - SPEC_V1-0.md §3. */
 @Data
 public final class PolicyDefinition {
-    /** Required SemVer string, e.g. "1.0.0" - see SPEC_V1-0-0.md §2. */
+    /** Required SemVer string, e.g. "1.0.0" - see SPEC_V1-0.md §2. */
     private final String version;
     /** Informational only - plays no role in evaluation. */
     private final String name;
@@ -41,7 +41,7 @@ public final class PolicyDefinition {
         return List.copyOf(rules);
     }
 
-    /** `[Effect, Action, Subject, Conditions?]` - SPEC_V1-0-0.md §3.3. Ordered; declaration order is significant (§6). */
+    /** `[Effect, Action, Subject, Conditions?]` - SPEC_V1-0.md §3.3. Ordered; declaration order is significant (§6). */
     @Data
     @AllArgsConstructor
     public static final class Rule {
@@ -54,7 +54,7 @@ public final class PolicyDefinition {
     }
 
     /**
-     * SPEC_V1-0-0.md §3.2: the optional `meta` object, grouping six
+     * SPEC_V1-0.md §3.2: the optional `meta` object, grouping six
      * independent, all-optional fields. Constructed via {@link #builder()}.
      * `anyAction`/`anySubject` are each tri-state - unset (a {@code null}
      * field here, meaning the "_ANY_" default applies), or a declared

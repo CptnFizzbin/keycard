@@ -31,7 +31,7 @@ import java.util.Set;
  * up front, folded in alongside whatever usage derives.
  */
 public final class PolicyBuilder {
-    /** The v1 SemVer this builder implements - stamped onto every buildDef() output, per SPEC_V1-0-0.md §2. Single-sourced from {@link KeyCardVersion}, alongside {@link Policy#SUPPORTED_VERSION}, so the two can never drift apart. */
+    /** The v1 SemVer this builder implements - stamped onto every buildDef() output, per SPEC_V1-0.md §2. Single-sourced from {@link KeyCardVersion}, alongside {@link Policy#SUPPORTED_VERSION}, so the two can never drift apart. */
     public static final String BUILDER_VERSION = KeyCardVersion.KEYCARD_POLICY_VERSION;
 
     private final List<PolicyDefinition.Rule> rules = new ArrayList<>();
@@ -150,7 +150,7 @@ public final class PolicyBuilder {
 
     private PolicyBuilder addRule(String effect, String action, String subjectName, Map<String, Object> conditions) {
         if (conditions != null) {
-            // SPEC_V1-0-0.md §6 property 5, EC-6: a rule wildcarded on both
+            // SPEC_V1-0.md §6 property 5, EC-6: a rule wildcarded on both
             // the action and the subject MUST NOT carry a Conditions element
             // - the builder MUST catch this immediately, rather than waiting
             // for eventual construction (Policy.from) to catch it.
