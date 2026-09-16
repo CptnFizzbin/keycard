@@ -8,6 +8,7 @@ import com.cptnfizzbin.keycard.conditions.ConditionResolver;
 import com.cptnfizzbin.keycard.conditions.Conditions;
 import com.cptnfizzbin.keycard.conditions.Operator;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -61,22 +62,25 @@ public class ConditionResolverTest {
         assertFalse(resolver.evaluate(article, Conditions.eq(Article::getOwnerId, 99)));
     }
 
+    /** v1 supports only top-level field access (SPEC_V1-0-0.md §5.4.10): a second level of field narrowing always evaluates to false. */
     @Test
-    public void testNestedFieldEquality() {
+    public void testNestedFieldConditionIsRejected() {
         Map<String, Object> user = Map.of("name", "james");
         Map<String, Object> article = Map.of("id", 1, "owner", user);
 
-        assertTrue(resolver.evaluate(article, Map.of("owner", Map.of("name", "james"))));
+        assertFalse(resolver.evaluate(article, Map.of("owner", Map.of("name", "james"))));
         assertFalse(resolver.evaluate(article, Map.of("owner", Map.of("name", "frank"))));
+        assertFalse(resolver.evaluate(article, Map.of("owner", Map.of("name", Map.of("$ne", "frank")))));
     }
 
+    /** A field condition's own value MAY still use logical/comparison operators against the narrowed value - only further field narrowing is disallowed. */
     @Test
-    public void testNestedFieldCondition() {
+    public void testFieldConditionWithOperatorValue() {
         Map<String, Object> user = Map.of("name", "james");
         Map<String, Object> article = Map.of("id", 1, "owner", user);
 
-        assertTrue(resolver.evaluate(article, Map.of("owner", Map.of("name", Map.of("$ne", "frank")))));
-        assertFalse(resolver.evaluate(article, Map.of("owner", Map.of("name", Map.of("$ne", "james")))));
+        assertTrue(resolver.evaluate(article, Map.of("owner", Collections.singletonMap("$ne", null))));
+        assertFalse(resolver.evaluate(Collections.singletonMap("owner", null), Map.of("owner", Collections.singletonMap("$ne", null))));
     }
 
     /**

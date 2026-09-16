@@ -16,12 +16,14 @@ import java.util.Set;
  * loop: it looks a `$`-prefixed key up in that registry and delegates, or
  * narrows into a bare field name.
  */
-public final class ConditionResolver implements OperatorContext {
+public final class ConditionResolver {
 
     /** Every `$`-prefixed name {@link DefaultOperators} supplies natively - the single source of truth for "is this name built-in". */
     public static final Set<String> BUILTIN_OPERATORS = names(DefaultOperators.ALL);
 
     private final Map<String, Operator> registry;
+    private final OperatorContext topContext = new Ctx(true);
+    private final OperatorContext nestedContext = new Ctx(false);
 
     public ConditionResolver() {
         this(null);
@@ -93,6 +95,18 @@ public final class ConditionResolver implements OperatorContext {
      * for any well-formed condition, regardless of what the subject is.
      */
     public boolean evaluate(Object subject, Object condition) {
+        return evaluate(subject, condition, true);
+    }
+
+    /**
+     * §7.4.10: {@code canNarrowField} tracks whether a field condition
+     * (bare-key or {@code $field}) is still allowed to narrow at this point
+     * in the tree - {@code true} at the root and while only recursing
+     * through non-narrowing combinators ($and/$or/$not), {@code false} once
+     * a field condition has already narrowed once, since v1 supports only
+     * one level of field access.
+     */
+    private boolean evaluate(Object subject, Object condition, boolean canNarrowField) {
         if (condition == null || condition instanceof String || condition instanceof Number || condition instanceof Boolean) {
             // §7.2: bare-value shorthand for $eq (including explicit null - §7.3, not a wildcard).
             return StringConditions.eq(subject, condition);
@@ -106,16 +120,11 @@ public final class ConditionResolver implements OperatorContext {
         // §7.5: every key MUST be evaluated and ANDed together - no key may
         // "consume" the whole object or cause sibling keys to be ignored.
         for (Map.Entry<?, ?> entry : condMap.entrySet()) {
-            if (!evaluateKey(subject, String.valueOf(entry.getKey()), entry.getValue())) {
+            if (!evaluateKey(subject, String.valueOf(entry.getKey()), entry.getValue(), canNarrowField)) {
                 return false;
             }
         }
         return true;
-    }
-
-    @Override
-    public boolean resolveSubcondition(Object subject, Object condition) {
-        return evaluate(subject, condition);
     }
 
     /**
@@ -123,9 +132,11 @@ public final class ConditionResolver implements OperatorContext {
      * a field name - built-in and custom operators are both resolved the
      * same way, by name, against the same registry.
      */
-    private boolean evaluateKey(Object subject, String key, Object value) {
+    private boolean evaluateKey(Object subject, String key, Object value, boolean canNarrowField) {
+        OperatorContext ctx = canNarrowField ? topContext : nestedContext;
+
         if (!key.startsWith("$")) {
-            return fieldCheck(subject, key, value);
+            return FieldAccess.check(subject, key, value, ctx);
         }
 
         Operator operator = registry.get(key);
@@ -140,12 +151,36 @@ public final class ConditionResolver implements OperatorContext {
             return false;
         }
 
-        return operator.resolve(subject, value, this);
+        return operator.resolve(subject, value, ctx);
     }
 
-    /** §7.4.10, §7.3: a missing field (or a non-object subject) makes the whole field-condition false - absence, not a type issue. */
-    private boolean fieldCheck(Object subject, String fieldName, Object condition) {
-        return FieldAccess.check(subject, fieldName, condition, this);
+    /**
+     * Backs {@link OperatorContext} for one fixed {@code canNarrowField}
+     * state - {@link #topContext} (narrowing still allowed) and {@link
+     * #nestedContext} (already narrowed once) are the only two instances
+     * ever needed, since v1 supports exactly one level of field access.
+     */
+    private final class Ctx implements OperatorContext {
+        private final boolean canNarrowField;
+
+        Ctx(boolean canNarrowField) {
+            this.canNarrowField = canNarrowField;
+        }
+
+        @Override
+        public boolean resolveSubcondition(Object subject, Object condition) {
+            return evaluate(subject, condition, canNarrowField);
+        }
+
+        @Override
+        public boolean resolveFieldSubcondition(Object subject, Object condition) {
+            return evaluate(subject, condition, false);
+        }
+
+        @Override
+        public boolean canNarrowField() {
+            return canNarrowField;
+        }
     }
 
     private static Map<String, Operator> buildRegistry(Collection<Operator> custom) {

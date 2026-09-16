@@ -9,6 +9,24 @@ package com.cptnfizzbin.keycard.conditions;
  * {@code (subject, value) -> boolean} check.
  */
 public interface OperatorContext {
-    /** Evaluates `condition` against `subject`, exactly as {@code ConditionResolver.evaluate} would. */
+    /**
+     * Evaluates {@code condition} against {@code subject}, preserving whether
+     * this point in the tree may still narrow into a field (§7.4.10) - used
+     * by $and/$or/$not, which don't themselves narrow.
+     */
     boolean resolveSubcondition(Object subject, Object condition);
+
+    /**
+     * Evaluates {@code condition} against a subject already narrowed by one
+     * field access, disabling any further field narrowing beneath it
+     * (§7.4.10) - used by the bare-key field path and {@code $field}.
+     */
+    boolean resolveFieldSubcondition(Object subject, Object condition);
+
+    /**
+     * True if a field condition (bare-key or {@code $field}) is still
+     * allowed to narrow at this point in the tree - v1 permits exactly one
+     * level (§7.4.10).
+     */
+    boolean canNarrowField();
 }

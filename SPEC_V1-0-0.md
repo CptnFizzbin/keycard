@@ -419,21 +419,21 @@ These are two different things and **MUST** be distinguished:
   "archived" } }` against that same subject is `true`. Every other operator
   keeps the blanket `false` (`$gt`, `$in`, `$has`, `$substr`, and so on
   aren't defined as an exact negation of anything, so they aren't exempted).
-  This exception is narrow: it applies when `$ne` is itself the (sole)
-  nested condition being evaluated against the missing field, per §5.4.2 —
-  it does **NOT** propagate a "the field is missing" signal down into an
-  arbitrary condition tree for every operator to interpret on its own (that
-  would leak the §5.1 diagnostic into `$gt`/`$in`/`$has`/`$substr` being
-  handed a non-number/non-array `undefined`, which §5.1's missing-field
-  carve-out explicitly forbids). A `$ne` that is one key among several in a
-  multi-key condition object (§5.6) still benefits from this exception for
-  its own key, but the object as a whole is still ANDed with its sibling
-  keys as normal — a sibling field key nested one level deeper than the
-  missing field (e.g. `{ author: { $ne: null, name: "Alice" } }` against a
-  subject with no `author` at all) still hits the general
-  missing-field-is-`false` rule for that sibling, since there's no object
-  there to narrow `name` out of. Either way this is absence, not a type
-  issue — it **MUST NOT** trigger the §5.1 console diagnostic.
+  This exception is narrow: it applies only when `$ne` is itself the *sole*
+  key of the condition object being evaluated against the missing field, per
+  §5.4.2 — it does **NOT** propagate a "the field is missing" signal down
+  into an arbitrary condition tree for every operator to interpret on its
+  own (that would leak the §5.1 diagnostic into `$gt`/`$in`/`$has`/`$substr`
+  being handed a non-number/non-array `undefined`, which §5.1's
+  missing-field carve-out explicitly forbids). Once `$ne` is one key among
+  several in a multi-key condition object (§5.6), the general
+  missing-field-is-`false` rule applies to the object as a whole instead:
+  `{ author: { $ne: null, $eq: "Alice" } }` against a subject with no
+  `author` key evaluates to `false` — even though `$ne` alone would be
+  `true` against that same missing field, it isn't the sole key here, so
+  the missing `author` field short-circuits the whole condition object
+  before either sibling key is evaluated. Either way this is absence, not a
+  type issue — it **MUST NOT** trigger the §5.1 console diagnostic.
 - **Explicit `null`** — the subject has the key, and its value is `null`.
   This is a real value and is compared like any other: `{ field: null }`
   (bare-value shorthand, §5.2) matches only when `subject.field` is `null`;
@@ -614,18 +614,32 @@ type mismatch **MUST** display the §5.1 diagnostic message.
 
 **Requirements:**
 
-- **MUST** narrow the subject to `subject[fieldName]` and recursively
-  evaluate `Condition` against that narrowed value.
+- **MUST** narrow the subject to `subject[fieldName]` and evaluate
+  `Condition` against that narrowed value.
 - §5.3 governs what happens when `fieldName` is missing from `subject` — the
   condition evaluates to `false`, and this **MUST NOT** be treated as a type
   issue (no console diagnostic).
-- Field conditions **MAY** nest arbitrarily to reach into nested objects:
-  `{ author: { name: "Alice" } }` requires `subject.author.name ===
-  "Alice"`.
+- **v1 supports only top-level field access.** `Condition` here **MUST NOT**
+  itself contain a field condition (bare-key or `$field`, §5.4.11), whether
+  directly or nested inside `$or`/`$and`/`$not` — a field condition **MUST
+  NOT** narrow more than once. `{ author: { name: "Alice" } }` is therefore
+  invalid: `{ name: "Alice" }` is a field condition already reached by
+  narrowing into `author`, so it attempts a second level of narrowing. This
+  is a structural, not a data, problem, so it is diagnosed the same way any
+  other malformed condition shape is (§5.1): the condition **MUST** evaluate
+  to `false` and **MUST** produce the §5.1 console diagnostic (type issue),
+  regardless of what `subject.author` actually contains. A field condition's
+  own `Condition` **MAY** still freely use comparison, collection, string,
+  and logical operators (`$eq`, `$gt`, `$in`, `$has`, `$substr`, `$or`,
+  `$and`, `$not`, and custom operators) — those don't narrow the subject, so
+  `{ author: { $ne: null } }` and `{ tags: { $has: "featured" } }` remain
+  ordinary, valid top-level field conditions. Reaching into a nested object
+  (`subject.author.name`) is out of scope for v1 and is reserved for a
+  future `MINOR` version; see §2.
 - There is no dot-path or array-index syntax (e.g. `"author.name"` or
-  `"tags.0"`) in v1 — reach into nested structures only by nesting field
-  conditions. A field name that happens to contain a literal `.` **MUST**
-  be matched as a single key, not split into a path.
+  `"tags.0"`) in v1 either, for the same reason — v1's field access is
+  strictly one level deep. A field name that happens to contain a literal
+  `.` **MUST** be matched as a single key, not split into a path.
 - Field-name matching is exact and case-sensitive, the same as action and
   subject matching (§6.2.2).
 
@@ -643,10 +657,15 @@ instead of as the object key.
   (e.g. a field literally named `$type`), it **MUST** use this long form:
   `{ $field: ["$type", Condition] }`, not `{ $type: Condition }` (which
   means the operator `$type`, per §5.5).
-- `name` **MUST** be a string; `Condition` follows the same recursive
-  evaluation rules as any nested condition, including §5.3's missing-field
-  handling (`subject[name]` missing behaves identically to the bare-key
-  form).
+- `name` **MUST** be a string; `Condition` follows the same evaluation rules
+  as the bare-key form, including §5.3's missing-field handling
+  (`subject[name]` missing behaves identically to the bare-key form) and
+  §5.4.10's top-level-only restriction: `$field`'s own `Condition` **MUST
+  NOT** itself contain a field condition (bare-key or `$field`), and using
+  `$field` where a field condition has already narrowed once — e.g.
+  `{ author: { $field: ["name", "Alice"] } }` — is subject to that same
+  restriction and evaluates to `false` with the §5.1 diagnostic, exactly
+  like the bare-key case.
 - If the operand isn't a well-formed 2-element `[name, Condition]` array
   (wrong length, or `name` not a string), the condition **MUST** evaluate to
   `false` and **MUST** produce the §5.1 console diagnostic (type issue) —

@@ -72,9 +72,15 @@ Condition =
   | FieldCondition = { [key]: Condition } //=> Condition(TSubject[key]), key MUST NOT start with "$"
   | ExplicitFieldCondition = { $field: [key, Condition] } //=> Condition(TSubject[key]), required when key starts with "$"
 
+`FieldCondition`/`ExplicitFieldCondition` reach only one level deep in v1:
+the nested `Condition` they narrow into MUST NOT itself be a field
+condition, so `{ status: "archived" }` is valid but `{ author: { name: "Alice" } }`
+is not — inspecting a subject's nested fields is out of scope for v1 and is
+left for a future version.
+
 See [`SPEC_V1-0-0.md`](SPEC_V1-0-0.md) §5 for full operator semantics,
-including `$substr`'s pattern language (§5.4.6) and why regex matching
-(`$rgx`) isn't part of v1.
+including `$substr`'s pattern language (§5.4.6), the top-level-only field
+restriction (§5.4.10), and why regex matching (`$rgx`) isn't part of v1.
 
 Policy
 ------

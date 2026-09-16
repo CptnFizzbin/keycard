@@ -115,8 +115,8 @@ exception type.
   disabling the wildcard mechanism via `null` (§4.2.1, §6.2.2
   property 4).
 - `04-conditions-fields.yaml` — bare-value shorthand (§5.2), missing field vs.
-  explicit `null` (§5.3), nested field conditions and `$field` (§5.4.10,
-  §5.4.11).
+  explicit `null` (§5.3), the top-level-only field restriction and `$field`
+  (§5.4.10, §5.4.11).
 - `05-operators-comparison.yaml` — `$eq`, `$ne`, `$gt`/`$gte`/`$lt`/`$lte`
   (§5.4.1–§5.4.3).
 - `06-operators-collections.yaml` — `$in`, `$has` (§5.4.4, §5.4.5).
