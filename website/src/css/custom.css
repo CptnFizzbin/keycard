@@ -8,11 +8,9 @@
  * component-level CSS modules.
  */
 
-@import url('https://fonts.googleapis.com/css2?display=swap&family=Cinzel+Decorative:wght@400;700;900');
 @import url('https://fonts.googleapis.com/css2?display=swap&family=Poiret+One');
 @import url('https://fonts.googleapis.com/css2?display=swap&family=Josefin+Sans:wght@300;400;500;600;700');
 @import url('https://fonts.googleapis.com/css2?display=swap&family=Space+Mono:wght@400;700');
-@import url('https://fonts.googleapis.com/css2?display=swap&family=Electrolize');
 
 :root {
     /* Brand palette (light mode: cream + bronze, still deco, less neon) */
@@ -41,7 +39,7 @@
     --ifm-footer-background-color: var(--deco-black);
     --ifm-code-font-size: 92%;
     --ifm-font-family-base: 'Josefin Sans', system-ui, sans-serif;
-    --ifm-heading-font-family: 'Electrolize', var(--ifm-font-family-base);
+    --ifm-heading-font-family: 'Poiret One', var(--ifm-font-family-base);
     --ifm-code-font-family: 'Space Mono', SFMono-Regular, Menlo, monospace;
 
     --deco-line: repeating-linear-gradient(
@@ -112,7 +110,7 @@ a {
 }
 
 code {
-    border-radius: 2px;
+    border-radius: 0;
 }
 
 /* ---------- Navbar ---------- */
@@ -123,7 +121,7 @@ code {
 }
 
 .navbar__title {
-    font-family: 'Cinzel Decorative', var(--ifm-font-family-base);
+    font-family: 'Poiret One', var(--ifm-font-family-base);
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -174,7 +172,7 @@ html[data-theme='dark'] .navbar__link {
 }
 
 .footer__title {
-    font-family: 'Cinzel Decorative', var(--ifm-font-family-base);
+    font-family: 'Poiret One', var(--ifm-font-family-base);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--deco-gold-bright);
@@ -247,5 +245,10 @@ table thead tr {
 }
 
 .breadcrumbs__link {
+    border-radius: 0;
+}
+
+.theme-code-block {
+    margin-bottom: 0;
     border-radius: 0;
 }

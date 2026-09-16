@@ -29,8 +29,8 @@ instance — `getInstance()` is empty until `.wrap()` is called.
 
 - `getName()` — get subject name
 - `getInstance()` — get the wrapped object, if any, as an `Optional<T>`
-- `wrap(T obj)` — returns a new `Subject<T>` of the same name, with its
-  instance set
+- `wrap(T obj)` — returns a new `Subject<T>` of the same name, with its instance
+  set
 
 ## `PolicyBuilder`
 
@@ -63,9 +63,9 @@ Evaluates conditions:
 Serializable policy, per
 [SPEC_V1-0-0.md §3](https://github.com/CptnFizzbin/keycard/blob/main/SPEC_V1-0-0.md#3-terminology):
 
-- `getVersion()` — get the SemVer spec version, e.g. `"1.0.0"`
-- `getMeta()` — get the optional `meta` object (wildcard tokens,
-  catalogues, application data)
+- `getVersion()` — get the SemVer spec version, e.g. `"1.0"`
+- `getMeta()` — get the optional `meta` object (wildcard tokens, catalogues,
+  application data)
 - `getRules()` — get the ordered list of
   `[effect, action, subject, conditions?]` rules
 
@@ -76,13 +76,13 @@ Thrown when a permission check fails with `require()`.
 ## Condition operators
 
 `$eq`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$has`, `$substr`, `$or`,
-`$and`, `$not`, `$field`, and plain field conditions are all supported —
-see the language-agnostic [Condition Operators](/docs/condition-operators)
+`$and`, `$not`, `$field`, and plain field conditions are all supported — see the
+language-agnostic [Condition Operators](/docs/condition-operators)
 reference for the full semantics.
 
 ## See also
 
-- [SPEC.md](https://github.com/CptnFizzbin/keycard/blob/main/SPEC.md) —
-  complete specification
+- [SPEC.md](https://github.com/CptnFizzbin/keycard/blob/main/SPEC.md) — complete
+  specification
 - [Guide](/docs/intro) — language-agnostic concepts
-- [JavaScript / TypeScript implementation](/js/intro)
+- [JavaScript implementation](/js/intro)

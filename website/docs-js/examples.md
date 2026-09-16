@@ -4,12 +4,12 @@ sidebar_label: Examples
 slug: /examples
 ---
 
-# Examples (JavaScript / TypeScript)
+# Examples (JavaScript)
 
 ### Schema-only check
 
-No conditions needed — this checks whether the action/subject pair is
-allowed at all, ignoring any specific instance:
+No conditions needed — this checks whether the action/subject pair is allowed at
+all, ignoring any specific instance:
 
 ```typescript
 policy.can(Actions.Create, Subjects.Article);
@@ -48,11 +48,11 @@ try {
 
 ### Cross-language usage
 
-`PolicyDefinition`s are plain JSON, so a policy built in one language can
-be evaluated in another:
+`PolicyDefinition`s are plain JSON, so a policy built in one language can be
+evaluated in another:
 
 ```typescript
-// Build & serialize in TypeScript
+// Build & serialize in JavaScript
 const json = JSON.stringify(policy.def());
 
 // ...ship `json` to a Java service, a Rust service, a browser, etc.

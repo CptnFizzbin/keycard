@@ -1,29 +1,28 @@
 ---
-title: JavaScript / TypeScript
+title: JavaScript
 sidebar_label: Introduction
 slug: /intro
 ---
 
-# KeyCard for JavaScript / TypeScript
+# KeyCard for JavaScript
 
-TypeScript access-control library inspired by CASL.js. Provides
-strongly-typed, composable authorization policies with compile-time
-safety for Actions and Subjects. Runs in the browser as well as
-server-side (Node.js and other JS runtimes).
+JavaScript access-control library inspired by CASL.js. Provides strongly-typed,
+composable authorization policies with compile-time safety for Actions and
+Subjects. Runs in the browser as well as server-side (Node.js and other JS
+runtimes).
 
-New to KeyCard's concepts? Read the language-agnostic
-**[Guide](/docs/intro)** first — Policy Definition, Rules, and the
-condition language are the same across every implementation.
+New to KeyCard's concepts? Read the language-agnostic **[Guide](/docs/intro)**
+first — Policy Definition, Rules, and the condition language are the same across
+every implementation.
 
 ## Features
 
-- **Type-safe Actions & Subjects** — branded types prevent typos and
-  ensure type-safe refactoring
+- **Type-safe Actions & Subjects** — branded types prevent typos and ensure
+  type-safe refactoring
 - **Composable** — build complex policies from simple rules
-- **Flexible conditions** — comparison, pattern matching, and logical
-  operators
-- **Cross-language** — `PolicyDefinition`s serialize to JSON for
-  cross-platform use
+- **Flexible conditions** — comparison, pattern matching, and logical operators
+- **Cross-language** — `PolicyDefinition`s serialize to JSON for cross-platform
+  use
 - **Extensible** — custom condition operators
 
 ## Installation

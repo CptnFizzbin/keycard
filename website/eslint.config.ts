@@ -9,6 +9,7 @@ export default defineConfig([
   {
     rules: {
       "import-x/no-unresolved": "off",
+      "check-file/filename-naming-convention": "off",
     },
   },
 ])

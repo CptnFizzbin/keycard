@@ -5,7 +5,8 @@ import { describe, expect, test } from "vitest"
 import * as YAML from "yaml"
 
 import { actionArgFor, listYamlFiles, subjectArgFor } from "./complianceFixtures.ts"
-import type { Operator, PolicyDefinition } from "../../src/index.ts"
+import type { AnyOperator } from "../../src/conditions/operators/operator.ts"
+import type { PolicyDefinition } from "../../src/index.ts"
 import { createOperator, Policy } from "../../src/index.ts"
 
 /**
@@ -30,7 +31,7 @@ const FIXTURES_DIR = path.join(__dirname, "../../../../test/fixtures/policies")
  * suite) can implement; declaring it in meta.operators documents it but
  * doesn't wire up behavior. Keyed by fixture file name.
  */
-const CUSTOM_CHECKERS: Record<string, Operator[]> = {
+const CUSTOM_CHECKERS: Record<string, AnyOperator[]> = {
   "policy-05-advanced.yaml": [
     createOperator("$startsWithUpper", (subject) => typeof subject === "string" && /^[A-Z]/.test(subject)),
   ],

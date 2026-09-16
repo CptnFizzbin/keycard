@@ -22,7 +22,7 @@ export default function LanguageSelectorNavbarItem(): React.ReactElement {
   const languages: LanguageOption[] = [
     {
       key: "js",
-      label: "JavaScript / TypeScript",
+      label: "JavaScript",
       badge: "JS",
       href: useBaseUrl("/js/intro"),
       prefix: useBaseUrl("/js"),
@@ -98,6 +98,13 @@ export default function LanguageSelectorNavbarItem(): React.ReactElement {
             </Link>
           </li>
         ))}
+
+        <li role="none">
+          <div className={styles.menuItem}>
+            <span className={styles.menuBadge}>+</span>
+            More coming soon
+          </div>
+        </li>
       </ul>
     </div>
   )

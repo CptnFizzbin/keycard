@@ -13,34 +13,29 @@ type FeatureItem = {
 const FeatureList: FeatureItem[] = [
   {
     number: "I",
-    title: "Define Once",
+    title: "Define",
     description: (
       <>
-        Build a policy from a fluent, type-safe <code>PolicyBuilder</code> API
-        and get back a small, order-significant, JSON-encodable{" "}
-        <code>PolicyDefinition</code> — one document, one source of truth.
+        Build a policy from a fluent, type-safe <code>PolicyBuilder</code> API to create a <code>PolicyDefinition</code>
       </>
     ),
   },
   {
     number: "II",
-    title: "Enforce Anywhere",
+    title: "Encode",
     description: (
       <>
-        A <code>PolicyDefinition</code> is plain JSON. Ship it to a browser,
-        a mobile client, or a service in another language — every conformant
-        implementation evaluates it identically.
+        A <code>PolicyDefinition</code> is a simple JSON encodeable object.
+        Ship it to a browser, a mobile client, or a service in another language
       </>
     ),
   },
   {
     number: "III",
-    title: "Type-Safe by Design",
+    title: "Apply",
     description: (
       <>
-        Actions and Subjects are branded types. Typos, refactors, and
-        invalid Action/Subject pairings are caught at compile time, not in
-        production.
+        Read the <code>PolicyDefinition</code> into a <code>Policy</code> and quickly check permissions
       </>
     ),
   },

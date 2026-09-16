@@ -12,7 +12,7 @@ const Read = createAction("Read")
 describe("Policy: last-rule-wins evaluation (SPEC_V1-0-0.md §6)", () => {
   test("a later-declared deny rule overrides an earlier allow for the same action/subject", () => {
     const policy = Policy.from({
-      version: "1.0.0",
+      version: "1.0",
       rules: [
         ["allow", "Delete", "Article"],
         ["deny", "Delete", "Article"],

@@ -60,7 +60,7 @@ Policy policy = new PolicyBuilder()
 Gson gson = new Gson();
 String json = gson.toJson(policy.getDefinition());
 
-// Can be loaded in TypeScript, Rust, etc.
+// Can be loaded in JavaScript, Rust, etc.
 ```
 
 ## Building and testing

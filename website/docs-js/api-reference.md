@@ -4,7 +4,7 @@ sidebar_label: API Reference
 slug: /api-reference
 ---
 
-# API Reference (JavaScript / TypeScript)
+# API Reference (JavaScript)
 
 ## `createAction<T>(name: T)`
 
@@ -48,12 +48,12 @@ instance — `instance` is `undefined` until `.wrap()` is called.
 ## Condition operators
 
 `$eq`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$has`, `$substr`, `$or`,
-`$and`, `$not`, `$field`, and plain field conditions are all supported —
-see the language-agnostic [Condition Operators](/docs/condition-operators)
+`$and`, `$not`, `$field`, and plain field conditions are all supported — see the
+language-agnostic [Condition Operators](/docs/condition-operators)
 reference for the full semantics.
 
 ## See also
 
-- [SPEC.md](https://github.com/CptnFizzbin/keycard/blob/main/SPEC.md) —
-  complete specification
+- [SPEC.md](https://github.com/CptnFizzbin/keycard/blob/main/SPEC.md) — complete
+  specification
 - [Guide](/docs/intro) — language-agnostic concepts

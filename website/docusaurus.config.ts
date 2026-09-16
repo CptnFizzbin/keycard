@@ -57,7 +57,7 @@ const config: Config = {
         id: "js",
         path: "docs-js",
         routeBasePath: "js",
-        sidebarPath: "./sidebarsDefault.js.ts",
+        sidebarPath: "./sidebars.js.ts",
         editUrl: `${GITHUB_URL}/tree/main/website/`,
       } satisfies PluginContentDocs.Options,
     ],
@@ -67,7 +67,7 @@ const config: Config = {
         id: "java",
         path: "docs-java",
         routeBasePath: "java",
-        sidebarPath: "./sidebarsDefault.java.ts",
+        sidebarPath: "./sidebars.java.ts",
         editUrl: `${GITHUB_URL}/tree/main/website/`,
       } satisfies PluginContentDocs.Options,
     ],
@@ -120,7 +120,7 @@ const config: Config = {
         {
           title: "Languages",
           items: [
-            { label: "JavaScript / TypeScript", to: "/js/intro" },
+            { label: "JavaScript", to: "/js/intro" },
             { label: "Java", to: "/java/intro" },
           ],
         },
@@ -132,7 +132,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} KeyCard. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Cptn Fizzbin. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.duotoneDark,
