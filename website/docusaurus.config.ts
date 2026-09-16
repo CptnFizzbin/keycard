@@ -1,54 +1,50 @@
-import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
-import type * as Preset from '@docusaurus/preset-classic';
-import type * as PluginContentDocs from '@docusaurus/plugin-content-docs';
+import type * as PluginContentDocs from "@docusaurus/plugin-content-docs"
+import type * as Preset from "@docusaurus/preset-classic"
+import type { Config } from "@docusaurus/types"
+import { themes as prismThemes } from "prism-react-renderer"
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
-const GITHUB_URL = 'https://github.com/CptnFizzbin/keycard';
+const GITHUB_URL = "https://github.com/CptnFizzbin/keycard"
 
 const config: Config = {
-  title: 'KeyCard',
-  tagline: 'Define your access policy once. Enforce it everywhere.',
-  favicon: 'img/favicon.svg',
+  title: "KeyCard",
+  tagline: "Define your access policy once. Enforce it everywhere.",
+  favicon: "img/favicon.svg",
 
-  future: {
-    v4: true,
-  },
+  url: "https://keycard.cptnfizzbin.com",
+  baseUrl: "/",
 
-  url: 'https://keycard.cptnfizzbin.com',
-  baseUrl: '/',
+  organizationName: "CptnFizzbin",
+  projectName: "keycard",
 
-  organizationName: 'CptnFizzbin',
-  projectName: 'keycard',
-
-  onBrokenLinks: 'throw',
+  onBrokenLinks: "throw",
 
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: "en",
+    locales: ["en"],
   },
 
   markdown: {
     hooks: {
-      onBrokenMarkdownLinks: 'warn',
+      onBrokenMarkdownLinks: "warn",
     },
   },
 
   presets: [
     [
-      'classic',
+      "classic",
       {
         docs: {
-          id: 'default',
-          path: 'docs',
-          routeBasePath: 'docs',
-          sidebarPath: './sidebars.ts',
+          id: "default",
+          path: "docs",
+          routeBasePath: "docs",
+          sidebarPath: "./sidebars.default.ts",
           editUrl: `${GITHUB_URL}/tree/main/website/`,
         },
         blog: false,
         theme: {
-          customCss: './src/css/custom.css',
+          customCss: "./src/css/custom.css",
         },
       } satisfies Preset.Options,
     ],
@@ -56,83 +52,83 @@ const config: Config = {
 
   plugins: [
     [
-      '@docusaurus/plugin-content-docs',
+      "@docusaurus/plugin-content-docs",
       {
-        id: 'js',
-        path: 'docs-js',
-        routeBasePath: 'js',
-        sidebarPath: './sidebars-js.ts',
+        id: "js",
+        path: "docs-js",
+        routeBasePath: "js",
+        sidebarPath: "./sidebarsDefault.js.ts",
         editUrl: `${GITHUB_URL}/tree/main/website/`,
       } satisfies PluginContentDocs.Options,
     ],
     [
-      '@docusaurus/plugin-content-docs',
+      "@docusaurus/plugin-content-docs",
       {
-        id: 'java',
-        path: 'docs-java',
-        routeBasePath: 'java',
-        sidebarPath: './sidebars-java.ts',
+        id: "java",
+        path: "docs-java",
+        routeBasePath: "java",
+        sidebarPath: "./sidebarsDefault.java.ts",
         editUrl: `${GITHUB_URL}/tree/main/website/`,
       } satisfies PluginContentDocs.Options,
     ],
   ],
 
   themeConfig: {
-    image: 'img/logo.svg',
+    image: "img/logo.svg",
     colorMode: {
-      defaultMode: 'dark',
+      defaultMode: "dark",
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'KeyCard',
+      title: "KeyCard",
       logo: {
-        alt: 'KeyCard Logo',
-        src: 'img/logo.svg',
+        alt: "KeyCard Logo",
+        src: "img/logo.svg",
       },
       items: [
         {
-          type: 'docSidebar',
-          docsPluginId: 'default',
-          sidebarId: 'guideSidebar',
-          position: 'left',
-          label: 'Guide',
+          type: "docSidebar",
+          docsPluginId: "default",
+          sidebarId: "guideSidebar",
+          position: "left",
+          label: "Guide",
         },
         {
-          type: 'custom-languageSelector',
-          position: 'left',
-          label: 'Language',
+          type: "custom-languageSelector",
+          position: "left",
+          label: "Language",
         },
         {
           href: GITHUB_URL,
-          label: 'GitHub',
-          position: 'right',
+          label: "GitHub",
+          position: "right",
         },
       ],
     },
     footer: {
-      style: 'dark',
+      style: "dark",
       links: [
         {
-          title: 'Guide',
+          title: "Guide",
           items: [
-            {label: 'Introduction', to: '/docs/intro'},
-            {label: 'Policy Definition', to: '/docs/policy-definition'},
-            {label: 'Condition Operators', to: '/docs/condition-operators'},
-            {label: 'Glossary', to: '/docs/glossary'},
+            { label: "Introduction", to: "/docs/intro" },
+            { label: "Policy Definition", to: "/docs/policy-definition" },
+            { label: "Condition Operators", to: "/docs/condition-operators" },
+            { label: "Glossary", to: "/docs/glossary" },
           ],
         },
         {
-          title: 'Languages',
+          title: "Languages",
           items: [
-            {label: 'JavaScript / TypeScript', to: '/js/intro'},
-            {label: 'Java', to: '/java/intro'},
+            { label: "JavaScript / TypeScript", to: "/js/intro" },
+            { label: "Java", to: "/java/intro" },
           ],
         },
         {
-          title: 'More',
+          title: "More",
           items: [
-            {label: 'GitHub', href: GITHUB_URL},
-            {label: 'Spec (source)', href: `${GITHUB_URL}/blob/main/SPEC.md`},
+            { label: "GitHub", href: GITHUB_URL },
+            { label: "Spec (source)", href: `${GITHUB_URL}/blob/main/SPEC.md` },
           ],
         },
       ],
@@ -141,9 +137,13 @@ const config: Config = {
     prism: {
       theme: prismThemes.duotoneDark,
       darkTheme: prismThemes.duotoneDark,
-      additionalLanguages: ['java'],
+      additionalLanguages: ["java"],
     },
   } satisfies Preset.ThemeConfig,
-};
 
-export default config;
+  future: {
+    v4: true,
+  },
+}
+
+export default config

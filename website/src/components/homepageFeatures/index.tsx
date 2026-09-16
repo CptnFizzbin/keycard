@@ -1,29 +1,30 @@
-import type {ReactNode} from 'react';
-import clsx from 'clsx';
-import Heading from '@theme/Heading';
-import styles from './styles.module.css';
+import Heading from "@theme/Heading"
+import { clsx } from "clsx"
+import type { ReactNode } from "react"
+
+import styles from "./styles.module.css"
 
 type FeatureItem = {
-  number: string;
-  title: string;
-  description: ReactNode;
-};
+  number: string
+  title: string
+  description: ReactNode
+}
 
 const FeatureList: FeatureItem[] = [
   {
-    number: 'I',
-    title: 'Define Once',
+    number: "I",
+    title: "Define Once",
     description: (
       <>
         Build a policy from a fluent, type-safe <code>PolicyBuilder</code> API
-        and get back a small, order-significant, JSON-encodable{' '}
+        and get back a small, order-significant, JSON-encodable{" "}
         <code>PolicyDefinition</code> — one document, one source of truth.
       </>
     ),
   },
   {
-    number: 'II',
-    title: 'Enforce Anywhere',
+    number: "II",
+    title: "Enforce Anywhere",
     description: (
       <>
         A <code>PolicyDefinition</code> is plain JSON. Ship it to a browser,
@@ -33,8 +34,8 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    number: 'III',
-    title: 'Type-Safe by Design',
+    number: "III",
+    title: "Type-Safe by Design",
     description: (
       <>
         Actions and Subjects are branded types. Typos, refactors, and
@@ -43,11 +44,11 @@ const FeatureList: FeatureItem[] = [
       </>
     ),
   },
-];
+]
 
-function Feature({number, title, description}: FeatureItem) {
+function Feature({ number, title, description }: FeatureItem) {
   return (
-    <div className={clsx('col col--4', styles.featureCol)}>
+    <div className={clsx("col col--4", styles.featureCol)}>
       <div className={styles.featureCard}>
         <div className={styles.featureNumber}>{number}</div>
         <Heading as="h3" className={styles.featureTitle}>
@@ -56,7 +57,7 @@ function Feature({number, title, description}: FeatureItem) {
         <p>{description}</p>
       </div>
     </div>
-  );
+  )
 }
 
 export default function HomepageFeatures(): ReactNode {
@@ -70,5 +71,5 @@ export default function HomepageFeatures(): ReactNode {
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -1,20 +1,21 @@
-import type {ReactNode} from 'react';
-import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import Layout from '@theme/Layout';
-import Heading from '@theme/Heading';
-import CodeBlock from '@theme/CodeBlock';
-import HomepageFeatures from '@site/src/components/HomepageFeatures';
+import Link from "@docusaurus/Link"
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
+import CodeBlock from "@theme/CodeBlock"
+import Heading from "@theme/Heading"
+import Layout from "@theme/Layout"
+import type { ReactNode } from "react"
 
-import styles from './index.module.css';
+import HomepageFeatures from "@site/src/components/homepageFeatures"
+
+import styles from "./index.module.css"
 
 const POLICY_SAMPLE = `rules:
   - [allow, Create, Article]
   - [allow, Update, Article, { owner_id: 1 }]
-  - [deny, Delete, Article, { status: { $not: "archived" } }]`;
+  - [deny, Delete, Article, { status: { $not: "archived" } }]`
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext()
   return (
     <header className={styles.heroBanner}>
       <div className={styles.heroInner}>
@@ -38,7 +39,7 @@ function HomepageHeader() {
       </div>
       <div className={styles.stepEdge} />
     </header>
-  );
+  )
 }
 
 function PolicySample() {
@@ -52,20 +53,21 @@ function PolicySample() {
         <CodeBlock language="yaml">{POLICY_SAMPLE}</CodeBlock>
       </div>
     </section>
-  );
+  )
 }
 
 export default function Home(): ReactNode {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext()
   return (
     <Layout
       title={siteConfig.title}
-      description="KeyCard is a cross-language access-control library: define your authorization policy once, enforce it anywhere.">
+      description="KeyCard is a cross-language access-control library: define your authorization policy once, enforce it anywhere."
+    >
       <HomepageHeader />
       <main>
         <HomepageFeatures />
         <PolicySample />
       </main>
     </Layout>
-  );
+  )
 }

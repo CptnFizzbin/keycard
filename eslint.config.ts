@@ -1,6 +1,6 @@
 import js from "@eslint/js"
 import stylistic from "@stylistic/eslint-plugin"
-import {defineConfig} from "eslint/config"
+import {defineConfig, globalIgnores} from "eslint/config"
 import {createTypeScriptImportResolver} from "eslint-import-resolver-typescript"
 import checkFile from "eslint-plugin-check-file"
 import {importX} from "eslint-plugin-import-x"
@@ -8,6 +8,11 @@ import globals from "globals"
 import tseslint from "typescript-eslint"
 
 export default defineConfig([
+  globalIgnores([
+    "**/target/",
+    "**/dist/",
+    "**/.docusaurus",
+  ]),
   tseslint.configs.recommended,
   js.configs.recommended,
   importX.flatConfigs.recommended,
