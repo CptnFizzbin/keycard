@@ -9,7 +9,7 @@ import { createSubject } from "../subject/index.ts"
 const Delete = createAction("Delete")
 const Read = createAction("Read")
 
-describe("Policy: last-rule-wins evaluation (SPEC_V1-0-0.md §6)", () => {
+describe("Policy: last-rule-wins evaluation (SPEC_V1-0.md §6)", () => {
   test("a later-declared deny rule overrides an earlier allow for the same action/subject", () => {
     const policy = Policy.from({
       version: "1.0.0",
@@ -117,7 +117,7 @@ describe("Policy: construction-time validation", () => {
     ).toThrow(PolicyLoadException)
   })
 
-  // --- operator registry collisions (SPEC_V1-0-0.md §3.2.3, EC-16) ---
+  // --- operator registry collisions (SPEC_V1-0.md §3.2.3, EC-16) ---
 
   test("throws PolicyLoadException when a custom operator collides with a builtin", () => {
     expect(() =>

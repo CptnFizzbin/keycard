@@ -4,7 +4,14 @@ import { getLogger } from "../../lib/logger.ts"
 import type { Condition } from "../condition.ts"
 
 export interface OperatorContext {
+  /** Evaluates `condition` against `subject`, preserving whether this point in the tree may still narrow into a field (§7.4.10) - used by $and/$or/$not, which don't narrow. */
   resolveSubcondition<TSubject>(subject: TSubject, condition: Condition<TSubject>): boolean
+
+  /** Evaluates `condition` against a subject already narrowed by one field access, disabling any further field narrowing beneath it (§7.4.10) - used by the bare-key field path and `$field`. */
+  resolveFieldSubcondition<TSubject>(subject: TSubject, condition: Condition<TSubject>): boolean
+
+  /** true if a field condition (bare-key or `$field`) is still allowed to narrow at this point in the tree - v1 permits exactly one level (§7.4.10). */
+  canNarrowField(): boolean
 }
 
 export interface Operator<TSubject, TValue = JsonValue> {

@@ -5,7 +5,7 @@ import java.util.function.BiPredicate;
 
 /**
  * Every operator {@link ConditionResolver} understands natively
- * (SPEC_V1-0-0.md §7.4.1-§7.4.11), as {@link Operator} instances - the
+ * (SPEC_V1-0.md §7.4.1-§7.4.11), as {@link Operator} instances - the
  * same type a custom, host-application-supplied operator uses, so built-in
  * and custom operators are constructed, registered, and dispatched
  * identically (§7.4.12).

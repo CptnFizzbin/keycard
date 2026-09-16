@@ -1,4 +1,6 @@
-import type { Condition } from "../../condition.ts"
+import { PolicyTypeMismatchError } from "../../../errors/policyTypeMismatchError.ts"
+import type { AnyCondition, Condition } from "../../condition.ts"
+import type { OperatorContext } from "../operator.ts"
 
 /**
  * §7.4.10, §7.3: true when `subject` is a non-null object carrying
@@ -32,4 +34,28 @@ export function isBareNe<TSubject>(condition: Condition<TSubject>): boolean {
     && Object.keys(condition).length === 1
     && "$ne" in condition
   )
+}
+
+/**
+ * §7.4.10, §7.4.11: shared narrowing logic for the bare-key field path and
+ * the explicit `$field` operator - both resolve to "look up a named field on
+ * the subject, then evaluate against it," and both are subject to v1's
+ * top-level-only restriction: a field condition MUST NOT itself narrow into
+ * another field, so `ctx.canNarrowField()` must still be `true` at this
+ * point in the tree. When it isn't - a field condition already reached by
+ * one narrowing step attempting a second - this is a structural problem,
+ * not a data one, so it's diagnosed like any other malformed condition
+ * shape (§7.1) rather than silently returning `false`.
+ */
+export function checkField<TSubject>(subject: TSubject, fieldName: string, condition: AnyCondition, ctx: OperatorContext): boolean {
+  if (!ctx.canNarrowField()) {
+    throw new PolicyTypeMismatchError({
+      value: {
+        expected: `a leaf condition for field "${fieldName}" (v1 supports only top-level field access - no further nesting)`,
+        received: "a nested field condition",
+      },
+    })
+  }
+
+  return hasField(subject, fieldName) ? ctx.resolveFieldSubcondition(subject[fieldName], condition) : isBareNe(condition)
 }

@@ -1,7 +1,7 @@
 package com.cptnfizzbin.keycard.policy;
 
 /**
- * A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V1-0-0.md §2.
+ * A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V1-0.md §2.
  * {@code MINOR}/{@code PATCH} may be omitted - {@code "1"} and {@code
  * "1.0"} are valid shorthand for {@code "1.0.0"} (§2.1) - and default to
  * {@code 0}.
@@ -30,7 +30,7 @@ public record SemVer(int major, int minor, int patch) {
 
     /**
      * True when a document declaring `this` version is compatible with an
-     * implementation supporting `supported` - SPEC_V1-0-0.md §2: the same
+     * implementation supporting `supported` - SPEC_V1-0.md §2: the same
      * MAJOR, and a MINOR no higher than what's supported (i.e. `supported`
      * MUST be at or above `this`, within the same MAJOR). PATCH never
      * affects compatibility.

@@ -2,7 +2,7 @@ package com.cptnfizzbin.keycard.policy;
 
 /**
  * Shared wildcard-token resolution for {@link Policy} and {@code
- * PolicyBuilder} - SPEC_V1-0-0.md §3.2.1, §4, §5, §6.
+ * PolicyBuilder} - SPEC_V1-0.md §3.2.1, §4, §5, §6.
  */
 public final class Wildcards {
     private Wildcards() {}
