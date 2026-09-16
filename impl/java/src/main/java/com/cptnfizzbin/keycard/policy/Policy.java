@@ -1,7 +1,9 @@
 package com.cptnfizzbin.keycard.policy;
 
+import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.subject.Subject;
+import com.cptnfizzbin.keycard.subject.SubjectFieldMapper;
 import com.cptnfizzbin.keycard.conditions.ConditionResolver;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyException;
@@ -14,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 public final class Policy {
     /**
@@ -28,6 +31,7 @@ public final class Policy {
 
     private final PolicyDefinition definition;
     private final ConditionResolver resolver;
+    private final KeycardConfig config;
 
     public Policy(PolicyDefinition definition) {
         this(definition, (Collection<Operator>) null);
@@ -44,9 +48,10 @@ public final class Policy {
         validateVersion(definition.getVersion());
 
         this.definition = definition;
+        this.config = null;
         this.resolver = new ConditionResolver(operators);
         validateOperatorsRegistered(definition, resolver);
-        validateRules(definition);
+        validateRules(definition, null);
     }
 
     /** Advanced escape hatch: supply an already-built {@link ConditionResolver} directly. */
@@ -54,9 +59,30 @@ public final class Policy {
         validateVersion(definition.getVersion());
 
         this.definition = definition;
+        this.config = null;
         this.resolver = resolver != null ? resolver : new ConditionResolver();
         validateOperatorsRegistered(definition, this.resolver);
-        validateRules(definition);
+        validateRules(definition, null);
+    }
+
+    /**
+     * @param config shared, optional config also accepted by {@code
+     *   PolicyBuilder} (SPEC_V1-0-0.md §3.2.2/§7.4.12 and the
+     *   SubjectFieldMapper feature): {@code actions}/{@code subjects} widen
+     *   the {@code meta.actions}/{@code meta.subjects} catalogs (EC-8)
+     *   beyond what {@code definition.meta} itself declares; {@code
+     *   operators} is registered on this Policy's resolver; {@code mapper}
+     *   is consulted for a subject's fields whenever the {@link Subject}
+     *   passed to {@link #can} doesn't carry its own field mapper.
+     */
+    public Policy(PolicyDefinition definition, KeycardConfig config) {
+        validateVersion(definition.getVersion());
+
+        this.definition = definition;
+        this.config = config;
+        this.resolver = new ConditionResolver(config != null ? config.getOperators() : null);
+        validateOperatorsRegistered(definition, resolver);
+        validateRules(definition, config);
     }
 
     /**
@@ -77,6 +103,10 @@ public final class Policy {
         return new Policy(definition, resolver);
     }
 
+    public static Policy from(PolicyDefinition definition, KeycardConfig config) {
+        return new Policy(definition, config);
+    }
+
     /** Alias of {@link #from(PolicyDefinition)}. */
     public static Policy fromDto(PolicyDefinition definition) {
         return from(definition);
@@ -90,6 +120,11 @@ public final class Policy {
     /** Alias of {@link #from(PolicyDefinition, ConditionResolver)}. */
     public static Policy fromDto(PolicyDefinition definition, ConditionResolver resolver) {
         return from(definition, resolver);
+    }
+
+    /** Alias of {@link #from(PolicyDefinition, KeycardConfig)}. */
+    public static Policy fromDto(PolicyDefinition definition, KeycardConfig config) {
+        return from(definition, config);
     }
 
     public PolicyDefinition getDefinition() {
@@ -148,7 +183,7 @@ public final class Policy {
                 // A conditional rule can never be satisfied by a bare-type/no-instance
                 // check - there's no instance data for the condition to inspect (EC-7).
                 if (subject.getInstance().isEmpty()) continue;
-                if (!resolver.evaluate(subject.getInstance().get(), conditions)) continue;
+                if (!resolver.evaluate(subject.getInstance().get(), conditions, resolveFieldMapper(subject))) continue;
                 return "allow".equals(rule.getEffect());
             }
 
@@ -156,6 +191,13 @@ public final class Policy {
         }
 
         return false; // EC-1, EC-2: default deny.
+    }
+
+    /** The subject's own field mapper (set via {@code SubjectFactory.create}) takes precedence; {@code config.getMapper()}, keyed by {@code subject.getName()}, is the fallback. */
+    private SubjectFieldMapper<?> resolveFieldMapper(Subject<?> subject) {
+        if (subject.getFieldMapper().isPresent()) return subject.getFieldMapper().get();
+        if (config == null || config.getMapper() == null) return null;
+        return config.getMapper().get(subject.getName()).orElse(null);
     }
 
     private static void validateVersion(String version) {
@@ -189,13 +231,21 @@ public final class Policy {
         resolver.assertAllRegistered(declared);
     }
 
-    private static void validateRules(PolicyDefinition definition) {
+    /** @param config {@code actions}/{@code subjects}, when given, widen the {@code meta.actions}/{@code meta.subjects} catalogs below (EC-8) beyond what {@code definition.meta} declares. */
+    private static void validateRules(PolicyDefinition definition, KeycardConfig config) {
         PolicyDefinition.Meta meta = definition.getMeta();
         WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
         WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);
 
-        Set<String> actionsCatalog = meta != null && meta.getActions() != null ? new HashSet<>(meta.getActions()) : null;
-        Set<String> subjectsCatalog = meta != null && meta.getSubjects() != null ? new HashSet<>(meta.getSubjects()) : null;
+        List<Action<?>> configActions = config != null ? config.getActions() : List.of();
+        List<Subject<?>> configSubjects = config != null ? config.getSubjects() : List.of();
+
+        Set<String> actionsCatalog = (meta != null && meta.getActions() != null) || !configActions.isEmpty()
+            ? unionNames(meta != null ? meta.getActions() : null, configActions, Action::getNameStr)
+            : null;
+        Set<String> subjectsCatalog = (meta != null && meta.getSubjects() != null) || !configSubjects.isEmpty()
+            ? unionNames(meta != null ? meta.getSubjects() : null, configSubjects, Subject::getName)
+            : null;
         Set<String> operatorsCatalog = meta != null && meta.getOperators() != null ? new HashSet<>(meta.getOperators()) : null;
 
         for (PolicyDefinition.Rule rule : definition.getRules()) {
@@ -251,5 +301,12 @@ public final class Policy {
                 }
             }
         }
+    }
+
+    private static <T> Set<String> unionNames(List<String> metaNames, List<T> configItems, Function<T, String> nameOf) {
+        Set<String> names = new HashSet<>();
+        if (metaNames != null) names.addAll(metaNames);
+        for (T item : configItems) names.add(nameOf.apply(item));
+        return names;
     }
 }

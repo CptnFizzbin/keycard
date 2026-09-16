@@ -70,4 +70,24 @@ describe("PolicyBuilder: meta.actions/subjects/operators are derived from usage"
 
     expect(policy.can(createAction("Anything"), createSubject("Anything"))).toBe(true)
   })
+
+  test("KeycardConfig.actions/subjects are folded into meta.actions/meta.subjects alongside what usage derives", () => {
+    const def = new PolicyBuilder({}, { actions: [createAction("Delete")], subjects: [createSubject("Comment")] })
+      .allow(createAction("Read"), createSubject("Article"))
+      .buildDef()
+
+    expect(def.meta?.actions).toEqual(["Read", "Delete"])
+    expect(def.meta?.subjects).toEqual(["Article", "Comment"])
+  })
+
+  test("KeycardConfig.operators is used in place of the options constructor's operators", () => {
+    const hasRole = createOperator("$hasRole", () => true)
+    const article = createSubject<{ id: number }>("Article")
+
+    const policy = new PolicyBuilder({}, { operators: [hasRole] })
+      .allow(createAction("Read"), article, { $hasRole: "admin" })
+      .build()
+
+    expect(policy.can(createAction("Read"), article.wrap({ id: 1 }))).toBe(true)
+  })
 })

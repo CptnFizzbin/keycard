@@ -18,8 +18,20 @@ final class FieldAccess {
      * exception: {@code $ne} (§7.4.2), which MUST be the exact negation of
      * {@code $eq} even when the field is missing, since {@code $eq} on a
      * missing field is false. See {@link #isBareNe}.
+     *
+     * <p>When {@code ctx} is a {@link ConditionResolver.MappedContext} bound
+     * to exactly {@code subject} (reference-identical to its {@code
+     * rootSubject} - never a value a previous field lookup narrowed into),
+     * its {@link SubjectFieldMapper} is tried first; a field it doesn't
+     * define falls through to the Map/reflection path below.
      */
     static boolean check(Object subject, String fieldName, Object condition, OperatorContext ctx) {
+        if (ctx instanceof ConditionResolver.MappedContext mapped
+                && mapped.rootSubject == subject
+                && mapped.fieldMapper.hasField(fieldName)) {
+            return ctx.resolveSubcondition(mapped.fieldMapper.get(subject, fieldName), condition);
+        }
+
         if (subject instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) subject;
             if (!map.containsKey(fieldName)) return isBareNe(condition);

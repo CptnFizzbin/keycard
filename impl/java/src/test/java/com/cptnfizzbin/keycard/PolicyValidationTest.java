@@ -212,4 +212,44 @@ public class PolicyValidationTest {
             new PolicyBuilder("*", "*")
                 .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Map.of("owner_id", 1)));
     }
+
+    // --- KeycardConfig, accepted by both PolicyBuilder and Policy ---
+
+    @Test
+    public void keycardConfigActionsAndSubjectsAreFoldedIntoMetaAlongsideWhatUsageDerives() {
+        KeycardConfig config = KeycardConfig.builder()
+            .actions(List.of(ActionFactory.create("Delete")))
+            .subjects(List.of(SubjectFactory.create("Comment")))
+            .build();
+
+        PolicyDefinition def = new PolicyBuilder(config)
+            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+            .buildDef();
+
+        assertEquals(List.of("Read", "Delete"), def.getMeta().getActions());
+        assertEquals(List.of("Article", "Comment"), def.getMeta().getSubjects());
+    }
+
+    @Test
+    public void keycardConfigOperatorsIsUsedByPolicyBuilder() {
+        Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> true);
+        KeycardConfig config = KeycardConfig.builder().operators(List.of(hasRole)).build();
+        Subject<Object> article = SubjectFactory.create("Article");
+
+        Policy policy = new PolicyBuilder(config)
+            .allow(ActionFactory.create("Read"), article, Map.of("$hasRole", "admin"))
+            .build();
+
+        assertTrue(policy.can(ActionFactory.create("Read"), article.wrap(new Object())));
+    }
+
+    @Test
+    public void keycardConfigLeavesWildcardTokensUndeclaredByDefault() {
+        PolicyDefinition def = new PolicyBuilder(KeycardConfig.builder().build())
+            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+            .buildDef();
+
+        assertEquals(null, def.getMeta().getAnyAction());
+        assertEquals(null, def.getMeta().getAnySubject());
+    }
 }

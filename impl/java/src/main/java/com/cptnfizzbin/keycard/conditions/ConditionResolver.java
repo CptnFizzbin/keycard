@@ -1,6 +1,7 @@
 package com.cptnfizzbin.keycard.conditions;
 
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
+import com.cptnfizzbin.keycard.subject.SubjectFieldMapper;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -93,6 +94,30 @@ public final class ConditionResolver implements OperatorContext {
      * for any well-formed condition, regardless of what the subject is.
      */
     public boolean evaluate(Object subject, Object condition) {
+        return evaluate(subject, condition, null);
+    }
+
+    /**
+     * Like {@link #evaluate(Object, Object)}, but {@code fieldMapper} - when
+     * non-null - is tried first for any field looked up directly on {@code
+     * subject}: anywhere in the condition tree that {@code subject} is
+     * still the object in scope (bare-key/{@code $field} access at the top
+     * level, and inside {@code $and}/{@code $or}/{@code $not}, none of which
+     * narrow into a different object). Never consulted for a value a field
+     * lookup has already narrowed into - those fall back to reflection,
+     * same as a field the mapper doesn't define.
+     */
+    public boolean evaluate(Object subject, Object condition, SubjectFieldMapper<?> fieldMapper) {
+        OperatorContext ctx = fieldMapper == null ? this : new MappedContext(subject, fieldMapper);
+        return evaluateWith(subject, condition, ctx);
+    }
+
+    @Override
+    public boolean resolveSubcondition(Object subject, Object condition) {
+        return evaluateWith(subject, condition, this);
+    }
+
+    private boolean evaluateWith(Object subject, Object condition, OperatorContext ctx) {
         if (condition == null || condition instanceof String || condition instanceof Number || condition instanceof Boolean) {
             // §7.2: bare-value shorthand for $eq (including explicit null - §7.3, not a wildcard).
             return StringConditions.eq(subject, condition);
@@ -106,16 +131,11 @@ public final class ConditionResolver implements OperatorContext {
         // §7.5: every key MUST be evaluated and ANDed together - no key may
         // "consume" the whole object or cause sibling keys to be ignored.
         for (Map.Entry<?, ?> entry : condMap.entrySet()) {
-            if (!evaluateKey(subject, String.valueOf(entry.getKey()), entry.getValue())) {
+            if (!evaluateKey(subject, String.valueOf(entry.getKey()), entry.getValue(), ctx)) {
                 return false;
             }
         }
         return true;
-    }
-
-    @Override
-    public boolean resolveSubcondition(Object subject, Object condition) {
-        return evaluate(subject, condition);
     }
 
     /**
@@ -123,9 +143,9 @@ public final class ConditionResolver implements OperatorContext {
      * a field name - built-in and custom operators are both resolved the
      * same way, by name, against the same registry.
      */
-    private boolean evaluateKey(Object subject, String key, Object value) {
+    private boolean evaluateKey(Object subject, String key, Object value, OperatorContext ctx) {
         if (!key.startsWith("$")) {
-            return fieldCheck(subject, key, value);
+            return FieldAccess.check(subject, key, value, ctx);
         }
 
         Operator operator = registry.get(key);
@@ -140,12 +160,30 @@ public final class ConditionResolver implements OperatorContext {
             return false;
         }
 
-        return operator.resolve(subject, value, this);
+        return operator.resolve(subject, value, ctx);
     }
 
-    /** §7.4.10, §7.3: a missing field (or a non-object subject) makes the whole field-condition false - absence, not a type issue. */
-    private boolean fieldCheck(Object subject, String fieldName, Object condition) {
-        return FieldAccess.check(subject, fieldName, condition, this);
+    /**
+     * Binds a {@link SubjectFieldMapper} to exactly the subject it was
+     * supplied for - {@link FieldAccess#check} only consults it when the
+     * object currently in scope is reference-identical to {@link
+     * #rootSubject}, so it never reaches into a value a field lookup has
+     * already narrowed into (a nested field falls back to reflection, same
+     * as any field the mapper doesn't define).
+     */
+    final class MappedContext implements OperatorContext {
+        final Object rootSubject;
+        final SubjectFieldMapper<?> fieldMapper;
+
+        MappedContext(Object rootSubject, SubjectFieldMapper<?> fieldMapper) {
+            this.rootSubject = rootSubject;
+            this.fieldMapper = fieldMapper;
+        }
+
+        @Override
+        public boolean resolveSubcondition(Object subject, Object condition) {
+            return evaluateWith(subject, condition, this);
+        }
     }
 
     private static Map<String, Operator> buildRegistry(Collection<Operator> custom) {
