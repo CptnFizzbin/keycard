@@ -3,6 +3,7 @@ import type { AnyCondition } from "../conditions/condition.ts"
 import type { Condition } from "../conditions/index.ts"
 import type { AnyOperator, InferCondition } from "../conditions/operators/operator.ts"
 import { PolicyArgumentError } from "../errors/index.ts"
+import type { KeycardConfig } from "../keycardConfig.ts"
 import { DEFAULT_WILDCARD } from "../lib/wildcard.ts"
 import { Policy } from "../policy/policy.ts"
 import type { Effect, Meta, PolicyDefinition, RuleTuple } from "../policy/policyDefinition.ts"
@@ -41,10 +42,13 @@ function wildcardNameOf(value: Action | Subject | string | undefined | null): st
 
 /**
  * Builds a {@link PolicyDefinition} rule by rule. `meta.actions`/
- * `meta.subjects`/`meta.operators` are never supplied directly -
+ * `meta.subjects`/`meta.operators` are never supplied directly by default -
  * {@link buildDef} fills them in automatically from what {@link allow}/
  * {@link deny} actually used and what `operators` actually registered, so
  * there's no separately hand-maintained catalog to keep in sync by hand.
+ * `config.actions`/`config.subjects` (constructor param, optional) declare
+ * additional vocabulary up front, folded in alongside whatever usage
+ * derives.
  */
 export class PolicyBuilder<
   TActions extends Action = Action,
@@ -57,11 +61,23 @@ export class PolicyBuilder<
   private readonly operators: TOperators[]
   private readonly actionsUsed = new Set<string>()
   private readonly subjectsUsed = new Set<string>()
+  private readonly config: KeycardConfig<TOperators>
 
-  constructor(options: PolicyBuilderOptions<TOperators> = {}) {
+  /**
+   * @param config shared, optional config also accepted by `Policy`:
+   *   `actions`/`subjects` are folded into `meta.actions`/`meta.subjects`
+   *   alongside whatever `allow`/`deny` actually used; `operators`, when
+   *   given, is used instead of `options.operators`; `mapper` is carried
+   *   through to the built `Policy` unchanged.
+   */
+  constructor(
+    options: PolicyBuilderOptions<TOperators> = {},
+    config: KeycardConfig<TOperators> = {},
+  ) {
     this.anyAction = wildcardNameOf(options.anyAction)
     this.anySubject = wildcardNameOf(options.anySubject)
-    this.operators = options.operators ?? []
+    this.config = config
+    this.operators = config.operators ?? options.operators ?? []
   }
 
   allow<TAction extends TActions, TSubject extends TSubjects>(
@@ -99,9 +115,7 @@ export class PolicyBuilder<
   }
 
   build(): Policy<TActions, TSubjects, TOperators> {
-    return new Policy(this.buildDef(), {
-      operators: this.operators,
-    })
+    return new Policy(this.buildDef(), { operators: this.operators }, this.config)
   }
 
   buildDef(options: { includeMeta?: boolean } = {}): PolicyDefinition {
@@ -120,11 +134,14 @@ export class PolicyBuilder<
     return def
   }
 
-  /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered - see the class doc. */
+  /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config.actions`/`config.subjects` additionally declare - see the class doc. */
   private buildMeta(): Meta {
+    const configActionNames = this.config.actions?.map((action) => action.name) ?? []
+    const configSubjectNames = this.config.subjects?.map((subject) => subject.name) ?? []
+
     const meta: Meta = {
-      actions: Array.from(this.actionsUsed),
-      subjects: Array.from(this.subjectsUsed),
+      actions: Array.from(new Set([...this.actionsUsed, ...configActionNames])),
+      subjects: Array.from(new Set([...this.subjectsUsed, ...configSubjectNames])),
     }
     if (this.anyAction !== DEFAULT_WILDCARD) meta.anyAction = this.anyAction
     if (this.anySubject !== DEFAULT_WILDCARD) meta.anySubject = this.anySubject

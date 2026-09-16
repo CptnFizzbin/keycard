@@ -1,6 +1,7 @@
 package com.cptnfizzbin.keycard.conditions;
 
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
+import com.cptnfizzbin.keycard.subject.SubjectFieldMapper;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -22,8 +23,8 @@ public final class ConditionResolver {
     public static final Set<String> BUILTIN_OPERATORS = names(DefaultOperators.ALL);
 
     private final Map<String, Operator> registry;
-    private final OperatorContext topContext = new Ctx(true);
-    private final OperatorContext nestedContext = new Ctx(false);
+    private final OperatorContext topContext = new Ctx(true, null);
+    private final OperatorContext nestedContext = new Ctx(false, null);
 
     public ConditionResolver() {
         this(null);
@@ -95,7 +96,21 @@ public final class ConditionResolver {
      * for any well-formed condition, regardless of what the subject is.
      */
     public boolean evaluate(Object subject, Object condition) {
-        return evaluate(subject, condition, true);
+        return evaluate(subject, condition, true, null);
+    }
+
+    /**
+     * Like {@link #evaluate(Object, Object)}, but {@code fieldMapper} - when
+     * non-null - is tried first for any field looked up directly on {@code
+     * subject}: anywhere in the condition tree that {@code subject} is
+     * still the object in scope (bare-key/{@code $field} access at the top
+     * level, and inside {@code $and}/{@code $or}/{@code $not}, none of which
+     * narrow). Never consulted once a field access has narrowed once - v1
+     * permits only one level of field narrowing (§7.4.10) - so a field the
+     * mapper doesn't define, or any nested access, falls back to reflection.
+     */
+    public boolean evaluate(Object subject, Object condition, SubjectFieldMapper<?> fieldMapper) {
+        return evaluate(subject, condition, true, fieldMapper);
     }
 
     /**
@@ -106,7 +121,7 @@ public final class ConditionResolver {
      * a field condition has already narrowed once, since v1 supports only
      * one level of field access.
      */
-    private boolean evaluate(Object subject, Object condition, boolean canNarrowField) {
+    private boolean evaluate(Object subject, Object condition, boolean canNarrowField, SubjectFieldMapper<?> fieldMapper) {
         if (condition == null || condition instanceof String || condition instanceof Number || condition instanceof Boolean) {
             // §7.2: bare-value shorthand for $eq (including explicit null - §7.3, not a wildcard).
             return StringConditions.eq(subject, condition);
@@ -120,7 +135,7 @@ public final class ConditionResolver {
         // §7.5: every key MUST be evaluated and ANDed together - no key may
         // "consume" the whole object or cause sibling keys to be ignored.
         for (Map.Entry<?, ?> entry : condMap.entrySet()) {
-            if (!evaluateKey(subject, String.valueOf(entry.getKey()), entry.getValue(), canNarrowField)) {
+            if (!evaluateKey(subject, String.valueOf(entry.getKey()), entry.getValue(), canNarrowField, fieldMapper)) {
                 return false;
             }
         }
@@ -132,8 +147,8 @@ public final class ConditionResolver {
      * a field name - built-in and custom operators are both resolved the
      * same way, by name, against the same registry.
      */
-    private boolean evaluateKey(Object subject, String key, Object value, boolean canNarrowField) {
-        OperatorContext ctx = canNarrowField ? topContext : nestedContext;
+    private boolean evaluateKey(Object subject, String key, Object value, boolean canNarrowField, SubjectFieldMapper<?> fieldMapper) {
+        OperatorContext ctx = contextFor(canNarrowField, fieldMapper);
 
         if (!key.startsWith("$")) {
             return FieldAccess.check(subject, key, value, ctx);
@@ -155,26 +170,45 @@ public final class ConditionResolver {
     }
 
     /**
-     * Backs {@link OperatorContext} for one fixed {@code canNarrowField}
-     * state - {@link #topContext} (narrowing still allowed) and {@link
-     * #nestedContext} (already narrowed once) are the only two instances
-     * ever needed, since v1 supports exactly one level of field access.
+     * The shared, mapper-less {@link #topContext}/{@link #nestedContext}
+     * cover the common case with no extra allocation; a {@code fieldMapper}
+     * is only ever live for one top-level {@link #evaluate(Object, Object,
+     * SubjectFieldMapper)} call, so its context is built fresh here rather
+     * than cached on the instance.
      */
-    private final class Ctx implements OperatorContext {
-        private final boolean canNarrowField;
+    private OperatorContext contextFor(boolean canNarrowField, SubjectFieldMapper<?> fieldMapper) {
+        if (!canNarrowField) return nestedContext;
+        return fieldMapper != null ? new Ctx(true, fieldMapper) : topContext;
+    }
 
-        Ctx(boolean canNarrowField) {
+    /**
+     * Backs {@link OperatorContext} for one fixed {@code canNarrowField}
+     * state, optionally paired with a {@link SubjectFieldMapper} - {@link
+     * #topContext}/{@link #nestedContext} (both mapper-less) are the only
+     * instances needed when no mapper is in play, since v1 supports exactly
+     * one level of field access; a mapper-carrying instance is built fresh
+     * per {@link #evaluate(Object, Object, SubjectFieldMapper)} call.
+     * {@link FieldAccess#check} reads {@link #fieldMapper} directly
+     * (package-private) rather than through {@link OperatorContext}, which
+     * stays free of this internal concept.
+     */
+    final class Ctx implements OperatorContext {
+        private final boolean canNarrowField;
+        final SubjectFieldMapper<?> fieldMapper;
+
+        Ctx(boolean canNarrowField, SubjectFieldMapper<?> fieldMapper) {
             this.canNarrowField = canNarrowField;
+            this.fieldMapper = fieldMapper;
         }
 
         @Override
         public boolean resolveSubcondition(Object subject, Object condition) {
-            return evaluate(subject, condition, canNarrowField);
+            return evaluate(subject, condition, canNarrowField, fieldMapper);
         }
 
         @Override
         public boolean resolveFieldSubcondition(Object subject, Object condition) {
-            return evaluate(subject, condition, false);
+            return evaluate(subject, condition, false, null);
         }
 
         @Override

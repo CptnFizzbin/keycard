@@ -1,11 +1,13 @@
 import type { Condition } from "./condition.ts"
+import type { AnyOperator, OperatorContext } from "./operators/operator.ts"
 import { PolicyLoadException } from "../errors/index.ts"
 import { PolicyTypeMismatchError } from "../errors/policyTypeMismatchError.ts"
 import type { JsonValue } from "../lib/json.ts"
 import { getLogger } from "../lib/logger.ts"
+import type { SubjectFieldMapper } from "../subject/subjectFieldMapper.ts"
 import { DefaultOperators } from "./operators/defaultOperators.ts"
+import type { FieldMapperContext } from "./operators/field/fieldAccess.ts"
 import { checkField } from "./operators/field/fieldAccess.ts"
-import type { AnyOperator, OperatorContext } from "./operators/operator.ts"
 
 /** Every operator name {@link ConditionResolver} understands out of the box - the single source of truth for "is this name built-in". */
 export const BUILTIN_OPERATOR_NAMES: ReadonlySet<string> = new Set(DefaultOperators.map((op) => op.name))
@@ -44,8 +46,6 @@ export class ConditionResolver {
       }
       this.operatorRegistry.set(operator.name, operator)
     }
-
-    this.evaluate = this.evaluate.bind(this)
   }
 
   /**
@@ -65,8 +65,18 @@ export class ConditionResolver {
     }
   }
 
-  evaluate<TSubject>(subject: TSubject, condition: Condition<TSubject>): boolean {
-    return this.evaluateInternal(subject, condition, true)
+  /**
+   * @param fieldMapper when given, tried first for any field looked up
+   *   directly on `subject` - anywhere in the condition tree that `subject`
+   *   is still the object in scope (bare-key/`$field` access at the top
+   *   level, and inside `$and`/`$or`/`$not`, none of which narrow). Never
+   *   consulted once a field access has narrowed once - v1 permits only
+   *   one level of field narrowing (§7.4.10) - so a field the mapper
+   *   doesn't define, or any nested access, falls back to ordinary
+   *   property access.
+   */
+  evaluate<TSubject>(subject: TSubject, condition: Condition<TSubject>, fieldMapper?: SubjectFieldMapper<TSubject>): boolean {
+    return this.evaluateInternal(subject, condition, true, fieldMapper as SubjectFieldMapper<unknown> | undefined)
   }
 
   /**
@@ -76,19 +86,24 @@ export class ConditionResolver {
    * (`$and`/`$or`/`$not`), `false` once a field condition has already
    * narrowed once, since v1 supports only one level of field access.
    */
-  private evaluateInternal<TSubject>(subject: TSubject, condition: Condition<TSubject>, canNarrowField: boolean): boolean {
+  private evaluateInternal<TSubject>(
+    subject: TSubject,
+    condition: Condition<TSubject>,
+    canNarrowField: boolean,
+    fieldMapper?: SubjectFieldMapper<unknown>,
+  ): boolean {
     if (!condition) {
-      return this.evaluateOperator(subject, "$eq", condition, canNarrowField)
+      return this.evaluateOperator(subject, "$eq", condition, canNarrowField, fieldMapper)
     }
 
     if (typeof condition === "object") {
       return Object.entries(condition).every(([key, value]) => {
         if (key.startsWith("$")) {
-          return this.evaluateOperator(subject, key, value, canNarrowField)
+          return this.evaluateOperator(subject, key, value, canNarrowField, fieldMapper)
         }
 
         try {
-          return checkField(subject, key, value, this.contextFor(canNarrowField))
+          return checkField(subject, key, value, this.contextFor(canNarrowField, fieldMapper))
         } catch (e) {
           if (e instanceof PolicyTypeMismatchError) {
             getLogger().warn(e.message)
@@ -99,25 +114,42 @@ export class ConditionResolver {
       })
     }
 
-    return this.evaluateOperator(subject, "$eq", condition, canNarrowField)
+    return this.evaluateOperator(subject, "$eq", condition, canNarrowField, fieldMapper)
   }
 
-  private evaluateOperator<TSubject>(subject: TSubject, operatorName: string, value: JsonValue, canNarrowField: boolean): boolean {
+  private evaluateOperator<TSubject>(
+    subject: TSubject,
+    operatorName: string,
+    value: JsonValue,
+    canNarrowField: boolean,
+    fieldMapper?: SubjectFieldMapper<unknown>,
+  ): boolean {
     const operator = this.operatorRegistry.get(operatorName)
     if (!operator) return false
 
-    return operator.resolve(subject, value, this.contextFor(canNarrowField))
+    return operator.resolve(subject, value, this.contextFor(canNarrowField, fieldMapper))
   }
 
-  private contextFor(canNarrowField: boolean): OperatorContext {
-    return canNarrowField ? this.topContext : this.nestedContext
+  /**
+   * The shared, mapper-less {@link topContext}/{@link nestedContext} cover
+   * the common case with no extra allocation; a `fieldMapper` is only ever
+   * live for one top-level `evaluate()` call, so its context is built fresh
+   * here rather than cached on the instance.
+   */
+  private contextFor(canNarrowField: boolean, fieldMapper?: SubjectFieldMapper<unknown>): OperatorContext {
+    if (!canNarrowField) return this.nestedContext
+    return fieldMapper ? this.makeContext(true, fieldMapper) : this.topContext
   }
 
-  private makeContext(canNarrowField: boolean): OperatorContext {
-    return {
+  private makeContext(canNarrowField: boolean, fieldMapper?: SubjectFieldMapper<unknown>): OperatorContext {
+    const base: OperatorContext = {
       canNarrowField: () => canNarrowField,
-      resolveSubcondition: (subject, condition) => this.evaluateInternal(subject, condition, canNarrowField),
+      resolveSubcondition: (subject, condition) => this.evaluateInternal(subject, condition, canNarrowField, fieldMapper),
       resolveFieldSubcondition: (subject, condition) => this.evaluateInternal(subject, condition, false),
     }
+    if (!fieldMapper) return base
+
+    const mapped: FieldMapperContext = { ...base, fieldMapper }
+    return mapped
   }
 }
