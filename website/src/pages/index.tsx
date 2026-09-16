@@ -1,11 +1,10 @@
 import Link from "@docusaurus/Link"
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
+import HomepageFeatures from "@site/src/components/homepageFeatures"
 import CodeBlock from "@theme/CodeBlock"
 import Heading from "@theme/Heading"
 import Layout from "@theme/Layout"
 import type { ReactNode } from "react"
-
-import HomepageFeatures from "@site/src/components/homepageFeatures"
 
 import styles from "./index.module.css"
 
