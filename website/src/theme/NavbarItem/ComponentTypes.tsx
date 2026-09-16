@@ -1,6 +1,6 @@
 import ComponentTypes from "@theme-original/NavbarItem/ComponentTypes"
 
-import LanguageSelectorNavbarItem from "./languageSelector/index.tsx"
+import LanguageSelectorNavbarItem from "./LanguageSelector/index.tsx"
 
 export default {
   ...ComponentTypes,
