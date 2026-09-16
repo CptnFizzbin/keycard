@@ -18,12 +18,25 @@ final class FieldAccess {
      * exception: {@code $ne} (§7.4.2), which MUST be the exact negation of
      * {@code $eq} even when the field is missing, since {@code $eq} on a
      * missing field is false. See {@link #isBareNe}.
+     *
+     * <p>v1 supports only top-level field access: a field condition MUST NOT
+     * itself narrow into another field, so {@code ctx.canNarrowField()} MUST
+     * still be {@code true} at this point in the tree. When it isn't - a
+     * field condition already reached by one narrowing step attempting a
+     * second - this is a structural problem, not a data one, so it's
+     * diagnosed like any other malformed condition shape (§7.1) rather than
+     * silently returning {@code false}.
      */
     static boolean check(Object subject, String fieldName, Object condition, OperatorContext ctx) {
+        if (!ctx.canNarrowField()) {
+            Diagnostics.logTypeIssue(fieldName,
+                "v1 supports only top-level field access - a field condition can't itself narrow into another field");
+            return false;
+        }
         if (subject instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) subject;
             if (!map.containsKey(fieldName)) return isBareNe(condition);
-            return ctx.resolveSubcondition(map.get(fieldName), condition);
+            return ctx.resolveFieldSubcondition(map.get(fieldName), condition);
         }
         if (subject == null) {
             return isBareNe(condition);
@@ -32,14 +45,14 @@ final class FieldAccess {
             java.lang.reflect.Field field = subject.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
             Object subjectValue = field.get(subject);
-            return ctx.resolveSubcondition(subjectValue, condition);
+            return ctx.resolveFieldSubcondition(subjectValue, condition);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             return isBareNe(condition);
         }
     }
 
     /**
-     * SPEC_V1-0-0.md §7.3's `$ne`-on-a-missing-field carve-out is narrow: it
+     * SPEC_V1-0.md §7.3's `$ne`-on-a-missing-field carve-out is narrow: it
      * only fires when `$ne` is itself the sole nested condition being
      * evaluated at the missing field, not when it's one key among several
      * in a multi-key condition object (§7.5) or nested deeper -

@@ -23,7 +23,7 @@ cases:
 # expressible as an allow/deny case here: declaring $hasRole in
 # meta.operators without registering a checker for it MUST throw a
 # PolicyLoadException at construction time, not merely log a diagnostic at
-# evaluation time (SPEC_V1-0-0.md §4.2.3) - see each implementation's
+# evaluation time (SPEC_V1-0.md §4.2.3) - see each implementation's
 # own construction-time unit tests (e.g. impl/java's PolicyValidationTest,
 # impl/js's policy.test.ts) instead.
 
