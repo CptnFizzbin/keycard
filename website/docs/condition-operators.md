@@ -44,6 +44,18 @@ A condition value that isn't itself an operator object is shorthand for
 { tags: { $has: "featured" } }
 ```
 
+:::note[Missing fields]
+A field condition on a field the subject doesn't have evaluates to
+`false`, whichever operator is nested inside it — **except `$ne`**. Since
+`$ne` is the exact negation of `$eq` (and a missing field makes `$eq`
+evaluate to `false`), `$ne` on a missing field evaluates to `true`
+instead: `{ status: { $ne: "archived" } }` matches a subject with no
+`status` key at all. This exception applies only when `$ne` is the *sole*
+key of that condition object — in a multi-key object like
+`{ author: { $ne: null, $eq: "Alice" } }`, a missing `author` field falls
+back to the ordinary blanket `false`.
+:::
+
 ## `$substr` — pattern matching
 
 `{ $substr: pattern }` matches when `String(subject)` contains a

@@ -26,7 +26,7 @@ Derive the `Action` / `Subject` union types that `PolicyBuilder` and
 - `allow(action, subject, conditions?)` — allow action
 - `deny(action, subject, conditions?)` — deny action
 - `buildDef()` — create a `PolicyDefinition`
-- `build()` — create a `Policy` instance (coming soon)
+- `build()` — create a `Policy` instance directly
 
 ## `Subject<T>`
 
@@ -47,8 +47,8 @@ instance — `instance` is `undefined` until `.wrap()` is called.
 
 ## Condition operators
 
-`$eq`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$has`, `$substr`, `$or`,
-`$and`, `$not`, `$field`, and plain field conditions are all supported —
+`$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$has`, `$substr`,
+`$or`, `$and`, `$not`, `$field`, and plain field conditions are all supported —
 see the language-agnostic [Condition Operators](/docs/condition-operators)
 reference for the full semantics.
 
