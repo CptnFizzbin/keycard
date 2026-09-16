@@ -5,6 +5,7 @@ import org.junit.Test;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
+import com.cptnfizzbin.keycard.conditions.Conditions;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import com.cptnfizzbin.keycard.policy.Policy;
@@ -15,7 +16,6 @@ import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,7 +54,7 @@ public class PolicyValidationTest {
     public void throwsPolicyLoadExceptionForARuleWildcardedOnBothSidesCarryingACondition() {
         assertThrows(PolicyLoadException.class, () ->
             Policy.from(new PolicyDefinition("1.0.0", List.of(
-                new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Map.of("owner_id", 1))
+                new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Conditions.op("owner_id", 1))
             ))));
     }
 
@@ -74,7 +74,7 @@ public class PolicyValidationTest {
 
         assertThrows(PolicyLoadException.class, () ->
             Policy.from(new PolicyDefinition("1.0.0", null, null, meta, List.of(
-                new PolicyDefinition.Rule("allow", "Read", "Article", Map.of("$isAdmin", true))
+                new PolicyDefinition.Rule("allow", "Read", "Article", Conditions.op("$isAdmin", true))
             ))));
     }
 
@@ -167,7 +167,7 @@ public class PolicyValidationTest {
 
         PolicyDefinition def = new PolicyBuilder(List.of(hasRole))
             .allow(read, article)
-            .allow(update, user, Map.of("$hasRole", "admin"))
+            .allow(update, user, Conditions.op("$hasRole", "admin"))
             .buildDef();
 
         assertEquals(List.of("Read", "Update"), def.getMeta().getActions());
@@ -210,6 +210,6 @@ public class PolicyValidationTest {
     public void wildcardOnlyConstructorStillCatchesEc6AtAddRuleTime() {
         assertThrows(PolicyArgumentException.class, () ->
             new PolicyBuilder("*", "*")
-                .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Map.of("owner_id", 1)));
+                .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Conditions.op("owner_id", 1)));
     }
 }

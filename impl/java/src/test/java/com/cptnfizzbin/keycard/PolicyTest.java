@@ -17,7 +17,6 @@ import com.cptnfizzbin.keycard.errors.PolicyException;
 import static org.junit.Assert.*;
 
 import java.util.List;
-import java.util.Map;
 
 public class PolicyTest {
     @Getter
@@ -111,7 +110,7 @@ public class PolicyTest {
 
         Policy policy = new PolicyBuilder()
             .allow(delete, article)
-            .deny(delete, article, Map.of("status", "archived"))
+            .deny(delete, article, Conditions.field(Article::getStatus, "archived"))
             .build();
 
         assertFalse(policy.can(delete, article.wrap(new Article(1, 1, "archived"))));
@@ -174,7 +173,7 @@ public class PolicyTest {
             Operator.of("$hasRole", (subject, value, ctx) -> "admin".equals(value))
         ))
             .deny(delete, article)
-            .allow(delete, article, Map.of("$hasRole", "admin"))
+            .allow(delete, article, Conditions.op("$hasRole", "admin"))
             .build();
 
         assertTrue(policy.can(delete, article.wrap(new Article(1, 1, "published"))));
