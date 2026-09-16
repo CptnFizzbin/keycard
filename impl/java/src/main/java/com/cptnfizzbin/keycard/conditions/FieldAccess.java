@@ -26,6 +26,15 @@ final class FieldAccess {
      * second - this is a structural problem, not a data one, so it's
      * diagnosed like any other malformed condition shape (§7.1) rather than
      * silently returning {@code false}.
+     *
+     * <p>When {@code ctx} is a {@link ConditionResolver.Ctx} carrying a
+     * {@link com.cptnfizzbin.keycard.subject.SubjectFieldMapper} - only ever
+     * true here, since a mapper-carrying context is only ever built for
+     * {@code canNarrowField() == true} (§7.4.10 permits only one level of
+     * narrowing, and only field access, never {@code $and}/{@code $or}/
+     * {@code $not}, narrows {@code subject} at all) - it's tried first for
+     * {@code fieldName}; a field it doesn't define falls through to the
+     * Map/reflection path below.
      */
     static boolean check(Object subject, String fieldName, Object condition, OperatorContext ctx) {
         if (!ctx.canNarrowField()) {
@@ -33,6 +42,13 @@ final class FieldAccess {
                 "v1 supports only top-level field access - a field condition can't itself narrow into another field");
             return false;
         }
+
+        if (ctx instanceof ConditionResolver.Ctx mapped
+                && mapped.fieldMapper != null
+                && mapped.fieldMapper.hasField(fieldName)) {
+            return ctx.resolveFieldSubcondition(mapped.fieldMapper.get(subject, fieldName), condition);
+        }
+
         if (subject instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) subject;
             if (!map.containsKey(fieldName)) return isBareNe(condition);

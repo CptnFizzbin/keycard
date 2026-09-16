@@ -1,5 +1,6 @@
 package com.cptnfizzbin.keycard.builder;
 
+import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.conditions.Operator;
@@ -20,12 +21,14 @@ import java.util.Set;
 /**
  * Builds a {@link PolicyDefinition} rule by rule. {@code meta.actions}/
  * {@code meta.subjects}/{@code meta.operators} are never supplied
- * directly - {@link #buildDef()} fills them in automatically from what
- * {@link #allow}/{@link #deny} actually used and what {@code operators}
- * actually registered, so there's no separately hand-maintained catalog to
- * keep in sync by hand. The only meta fields a caller ever needs to
- * declare explicitly are the wildcard tokens themselves (§3.2.1) - nothing
- * about them can be inferred from usage.
+ * directly by default - {@link #buildDef()} fills them in automatically
+ * from what {@link #allow}/{@link #deny} actually used and what {@code
+ * operators} actually registered, so there's no separately hand-maintained
+ * catalog to keep in sync by hand. The only meta fields a caller ever needs
+ * to declare explicitly are the wildcard tokens themselves (§3.2.1) -
+ * nothing about them can be inferred from usage. {@link KeycardConfig}'s
+ * {@code actions}/{@code subjects} (optional) declare additional vocabulary
+ * up front, folded in alongside whatever usage derives.
  */
 public final class PolicyBuilder {
     /** The v1 SemVer this builder implements - stamped onto every buildDef() output, per SPEC_V1-0.md §2. Single-sourced from {@link KeyCardVersion}, alongside {@link Policy#SUPPORTED_VERSION}, so the two can never drift apart. */
@@ -38,17 +41,20 @@ public final class PolicyBuilder {
     private final WildcardToken anyAction;
     private final WildcardToken anySubject;
     private final Collection<Operator> operators;
+    private final KeycardConfig config;
 
     public PolicyBuilder() {
         this.anyAction = null;
         this.anySubject = null;
         this.operators = null;
+        this.config = null;
     }
 
     public PolicyBuilder(Collection<Operator> operators) {
         this.anyAction = null;
         this.anySubject = null;
         this.operators = operators;
+        this.config = null;
     }
 
     /**
@@ -61,13 +67,36 @@ public final class PolicyBuilder {
      *   {@code operators} are never set here; see the class doc.
      */
     public PolicyBuilder(Object anyAction, Object anySubject) {
-        this(anyAction, anySubject, null);
+        this(anyAction, anySubject, (Collection<Operator>) null);
     }
 
     public PolicyBuilder(Object anyAction, Object anySubject, Collection<Operator> operators) {
         this.anyAction = WildcardToken.of(anyAction);
         this.anySubject = WildcardToken.of(anySubject);
         this.operators = operators;
+        this.config = null;
+    }
+
+    /**
+     * @param config shared, optional config also accepted by {@link
+     *   Policy}: {@code anyAction}/{@code anySubject} are dispatched per
+     *   {@link WildcardToken#of} exactly as the {@code (Object, Object)}
+     *   constructors' are, except that unset (never assigned on {@link
+     *   KeycardConfig#builder()}, so {@code null}) leaves the wildcard "not
+     *   declared" (the "_ANY_" default applies) rather than disabling it -
+     *   pass {@link Boolean#FALSE} there to disable one explicitly. {@code
+     *   actions}/{@code subjects} are folded into {@code
+     *   meta.actions}/{@code meta.subjects} alongside whatever {@link
+     *   #allow}/{@link #deny} actually used; {@code operators} is
+     *   registered the same way the {@link Collection} constructors'
+     *   {@code operators} is; {@code mapper} is carried through to the
+     *   built {@link Policy} unchanged.
+     */
+    public PolicyBuilder(KeycardConfig config) {
+        this.anyAction = config != null && config.getAnyAction() != null ? WildcardToken.of(config.getAnyAction()) : null;
+        this.anySubject = config != null && config.getAnySubject() != null ? WildcardToken.of(config.getAnySubject()) : null;
+        this.config = config;
+        this.operators = config != null ? config.getOperators() : null;
     }
 
     public PolicyBuilder allow(Action<?> action, Subject<?> subject) {
@@ -87,18 +116,25 @@ public final class PolicyBuilder {
     }
 
     public Policy build() {
-        return new Policy(buildDef(), operators);
+        return config != null ? new Policy(buildDef(), config) : new Policy(buildDef(), operators);
     }
 
     public PolicyDefinition buildDef() {
         return new PolicyDefinition(BUILDER_VERSION, null, null, buildMeta(), rules);
     }
 
-    /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered - see the class doc. */
+    /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config.getActions()`/`config.getSubjects()` additionally declare - see the class doc. */
     private PolicyDefinition.Meta buildMeta() {
+        Set<String> actions = new LinkedHashSet<>(actionsUsed);
+        Set<String> subjects = new LinkedHashSet<>(subjectsUsed);
+        if (config != null) {
+            for (Action<?> action : config.getActions()) actions.add(action.getNameStr());
+            for (Subject<?> subject : config.getSubjects()) subjects.add(subject.getName());
+        }
+
         PolicyDefinition.Meta.Builder builder = PolicyDefinition.Meta.builder()
-            .actions(List.copyOf(actionsUsed))
-            .subjects(List.copyOf(subjectsUsed));
+            .actions(List.copyOf(actions))
+            .subjects(List.copyOf(subjects));
 
         if (anyAction != null) builder.anyAction(anyAction);
         if (anySubject != null) builder.anySubject(anySubject);

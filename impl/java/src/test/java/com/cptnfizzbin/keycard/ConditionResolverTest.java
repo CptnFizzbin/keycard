@@ -27,32 +27,32 @@ public class ConditionResolverTest {
 
     @Test
     public void testEqualityCondition() {
-        assertTrue(resolver.evaluate(5, Map.of("$eq", 5)));
-        assertFalse(resolver.evaluate(5, Map.of("$eq", 3)));
+        assertTrue(resolver.evaluate(5, Conditions.op("$eq", 5)));
+        assertFalse(resolver.evaluate(5, Conditions.op("$eq", 3)));
     }
 
     @Test
     public void testGreaterThanCondition() {
-        assertTrue(resolver.evaluate(10, Map.of("$gt", 5)));
-        assertFalse(resolver.evaluate(3, Map.of("$gt", 5)));
+        assertTrue(resolver.evaluate(10, Conditions.op("$gt", 5)));
+        assertFalse(resolver.evaluate(3, Conditions.op("$gt", 5)));
     }
 
     @Test
     public void testInCondition() {
-        assertTrue(resolver.evaluate(2, Map.of("$in", List.of(1, 2, 3))));
-        assertFalse(resolver.evaluate(5, Map.of("$in", List.of(1, 2, 3))));
+        assertTrue(resolver.evaluate(2, Conditions.op("$in", List.of(1, 2, 3))));
+        assertFalse(resolver.evaluate(5, Conditions.op("$in", List.of(1, 2, 3))));
     }
 
     @Test
     public void testHasCondition() {
-        assertTrue(resolver.evaluate(List.of(1, 2, 3), Map.of("$has", 2)));
-        assertFalse(resolver.evaluate(List.of(1, 2, 3), Map.of("$has", 5)));
+        assertTrue(resolver.evaluate(List.of(1, 2, 3), Conditions.op("$has", 2)));
+        assertFalse(resolver.evaluate(List.of(1, 2, 3), Conditions.op("$has", 5)));
     }
 
     @Test
     public void testNotCondition() {
-        assertTrue(resolver.evaluate("draft", Map.of("$not", Map.of("$eq", "published"))));
-        assertFalse(resolver.evaluate("published", Map.of("$not", Map.of("$eq", "published"))));
+        assertTrue(resolver.evaluate("draft", Conditions.not(Conditions.op("$eq", "published"))));
+        assertFalse(resolver.evaluate("published", Conditions.not(Conditions.op("$eq", "published"))));
     }
 
     @Test
@@ -79,8 +79,8 @@ public class ConditionResolverTest {
         Map<String, Object> user = Map.of("name", "james");
         Map<String, Object> article = Map.of("id", 1, "owner", user);
 
-        assertTrue(resolver.evaluate(article, Map.of("owner", Collections.singletonMap("$ne", null))));
-        assertFalse(resolver.evaluate(Collections.singletonMap("owner", null), Map.of("owner", Collections.singletonMap("$ne", null))));
+        assertTrue(resolver.evaluate(article, Map.of("owner", Conditions.op("$ne", null))));
+        assertFalse(resolver.evaluate(Collections.singletonMap("owner", null), Map.of("owner", Conditions.op("$ne", null))));
     }
 
     /**
@@ -102,11 +102,11 @@ public class ConditionResolverTest {
 
         Map<String, Object> article = Map.of("ownerId", 42, "status", "draft");
 
-        assertTrue(withCustom.evaluate(article, Map.of("$every", List.of(
+        assertTrue(withCustom.evaluate(article, Conditions.op("$every", List.of(
             Map.of("ownerId", 42),
             Map.of("status", "draft")
         ))));
-        assertFalse(withCustom.evaluate(article, Map.of("$every", List.of(
+        assertFalse(withCustom.evaluate(article, Conditions.op("$every", List.of(
             Map.of("ownerId", 42),
             Map.of("status", "published")
         ))));
