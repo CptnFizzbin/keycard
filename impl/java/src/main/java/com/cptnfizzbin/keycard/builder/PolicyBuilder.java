@@ -79,7 +79,13 @@ public final class PolicyBuilder {
 
     /**
      * @param config shared, optional config also accepted by {@link
-     *   Policy}: {@code actions}/{@code subjects} are folded into {@code
+     *   Policy}: {@code anyAction}/{@code anySubject} are dispatched per
+     *   {@link WildcardToken#of} exactly as the {@code (Object, Object)}
+     *   constructors' are, except that unset (never assigned on {@link
+     *   KeycardConfig#builder()}, so {@code null}) leaves the wildcard "not
+     *   declared" (the "_ANY_" default applies) rather than disabling it -
+     *   pass {@link Boolean#FALSE} there to disable one explicitly. {@code
+     *   actions}/{@code subjects} are folded into {@code
      *   meta.actions}/{@code meta.subjects} alongside whatever {@link
      *   #allow}/{@link #deny} actually used; {@code operators} is
      *   registered the same way the {@link Collection} constructors'
@@ -87,19 +93,8 @@ public final class PolicyBuilder {
      *   built {@link Policy} unchanged.
      */
     public PolicyBuilder(KeycardConfig config) {
-        // Mirrors the no-arg constructor's wildcard handling (leaves both
-        // "not declared", so the §3.2.1 "_ANY_" default applies) - NOT the
-        // (Object, Object, ...) constructors', where an explicit `null`
-        // instead disables the wildcard via WildcardToken.of.
-        this.anyAction = null;
-        this.anySubject = null;
-        this.config = config;
-        this.operators = config != null ? config.getOperators() : null;
-    }
-
-    public PolicyBuilder(Object anyAction, Object anySubject, KeycardConfig config) {
-        this.anyAction = WildcardToken.of(anyAction);
-        this.anySubject = WildcardToken.of(anySubject);
+        this.anyAction = config != null && config.getAnyAction() != null ? WildcardToken.of(config.getAnyAction()) : null;
+        this.anySubject = config != null && config.getAnySubject() != null ? WildcardToken.of(config.getAnySubject()) : null;
         this.config = config;
         this.operators = config != null ? config.getOperators() : null;
     }

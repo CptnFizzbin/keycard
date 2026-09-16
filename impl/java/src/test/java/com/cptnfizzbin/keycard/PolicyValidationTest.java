@@ -252,4 +252,23 @@ public class PolicyValidationTest {
         assertEquals(null, def.getMeta().getAnyAction());
         assertEquals(null, def.getMeta().getAnySubject());
     }
+
+    @Test
+    public void keycardConfigAnyActionAndAnySubjectDeclareTheWildcardTokens() {
+        KeycardConfig config = KeycardConfig.builder().anyAction("*").anySubject(false).build();
+
+        Policy policy = new PolicyBuilder(config)
+            .allow(ActionFactory.create("*"), SubjectFactory.create("Article"))
+            .allow(ActionFactory.create("Read"), SubjectFactory.create("*"))
+            .build();
+
+        // "*" is now the action wildcard token: a rule naming it as its
+        // action matches any incoming action.
+        assertTrue(policy.can(ActionFactory.create("AnythingGoes"), SubjectFactory.create("Article")));
+
+        // The subject wildcard is disabled (false): a rule's literal "*"
+        // subject only matches an incoming subject also literally named "*".
+        assertFalse(policy.can(ActionFactory.create("Read"), SubjectFactory.create("AnySubjectName")));
+        assertTrue(policy.can(ActionFactory.create("Read"), SubjectFactory.create("*")));
+    }
 }
