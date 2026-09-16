@@ -5,7 +5,7 @@ import { SubstrOperator } from "./substrOperator.ts"
 
 describe("$substr", () => {
   const $substr = SubstrOperator
-  const ctx: OperatorContext = { resolveSubcondition: vi.fn() }
+  const ctx: OperatorContext = { resolveSubcondition: vi.fn(), resolveFieldSubcondition: vi.fn(), canNarrowField: vi.fn() }
 
   describe("literal matching", () => {
     test.each([

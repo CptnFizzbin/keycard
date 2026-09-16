@@ -86,31 +86,67 @@ cases:
 
 ---
 version: "1.0.0"
-name: "nested field conditions (§7.4.10)"
+name: "field conditions are top-level only in v1 - nesting is rejected (§7.4.10)"
+description: >
+  v1 restricts field conditions to a subject's own top-level fields;
+  { name: "Alice" } here would be a second level of field narrowing
+  (author -> name), which v1 doesn't support, so the whole condition always
+  evaluates to false - regardless of what subject.author actually contains.
 rules:
   - [allow, Read, Article, { author: { name: "Alice" } }]
 
 cases:
-  - name: "nested match"
+  - name: "denied even though the nested data would have matched"
     subjectData: { author: { name: "Alice" } }
     action: Read
     subject: Article
-    expected: allow
+    expected: deny
 
-  - name: "nested mismatch"
+  - name: "denied when the nested data would not have matched either"
     subjectData: { author: { name: "Bob" } }
     action: Read
     subject: Article
     expected: deny
 
-  - name: "inner field missing"
-    subjectData: { author: {} }
+  - name: "denied when the outer field is missing"
+    subjectData: {}
     action: Read
     subject: Article
     expected: deny
 
-  - name: "outer field missing"
+---
+version: "1.0.0"
+name: "logical and comparison operators still nest inside a top-level field condition (§7.4.10)"
+description: >
+  The top-level-only restriction is about further FIELD narrowing, not about
+  using $and/$or/$not/comparison operators against the field's own value -
+  { author: { $ne: null } } stays a valid, ordinary top-level field
+  condition.
+rules:
+  - [allow, Read, Article, { author: { $ne: null } }]
+
+cases:
+  - name: "field present and non-null: allowed"
+    subjectData: { author: { name: "Alice" } }
+    action: Read
+    subject: Article
+    expected: allow
+
+  - name: "field missing: allowed ($ne's exact-negation-of-$eq exception applies here too, since $ne is the sole key)"
     subjectData: {}
+    action: Read
+    subject: Article
+    expected: allow
+
+---
+version: "1.0.0"
+name: "$field used to reach a second level of nesting is rejected the same way (§7.4.11)"
+rules:
+  - [allow, Read, Article, { author: { $field: ["name", "Alice"] } }]
+
+cases:
+  - name: "denied even though the nested data would have matched"
+    subjectData: { author: { name: "Alice" } }
     action: Read
     subject: Article
     expected: deny
