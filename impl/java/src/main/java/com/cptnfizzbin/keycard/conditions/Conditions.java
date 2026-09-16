@@ -70,11 +70,42 @@ public final class Conditions {
         return condition;
     }
 
+    /** §7.4.5: $has - the field itself is the array; matches when it contains value. */
+    public static <T, R> Map<String, Object> has(FieldGetter<T, R> getter, Object value) {
+        String fieldName = extractFieldName(getter);
+        Map<String, Object> condition = new HashMap<>();
+        condition.put(fieldName, Map.of("$has", value));
+        return condition;
+    }
+
     /** §7.4.6: $substr - a small, non-regex substring pattern language. */
     public static <T, R> Map<String, Object> substr(FieldGetter<T, R> getter, String pattern) {
         String fieldName = extractFieldName(getter);
         Map<String, Object> condition = new HashMap<>();
         condition.put(fieldName, Map.of("$substr", pattern));
+        return condition;
+    }
+
+    /**
+     * §7.4.11: $field (explicit field access) - the long form for testing a
+     * subject field whose name itself starts with "$", since a bare key
+     * starting with "$" is always parsed as an operator (§7.5). Use this
+     * instead of {@link #field} only for such dollar-prefixed field names.
+     */
+    public static Map<String, Object> field(String fieldName, Object condition) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("$field", java.util.List.of(fieldName, condition));
+        return result;
+    }
+
+    /**
+     * §7.4.12: a single-key condition for any registered operator, built-in
+     * or custom (e.g. {@code Conditions.op("$hasRole", "admin")}) - the
+     * escape hatch for operators with no dedicated helper above.
+     */
+    public static Map<String, Object> op(String operatorName, Object value) {
+        Map<String, Object> condition = new HashMap<>();
+        condition.put(operatorName, value);
         return condition;
     }
 
