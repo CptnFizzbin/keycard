@@ -11,5 +11,5 @@ package com.cptnfizzbin.keycard.version;
 public final class KeyCardVersion {
     private KeyCardVersion() {}
 
-    public static final String KEYCARD_POLICY_VERSION = "1.0";
+    public static final String KEYCARD_POLICY_VERSION = "1.0.0";
 }
