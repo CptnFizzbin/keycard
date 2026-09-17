@@ -6,6 +6,12 @@ slug: /intro
 
 # KeyCard for JavaScript
 
+:::warning[Pre-alpha]
+KeyCard is in **pre-alpha**. The API and policy format are still subject to
+breaking changes without notice. It is not yet recommended for production
+use.
+:::
+
 JavaScript access-control library inspired by CASL.js, written in
 TypeScript with full type definitions included. Provides strongly-typed,
 composable authorization policies with compile-time safety for Actions and

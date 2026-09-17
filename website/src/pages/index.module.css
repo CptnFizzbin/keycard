@@ -67,6 +67,16 @@
     margin-bottom: 2.5rem;
 }
 
+.preAlphaNotice {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    padding: 0.35rem 1rem;
+    border: 1px solid var(--deco-gold, #a9781f);
+    color: var(--deco-gold-bright, #c9932f);
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+}
+
 .decoRule {
     width: 140px;
     height: 12px;

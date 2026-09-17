@@ -23,6 +23,9 @@ function HomepageHeader() {
           Write permissions in <LanguageSwapper languages={SOURCE_LANGUAGES} /> -
           Check them in <LanguageSwapper languages={TARGET_LANGUAGES} />
         </p>
+        <p className={styles.preAlphaNotice}>
+          Pre-alpha: the API and policy format may still change without notice.
+        </p>
         <div className={styles.decoRule} />
         <div className={styles.buttons}>
           <Link className="button button--primary button--lg" to="/docs/intro">

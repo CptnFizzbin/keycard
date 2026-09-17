@@ -6,6 +6,12 @@ slug: /intro
 
 # KeyCard for Java
 
+:::warning[Pre-alpha]
+KeyCard is in **pre-alpha**. The API and policy format are still subject to
+breaking changes without notice. It is not yet recommended for production
+use.
+:::
+
 Cross-language access-control library inspired by CASL.js. Provides
 type-safe, composable authorization policies for the JVM.
 
