@@ -6,6 +6,12 @@ slug: /intro
 
 # KeyCard
 
+:::warning[Pre-alpha]
+KeyCard is in **pre-alpha**. The API, the policy format, and the condition
+language are all still subject to breaking changes without notice. It is not
+yet recommended for production use.
+:::
+
 **KeyCard** is a cross-language access-control library, strongly inspired
 by [CASL.js](https://casl.js.org/). It lets you **define** an authorization
 policy once — in one place, in one format — and **enforce** it anywhere:

@@ -79,6 +79,14 @@ const config: Config = {
       defaultMode: "dark",
       respectPrefersColorScheme: true,
     },
+    announcementBar: {
+      id: "pre-alpha-notice",
+      content:
+        "⚠️ KeyCard is in <strong>pre-alpha</strong> — the API and policy format may change without notice. Not yet recommended for production use.",
+      backgroundColor: "#a9781f",
+      textColor: "#1b1b1b",
+      isCloseable: true,
+    },
     navbar: {
       title: "KeyCard",
       logo: {
