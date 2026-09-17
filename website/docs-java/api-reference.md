@@ -205,4 +205,4 @@ Policy policy = Policy.from(policyDef, config);
 - [SPEC.md](https://github.com/CptnFizzbin/keycard/blob/main/SPEC.md) —
   complete specification
 - [Guide](/docs/intro) — language-agnostic concepts
-- [JavaScript / TypeScript implementation](/js/intro)
+- [JavaScript implementation](/js/intro)

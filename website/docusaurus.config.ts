@@ -120,7 +120,7 @@ const config: Config = {
         {
           title: "Languages",
           items: [
-            { label: "JavaScript / TypeScript", to: "/js/intro" },
+            { label: "JavaScript", to: "/js/intro" },
             { label: "Java", to: "/java/intro" },
           ],
         },

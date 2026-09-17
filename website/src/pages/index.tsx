@@ -29,7 +29,7 @@ function HomepageHeader() {
             Read the Guide
           </Link>
           <Link className="button button--outline button--lg" to="/js/intro">
-            JavaScript / TypeScript
+            JavaScript
           </Link>
           <Link className="button button--outline button--lg" to="/java/intro">
             Java

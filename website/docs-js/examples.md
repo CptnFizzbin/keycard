@@ -4,7 +4,7 @@ sidebar_label: Examples
 slug: /examples
 ---
 
-# Examples (JavaScript / TypeScript)
+# Examples (JavaScript)
 
 ### Schema-only check
 

@@ -1,15 +1,16 @@
 ---
-title: JavaScript / TypeScript
+title: JavaScript
 sidebar_label: Introduction
 slug: /intro
 ---
 
-# KeyCard for JavaScript / TypeScript
+# KeyCard for JavaScript
 
-TypeScript access-control library inspired by CASL.js. Provides
-strongly-typed, composable authorization policies with compile-time
-safety for Actions and Subjects. Runs in the browser as well as
-server-side (Node.js and other JS runtimes).
+JavaScript access-control library inspired by CASL.js, written in
+TypeScript with full type definitions included. Provides strongly-typed,
+composable authorization policies with compile-time safety for Actions
+and Subjects. Runs in the browser as well as server-side (Node.js and
+other JS runtimes).
 
 New to KeyCard's concepts? Read the language-agnostic
 **[Guide](/docs/intro)** first — Policy Definition, Rules, and the

@@ -4,7 +4,7 @@ sidebar_label: API Reference
 slug: /api-reference
 ---
 
-# API Reference (JavaScript / TypeScript)
+# API Reference (JavaScript)
 
 ## `createAction<T>(name: T)`
 

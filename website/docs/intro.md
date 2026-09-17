@@ -17,7 +17,7 @@ This guide covers the language-agnostic concepts: the policy format, the
 condition language, and the evaluation rules every KeyCard implementation
 must follow. For installation instructions and language-specific API docs,
 use the **Language** selector in the navbar above, or jump straight to the
-**[JavaScript / TypeScript](/js/intro)** or **[Java](/java/intro)** guide.
+**[JavaScript](/js/intro)** or **[Java](/java/intro)** guide.
 :::
 
 ## Why KeyCard
