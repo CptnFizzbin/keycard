@@ -1,36 +1,67 @@
 .features {
-  padding: 4rem 0 1rem;
-}
-
-.featureCol {
-  margin-bottom: 2rem;
+    padding: 4rem 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .featureCard {
-  height: 100%;
-  padding: 2rem 1.75rem;
-  border: 1px solid rgba(169, 120, 31, 0.4);
-  border-top: 3px solid var(--deco-gold, #a9781f);
-  transition: border-color 150ms ease;
-}
+    padding: 1rem;
+    border: 1px solid rgba(169, 120, 31, 0.4);
+    border-top: 3px solid var(--deco-gold, #a9781f);
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
 
-.featureCard:hover {
-  border-color: var(--deco-gold-bright, #c9932f);
-}
+    .featureHeader {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+    }
 
-.featureNumber {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 2rem;
-  color: var(--deco-gold-bright, #c9932f);
-  margin-bottom: 0.75rem;
-}
+    .featureTitle {
+        font-size: 1.15rem;
+        margin: 0;
+        padding: 0;
+    }
 
-.featureTitle {
-  font-size: 1.15rem;
-  margin-bottom: 0.75rem;
-}
+    .featureDescription {
+        margin: 0;
+        padding: 0;
+    }
 
-.featureCode {
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
+    .featureNumber {
+        font-family: 'Cinzel Decorative', serif;
+        font-size: 2rem;
+        color: var(--deco-gold-bright, #c9932f);
+        margin: 0;
+        padding: 0;
+        line-height: 1rem;
+        width: 32px;
+        text-align: center;
+    }
+
+    .featureLeft {
+        width: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .divider {
+        display: block;
+        border-left: 1px solid var(--deco-gold, #a9781f);
+        border-bottom: 1px solid var(--deco-gold, #a9781f);
+    }
+
+    .featureRight {
+        flex-grow: 1;
+        align-self: stretch;
+    }
+
+    .featureCode {
+        font-size: 0.85rem;
+        flex-grow: 1;
+    }
 }

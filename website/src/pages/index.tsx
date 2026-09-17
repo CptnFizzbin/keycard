@@ -1,6 +1,5 @@
 import Link from "@docusaurus/Link"
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
-import CodeBlock from "@theme/CodeBlock"
 import Heading from "@theme/Heading"
 import Layout from "@theme/Layout"
 import type { ReactNode } from "react"
@@ -10,12 +9,6 @@ import { LanguageSwapper } from "@site/src/components/languageSwapper"
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "@site/src/data/languages"
 
 import styles from "./index.module.css"
-
-const POLICY_SAMPLE = `version: "1.0"
-rules:
-  - [allow, Create, Article]
-  - [allow, Update, Article, { owner_id: 1 }]
-  - [deny, Delete, Article, { status: { $not: "archived" } }]`
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext()
@@ -48,20 +41,6 @@ function HomepageHeader() {
   )
 }
 
-function PolicySample() {
-  return (
-    <section className={styles.codePanelSection}>
-      <div className={styles.codePanel}>
-        <div className={styles.codePanelHeader}>
-          <span>Policy Definition</span>
-          <span>v1.0</span>
-        </div>
-        <CodeBlock language="yaml">{POLICY_SAMPLE}</CodeBlock>
-      </div>
-    </section>
-  )
-}
-
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext()
   return (
@@ -72,7 +51,6 @@ export default function Home(): ReactNode {
       <HomepageHeader />
       <main>
         <HomepageFeatures />
-        <PolicySample />
       </main>
     </Layout>
   )
