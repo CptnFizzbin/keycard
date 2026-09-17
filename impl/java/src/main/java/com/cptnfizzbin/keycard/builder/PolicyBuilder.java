@@ -5,6 +5,7 @@ import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
+import com.cptnfizzbin.keycard.lib.Catalog;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
 import com.cptnfizzbin.keycard.policy.Wildcards;
@@ -42,12 +43,21 @@ public final class PolicyBuilder {
     private final WildcardToken anySubject;
     private final Collection<Operator> operators;
     private final KeycardConfig config;
+    /** Resolves a dynamic Action/Subject's random name to its catalog key - see {@code lib/Catalog}. Empty (never null) when {@link #config} declares no keyed catalog. */
+    private final Map<String, String> actionReverseMap;
+    private final Map<String, String> subjectReverseMap;
+    private final List<String> configActionNames;
+    private final List<String> configSubjectNames;
 
     public PolicyBuilder() {
         this.anyAction = null;
         this.anySubject = null;
         this.operators = null;
         this.config = null;
+        this.actionReverseMap = Map.of();
+        this.subjectReverseMap = Map.of();
+        this.configActionNames = List.of();
+        this.configSubjectNames = List.of();
     }
 
     public PolicyBuilder(Collection<Operator> operators) {
@@ -55,6 +65,10 @@ public final class PolicyBuilder {
         this.anySubject = null;
         this.operators = operators;
         this.config = null;
+        this.actionReverseMap = Map.of();
+        this.subjectReverseMap = Map.of();
+        this.configActionNames = List.of();
+        this.configSubjectNames = List.of();
     }
 
     /**
@@ -75,6 +89,10 @@ public final class PolicyBuilder {
         this.anySubject = WildcardToken.of(anySubject);
         this.operators = operators;
         this.config = null;
+        this.actionReverseMap = Map.of();
+        this.subjectReverseMap = Map.of();
+        this.configActionNames = List.of();
+        this.configSubjectNames = List.of();
     }
 
     /**
@@ -97,6 +115,21 @@ public final class PolicyBuilder {
         this.anySubject = config != null && config.getAnySubject() != null ? WildcardToken.of(config.getAnySubject()) : null;
         this.config = config;
         this.operators = config != null ? config.getOperators() : null;
+
+        Catalog.Resolution actionsResolution = Catalog.build(
+            config != null ? config.getActions() : null,
+            config != null ? config.getActionCatalog() : null,
+            Action::getNameStr,
+            "action");
+        Catalog.Resolution subjectsResolution = Catalog.build(
+            config != null ? config.getSubjects() : null,
+            config != null ? config.getSubjectCatalog() : null,
+            Subject::getName,
+            "subject");
+        this.actionReverseMap = actionsResolution.reverseMap();
+        this.subjectReverseMap = subjectsResolution.reverseMap();
+        this.configActionNames = actionsResolution.names();
+        this.configSubjectNames = subjectsResolution.names();
     }
 
     public PolicyBuilder allow(Action<?> action, Subject<?> subject) {
@@ -104,7 +137,7 @@ public final class PolicyBuilder {
     }
 
     public PolicyBuilder allow(Action<?> action, Subject<?> subject, Map<String, Object> conditions) {
-        return addRule("allow", action.getName(), subject.getName(), conditions);
+        return addRule("allow", resolveDynamicAction(action), resolveDynamicSubject(subject), conditions);
     }
 
     public PolicyBuilder deny(Action<?> action, Subject<?> subject) {
@@ -112,7 +145,7 @@ public final class PolicyBuilder {
     }
 
     public PolicyBuilder deny(Action<?> action, Subject<?> subject, Map<String, Object> conditions) {
-        return addRule("deny", action.getName(), subject.getName(), conditions);
+        return addRule("deny", resolveDynamicAction(action), resolveDynamicSubject(subject), conditions);
     }
 
     public Policy build() {
@@ -123,14 +156,12 @@ public final class PolicyBuilder {
         return new PolicyDefinition(BUILDER_VERSION, null, null, buildMeta(), rules);
     }
 
-    /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config.getActions()`/`config.getSubjects()` additionally declare - see the class doc. */
+    /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config`'s catalogs (list and/or keyed) additionally declare - see the class doc. */
     private PolicyDefinition.Meta buildMeta() {
         Set<String> actions = new LinkedHashSet<>(actionsUsed);
+        actions.addAll(configActionNames);
         Set<String> subjects = new LinkedHashSet<>(subjectsUsed);
-        if (config != null) {
-            for (Action<?> action : config.getActions()) actions.add(action.getNameStr());
-            for (Subject<?> subject : config.getSubjects()) subjects.add(subject.getName());
-        }
+        subjects.addAll(configSubjectNames);
 
         PolicyDefinition.Meta.Builder builder = PolicyDefinition.Meta.builder()
             .actions(List.copyOf(actions))
@@ -167,5 +198,27 @@ public final class PolicyBuilder {
         subjectsUsed.add(subjectName);
         rules.add(new PolicyDefinition.Rule(effect, action, subjectName, conditions));
         return this;
+    }
+
+    /** Resolves {@code action}'s name through the action catalog; throws {@link PolicyArgumentException} if it's dynamic and never registered as a catalog value. */
+    private String resolveDynamicAction(Action<?> action) {
+        if (action.isDynamic() && !actionReverseMap.containsKey(action.getNameStr())) {
+            throw new PolicyArgumentException(
+                "This Action was created via Action.create()/ActionFactory.create() with no name and must be"
+                    + " registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+            );
+        }
+        return Catalog.resolveName(actionReverseMap, action.getNameStr());
+    }
+
+    /** Resolves {@code subject}'s name through the subject catalog; throws {@link PolicyArgumentException} if it's dynamic and never registered as a catalog value. */
+    private String resolveDynamicSubject(Subject<?> subject) {
+        if (subject.isDynamic() && !subjectReverseMap.containsKey(subject.getName())) {
+            throw new PolicyArgumentException(
+                "This Subject was created via Subject.create()/SubjectFactory.create() with no name and must be"
+                    + " registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+            );
+        }
+        return Catalog.resolveName(subjectReverseMap, subject.getName());
     }
 }

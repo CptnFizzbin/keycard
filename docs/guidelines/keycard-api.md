@@ -134,7 +134,7 @@ for it today.
 Dynamic (unnamed) Subjects/Actions and the Catalog
 ----------------------------------------------------
 
-> This section is a proposed extension, not yet implemented.
+> Implemented in both `impl/js` and `impl/java`.
 
 `createSubject`/`createAction` should also be callable with **no** name:
 

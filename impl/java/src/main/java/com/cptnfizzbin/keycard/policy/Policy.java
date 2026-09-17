@@ -9,6 +9,8 @@ import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyException;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
 import com.cptnfizzbin.keycard.errors.PolicyVersionException;
+import com.cptnfizzbin.keycard.lib.Catalog;
+import com.cptnfizzbin.keycard.lib.Logger;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
 
 import java.util.Collection;
@@ -16,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 public final class Policy {
     /**
@@ -32,6 +33,11 @@ public final class Policy {
     private final PolicyDefinition definition;
     private final ConditionResolver resolver;
     private final KeycardConfig config;
+    /** Resolves a dynamic Action/Subject's random name to its catalog key - see {@code lib/Catalog}. Empty (never null) when {@link #config} declares no keyed catalog. */
+    private final Map<String, String> actionReverseMap;
+    private final Map<String, String> subjectReverseMap;
+    /** Distinct raw ids already warned about via {@link #warnIfUnregisteredDynamic} - deduped per id, not per {@link #can}/{@link #cannot}/{@link #require} call. */
+    private final Set<String> warnedDynamicIds = new HashSet<>();
 
     public Policy(PolicyDefinition definition) {
         this(definition, (Collection<Operator>) null);
@@ -49,9 +55,11 @@ public final class Policy {
 
         this.definition = definition;
         this.config = null;
+        this.actionReverseMap = Map.of();
+        this.subjectReverseMap = Map.of();
         this.resolver = new ConditionResolver(operators);
         validateOperatorsRegistered(definition, resolver);
-        validateRules(definition, null);
+        validateRules(definition, List.of(), List.of());
     }
 
     /** Advanced escape hatch: supply an already-built {@link ConditionResolver} directly. */
@@ -60,9 +68,11 @@ public final class Policy {
 
         this.definition = definition;
         this.config = null;
+        this.actionReverseMap = Map.of();
+        this.subjectReverseMap = Map.of();
         this.resolver = resolver != null ? resolver : new ConditionResolver();
         validateOperatorsRegistered(definition, this.resolver);
-        validateRules(definition, null);
+        validateRules(definition, List.of(), List.of());
     }
 
     /**
@@ -70,10 +80,13 @@ public final class Policy {
      *   PolicyBuilder} (SPEC_V1-0-0.md §3.2.2/§7.4.12 and the
      *   SubjectFieldMapper feature): {@code actions}/{@code subjects} widen
      *   the {@code meta.actions}/{@code meta.subjects} catalogs (EC-8)
-     *   beyond what {@code definition.meta} itself declares; {@code
-     *   operators} is registered on this Policy's resolver; {@code mapper}
-     *   is consulted for a subject's fields whenever the {@link Subject}
-     *   passed to {@link #can} doesn't carry its own field mapper.
+     *   beyond what {@code definition.meta} itself declares; a keyed
+     *   {@code actionCatalog}/{@code subjectCatalog} is also a catalog
+     *   resolving a dynamic (no-name) Action/Subject's random name to its
+     *   key, built once here and cached (see {@code lib/Catalog});
+     *   {@code operators} is registered on this Policy's resolver; {@code
+     *   mapper} is consulted for a subject's fields whenever the {@link
+     *   Subject} passed to {@link #can} doesn't carry its own field mapper.
      */
     public Policy(PolicyDefinition definition, KeycardConfig config) {
         validateVersion(definition.getVersion());
@@ -81,8 +94,22 @@ public final class Policy {
         this.definition = definition;
         this.config = config;
         this.resolver = new ConditionResolver(config != null ? config.getOperators() : null);
+
+        Catalog.Resolution actionsResolution = Catalog.build(
+            config != null ? config.getActions() : null,
+            config != null ? config.getActionCatalog() : null,
+            Action::getNameStr,
+            "action");
+        Catalog.Resolution subjectsResolution = Catalog.build(
+            config != null ? config.getSubjects() : null,
+            config != null ? config.getSubjectCatalog() : null,
+            Subject::getName,
+            "subject");
+        this.actionReverseMap = actionsResolution.reverseMap();
+        this.subjectReverseMap = subjectsResolution.reverseMap();
+
         validateOperatorsRegistered(definition, resolver);
-        validateRules(definition, config);
+        validateRules(definition, actionsResolution.names(), subjectsResolution.names());
     }
 
     /**
@@ -152,7 +179,9 @@ public final class Policy {
 
     public void require(Action<?> action, Subject<?> subject) throws PolicyException {
         if (!can(action, subject)) {
-            throw new PolicyException("Access denied: cannot " + action.getName() + " on " + subject.getName());
+            String actionName = Catalog.resolveName(actionReverseMap, action.getNameStr());
+            String subjectName = Catalog.resolveName(subjectReverseMap, subject.getName());
+            throw new PolicyException("Access denied: cannot " + actionName + " on " + subjectName);
         }
     }
 
@@ -169,8 +198,10 @@ public final class Policy {
         WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
         WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);
         List<PolicyDefinition.Rule> rules = definition.getRules();
-        String actionName = action.getName();
-        String subjectName = subject.getName();
+        warnIfUnregisteredDynamic(action.isDynamic(), action.getNameStr(), actionReverseMap, "Action", "Action.create()/ActionFactory.create()");
+        warnIfUnregisteredDynamic(subject.isDynamic(), subject.getName(), subjectReverseMap, "Subject", "Subject.create()/SubjectFactory.create()");
+        String actionName = Catalog.resolveName(actionReverseMap, action.getNameStr());
+        String subjectName = Catalog.resolveName(subjectReverseMap, subject.getName());
 
         for (int i = rules.size() - 1; i >= 0; i--) {
             PolicyDefinition.Rule rule = rules.get(i);
@@ -193,11 +224,29 @@ public final class Policy {
         return false; // EC-1, EC-2: default deny.
     }
 
-    /** The subject's own field mapper (set via {@code SubjectFactory.create}) takes precedence; {@code config.getMapper()}, keyed by {@code subject.getName()}, is the fallback. */
+    /** The subject's own field mapper (set via {@code SubjectFactory.create}) takes precedence; {@code config.getMapper()}, keyed by the subject's resolved catalog name, is the fallback. */
     private SubjectFieldMapper<?> resolveFieldMapper(Subject<?> subject) {
         if (subject.getFieldMapper().isPresent()) return subject.getFieldMapper().get();
         if (config == null || config.getMapper() == null) return null;
-        return config.getMapper().get(subject.getName()).orElse(null);
+        return config.getMapper().get(Catalog.resolveName(subjectReverseMap, subject.getName())).orElse(null);
+    }
+
+    /**
+     * A dynamic (no-name) Action/Subject never registered in any catalog
+     * reachable from this Policy can't resolve to a real name - it falls
+     * through to default-deny like any other non-match (unless a wildcard
+     * rule catches it), but that's silent otherwise, so warn once per
+     * distinct id rather than once per {@link #can}/{@link #cannot}/
+     * {@link #require} call.
+     */
+    private void warnIfUnregisteredDynamic(boolean dynamic, String rawName, Map<String, String> reverseMap, String kind, String factory) {
+        if (!dynamic || reverseMap.containsKey(rawName) || warnedDynamicIds.contains(rawName)) return;
+        warnedDynamicIds.add(rawName);
+        Logger logger = config != null && config.getLogger() != null ? config.getLogger() : Logger.NO_OP;
+        logger.warn(
+            kind + " created via " + factory + " with no name was checked but never registered in any"
+                + " KeycardConfig catalog reachable from this Policy - it can never match a non-wildcard rule."
+        );
     }
 
     private static void validateVersion(String version) {
@@ -231,20 +280,17 @@ public final class Policy {
         resolver.assertAllRegistered(declared);
     }
 
-    /** @param config {@code actions}/{@code subjects}, when given, widen the {@code meta.actions}/{@code meta.subjects} catalogs below (EC-8) beyond what {@code definition.meta} declares. */
-    private static void validateRules(PolicyDefinition definition, KeycardConfig config) {
+    /** @param configActionNames/@param configSubjectNames resolved catalog names (see {@code lib/Catalog}) that, when given, widen the {@code meta.actions}/{@code meta.subjects} catalogs below (EC-8) beyond what {@code definition.meta} declares. */
+    private static void validateRules(PolicyDefinition definition, List<String> configActionNames, List<String> configSubjectNames) {
         PolicyDefinition.Meta meta = definition.getMeta();
         WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
         WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);
 
-        List<Action<?>> configActions = config != null ? config.getActions() : List.of();
-        List<Subject<?>> configSubjects = config != null ? config.getSubjects() : List.of();
-
-        Set<String> actionsCatalog = (meta != null && meta.getActions() != null) || !configActions.isEmpty()
-            ? unionNames(meta != null ? meta.getActions() : null, configActions, Action::getNameStr)
+        Set<String> actionsCatalog = (meta != null && meta.getActions() != null) || !configActionNames.isEmpty()
+            ? unionNames(meta != null ? meta.getActions() : null, configActionNames)
             : null;
-        Set<String> subjectsCatalog = (meta != null && meta.getSubjects() != null) || !configSubjects.isEmpty()
-            ? unionNames(meta != null ? meta.getSubjects() : null, configSubjects, Subject::getName)
+        Set<String> subjectsCatalog = (meta != null && meta.getSubjects() != null) || !configSubjectNames.isEmpty()
+            ? unionNames(meta != null ? meta.getSubjects() : null, configSubjectNames)
             : null;
         Set<String> operatorsCatalog = meta != null && meta.getOperators() != null ? new HashSet<>(meta.getOperators()) : null;
 
@@ -303,10 +349,10 @@ public final class Policy {
         }
     }
 
-    private static <T> Set<String> unionNames(List<String> metaNames, List<T> configItems, Function<T, String> nameOf) {
+    private static Set<String> unionNames(List<String> metaNames, List<String> configNames) {
         Set<String> names = new HashSet<>();
         if (metaNames != null) names.addAll(metaNames);
-        for (T item : configItems) names.add(nameOf.apply(item));
+        names.addAll(configNames);
         return names;
     }
 }

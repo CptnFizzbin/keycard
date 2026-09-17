@@ -2,6 +2,7 @@ package com.cptnfizzbin.keycard;
 
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.conditions.Operator;
+import com.cptnfizzbin.keycard.lib.Logger;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFieldMapperCatalog;
 
@@ -10,6 +11,7 @@ import lombok.Getter;
 import lombok.Singular;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Optional, shared config both {@link com.cptnfizzbin.keycard.policy.Policy}
@@ -44,9 +46,21 @@ public final class KeycardConfig {
     /** Declared subject vocabulary, additive to {@code meta.subjects} (SPEC_V1-0-0.md §3.2.2, EC-8). */
     @Singular
     private final List<Subject<?>> subjects;
+    /**
+     * A keyed action catalog: each key becomes the serialized name for its
+     * Action, which is how an {@link Action#create()} call with no name
+     * gets a real, stable name. Plain (not {@code @Singular}) since a
+     * builder can only be handed one {@link Map} for this field, unlike
+     * {@link #actions}, which accumulates across repeated builder calls.
+     */
+    private final Map<String, Action<?>> actionCatalog;
+    /** Keyed subject catalog - see {@link #actionCatalog}. */
+    private final Map<String, Subject<?>> subjectCatalog;
     /** Custom operators to register alongside the built-ins (SPEC_V1-0-0.md §7.4.12). */
     @Singular
     private final List<Operator> operators;
     /** SubjectFieldMappers registered by subject name - consulted when the Subject in hand doesn't carry its own field mapper. Null when never set. */
     private final SubjectFieldMapperCatalog mapper;
+    /** Logger for non-fatal diagnostics (currently: an unregistered dynamic Action/Subject encountered at {@code Policy}'s {@code can}/{@code cannot}/{@code require} time) - falls back to {@link Logger#NO_OP} when unset. */
+    private final Logger logger;
 }
