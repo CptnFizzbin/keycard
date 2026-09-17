@@ -6,6 +6,18 @@ slug: /examples
 
 # Examples (JavaScript)
 
+Every example below shares one `KeycardConfig`, built once from the
+actions/subjects in play and handed to both `PolicyBuilder` and `Policy`
+instead of kept in sync by hand — see [`KeycardConfig`](#keycardconfig)
+further down:
+
+```typescript
+const config: KeycardConfig = {
+  actions: [Actions.Create, Actions.Read, Actions.Update, Actions.Delete],
+  subjects: [Subjects.Article],
+};
+```
+
 ### Schema-only check
 
 No conditions needed — this checks whether the action/subject pair is allowed at
@@ -25,7 +37,7 @@ policy.can(Actions.Update, article);
 ### Multiple conditions
 
 ```typescript
-new PolicyBuilder()
+new PolicyBuilder({}, config)
   .allow(Actions.Update, Subjects.Article, {
     $and: [
       { owner_id: userId },
@@ -52,10 +64,13 @@ const post = createSubject<Post>("Post", {
   authorName: (instance) => instance.author.name,
 });
 
-const policy = Policy.from({
-  version: "1.0",
-  rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
-});
+const config: KeycardConfig = { actions: [read], subjects: [post] };
+
+const policy = Policy.from(
+  { version: "1.0", rules: [["allow", "Read", "Post", { authorName: "Alice" }]] },
+  {},
+  config,
+);
 
 policy.can(read, post.wrap({ status: "draft", author: { name: "Alice" } })); // true
 ```

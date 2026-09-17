@@ -6,6 +6,20 @@ slug: /examples
 
 # Examples (Java)
 
+Every example below shares one `KeycardConfig`, built once from the
+actions/subjects in play and handed to both `PolicyBuilder` and `Policy`
+instead of kept in sync by hand — see [`KeycardConfig`](#keycardconfig)
+further down:
+
+```java
+KeycardConfig config = KeycardConfig.builder()
+    .action(create)
+    .action(update)
+    .action(delete)
+    .subject(article)
+    .build();
+```
+
 ### Schema-only check
 
 ```java
@@ -25,7 +39,7 @@ policy.can(update, ref);
 ### Multiple conditions
 
 ```java
-new PolicyBuilder()
+new PolicyBuilder(config)
     .allow(update, article, Map.of(
         "$and", List.of(
             Map.of("ownerId", userId),
@@ -42,7 +56,7 @@ references, so a typo in a field name is caught by the compiler instead of
 failing silently at evaluation time:
 
 ```java
-new PolicyBuilder()
+new PolicyBuilder(config)
     .allow(update, article, Conditions.and(
         Conditions.eq(Article::getOwnerId, userId),
         Conditions.ne(Article::getStatus, "archived")
@@ -67,10 +81,15 @@ SubjectFieldMapper<Post> authorNameMapper = SubjectFieldMapper.<Post>builder()
 Subject<Post> post = SubjectFactory.create("Post", authorNameMapper);
 Action<String> read = ActionFactory.create("Read");
 
+KeycardConfig postConfig = KeycardConfig.builder()
+    .action(read)
+    .subject(post)
+    .build();
+
 // `Conditions`'s getter-based helpers can't reference "authorName" — it has
 // no real Post.getAuthorName(), only a mapper entry — so build this one
 // as a plain Map, keyed by the mapped field's synthetic name:
-Policy policy = new PolicyBuilder()
+Policy policy = new PolicyBuilder(postConfig)
     .allow(read, post, Map.of("authorName", "Alice")) // resolved via the mapper
     .build();
 ```
@@ -121,7 +140,7 @@ Policies can be serialized with Gson and shared across languages:
 
 ```java
 // Build policy in Java
-Policy policy = new PolicyBuilder()
+Policy policy = new PolicyBuilder(config)
     .allow(create, article)
     .build();
 

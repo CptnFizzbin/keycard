@@ -1,7 +1,7 @@
 import { createAction, createSubject, Policy, PolicyBuilder } from "./index.ts"
 import { getLogger } from "./lib/logger.ts"
 
-import type { InferActions, InferSubjects } from "./index"
+import type { InferActions, InferSubjects, KeycardConfig } from "./index"
 
 const logger = getLogger()
 
@@ -23,8 +23,15 @@ const Subjects = {
 
 type AppSubjects = InferSubjects<typeof Subjects>
 
+// Bundle the action/subject vocabulary into one KeycardConfig, shared by
+// PolicyBuilder and Policy instead of kept in sync by hand
+const config: KeycardConfig = {
+  actions: Object.values(Actions),
+  subjects: Object.values(Subjects),
+}
+
 // Build a policy using the type-safe definitions
-const policyDef = new PolicyBuilder<AppActions, AppSubjects>()
+const policyDef = new PolicyBuilder<AppActions, AppSubjects>({}, config)
   .allow(Actions.Create, Subjects.Article)
   .allow(Actions.Read, Subjects.Article)
   .allow(Actions.Update, Subjects.Article, { owner_id: 1 })
@@ -32,7 +39,7 @@ const policyDef = new PolicyBuilder<AppActions, AppSubjects>()
   .buildDef()
 
 // Create a policy instance
-const policy = new Policy<AppActions, AppSubjects>(policyDef)
+const policy = new Policy<AppActions, AppSubjects>(policyDef, {}, config)
 
 // Type-safe permission checks
 const article = Subjects.Article.wrap({ id: 1, owner_id: 1, status: "published" })
