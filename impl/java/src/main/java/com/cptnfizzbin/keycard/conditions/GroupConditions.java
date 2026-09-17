@@ -3,7 +3,7 @@ package com.cptnfizzbin.keycard.conditions;
 import java.util.Collection;
 
 /**
- * Pure containment logic for $in/$has (SPEC_V1-0-0.md §7.4.4, §7.4.5) -
+ * Pure containment logic for $in/$has (SPEC_V1-0.md §7.4.4, §7.4.5) -
  * type-checking the operand/subject and the required §7.1 diagnostic on
  * failure is the caller's job (ConditionResolver), so these assume an
  * already-validated {@link Collection}.

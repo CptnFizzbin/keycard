@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  *
  * Factors out the parts that don't depend on a fixture format's on-disk
  * shape: discovering `*.yaml` files, parsing the v1 `rules`/`meta` shape
- * (SPEC_V1-0-0.md §3) shared by every fixture format, the `{ action,
+ * (SPEC_V1-0.md §3) shared by every fixture format, the `{ action,
  * subject, subjectData?, expected }` shape every format's individual
  * cases boil down to once parsed, resolving one such case against a
  * {@link Policy}, and filtering fixtures by the SemVer `version` they
@@ -61,7 +61,7 @@ final class ComplianceFixtures {
         }
     }
 
-    /** Parses a raw `rules:` list of `[effect, action, subject, conditions?]` tuples into `Rule`s (SPEC_V1-0-0.md §3.3). */
+    /** Parses a raw `rules:` list of `[effect, action, subject, conditions?]` tuples into `Rule`s (SPEC_V1-0.md §3.3). */
     @SuppressWarnings("unchecked")
     static List<PolicyDefinition.Rule> toRules(List<?> rawRules) {
         List<PolicyDefinition.Rule> rules = new ArrayList<>();
@@ -79,7 +79,7 @@ final class ComplianceFixtures {
     /**
      * Parses a raw `meta:` map into a {@link PolicyDefinition.Meta},
      * preserving the "not declared" vs. "explicitly declared" distinction
-     * for anyAction/anySubject (SPEC_V1-0-0.md §3.2.1) via {@code
+     * for anyAction/anySubject (SPEC_V1-0.md §3.2.1) via {@code
      * containsKey}, since a SnakeYaml-parsed map can tell the two apart
      * where a plain nullable field can't. Whatever raw value SnakeYaml
      * parsed for `anyAction`/`anySubject` (a string, {@code null}, {@code
@@ -134,7 +134,7 @@ final class ComplianceFixtures {
         return policy.can(action, subject);
     }
 
-    /** A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V1-0-0.md §2. */
+    /** A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V1-0.md §2. */
     record SemVer(int major, int minor, int patch) implements Comparable<SemVer> {
         static SemVer parse(String raw) {
             String[] parts = raw.split("\\.");
@@ -155,7 +155,7 @@ final class ComplianceFixtures {
     /**
      * True when a fixture declaring {@code fixtureVersion} is compatible
      * with an implementation targeting {@code maxSupportedVersion}, per
-     * SPEC_V1-0-0.md §2: the same MAJOR, and a MINOR no higher than what's
+     * SPEC_V1-0.md §2: the same MAJOR, and a MINOR no higher than what's
      * supported. PATCH never affects compatibility.
      */
     static boolean isCompatible(String fixtureVersion, String maxSupportedVersion) {

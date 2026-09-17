@@ -46,7 +46,13 @@ implementation 'com.cptnfizzbin:keycard:0.0.4'
 ## Quick start
 
 ```java
-import com.cptnfizzbin.keycard.*;
+import com.cptnfizzbin.keycard.action.Action;
+import com.cptnfizzbin.keycard.action.ActionFactory;
+import com.cptnfizzbin.keycard.subject.Subject;
+import com.cptnfizzbin.keycard.subject.SubjectFactory;
+import com.cptnfizzbin.keycard.builder.PolicyBuilder;
+import com.cptnfizzbin.keycard.policy.Policy;
+import com.cptnfizzbin.keycard.errors.PolicyException;
 import java.util.Map;
 
 class Article {
@@ -114,5 +120,15 @@ policy.can("Create", article);      // compiler error: action must be an Action<
 policy.can(create, "Article");      // compiler error: subject must be a Subject<?>
 ```
 
-Continue to the [API Reference](./api-reference.md), or see
+## Beyond the basics
+
+- **`Conditions`** — a type-safe condition builder using method references
+  (`Conditions.eq(Article::getOwnerId, 1)`) instead of hand-written
+  `Map.of(...)` literals.
+- **`SubjectFieldMapper`** — resolve a condition field through an explicit
+  getter instead of reflection, for a renamed or computed field.
+- **`KeycardConfig`** — one object bundling actions/subjects/operators/field
+  mappers, accepted by both `PolicyBuilder` and `Policy`.
+
+See the [API Reference](./api-reference.md) for all three, or
 [Examples](./examples.md) for more complete walkthroughs.

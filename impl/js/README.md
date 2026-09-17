@@ -103,7 +103,7 @@ See [TYPE_SAFETY.md](../TYPE_SAFETY.md) for detailed examples.
 - `$in` - Value in array
 - `$has` - Array contains value
 - `$substr` - Substring pattern match (a small, non-regex pattern language - see
-  SPEC_V1-0-0.md §7.4.6)
+  SPEC_V1-0.md §7.4.6)
 - `$or` - Logical OR
 - `$and` - Logical AND
 - `$not` - Logical NOT

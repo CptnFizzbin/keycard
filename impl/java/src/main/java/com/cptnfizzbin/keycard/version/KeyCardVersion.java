@@ -1,7 +1,7 @@
 package com.cptnfizzbin.keycard.version;
 
 /**
- * The v1 SemVer this implementation speaks (SPEC_V1-0-0.md §2) - the
+ * The v1 SemVer this implementation speaks (SPEC_V1-0.md §2) - the
  * single source of truth {@link com.cptnfizzbin.keycard.policy.Policy}'s
  * {@code SUPPORTED_VERSION}, {@link
  * com.cptnfizzbin.keycard.builder.PolicyBuilder}'s {@code

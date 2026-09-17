@@ -6,7 +6,8 @@ slug: /intro
 
 # KeyCard for JavaScript
 
-JavaScript access-control library inspired by CASL.js. Provides strongly-typed,
+JavaScript access-control library inspired by CASL.js, written in
+TypeScript with full type definitions included. Provides strongly-typed,
 composable authorization policies with compile-time safety for Actions and
 Subjects. Runs in the browser as well as server-side (Node.js and other JS
 runtimes).

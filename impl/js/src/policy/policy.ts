@@ -8,10 +8,12 @@ import { BUILTIN_OPERATOR_NAMES } from "../conditions/conditionResolver.ts"
 import { ConditionResolver } from "../conditions/index.ts"
 import type { AnyOperator } from "../conditions/operators/operator.ts"
 import { PolicyError, PolicyLoadException, PolicyVersionException } from "../errors/index.ts"
+import type { KeycardConfig } from "../keycardConfig.ts"
 import type { Subject } from "../subject/index.ts"
+import type { SubjectFieldMapper } from "../subject/subjectFieldMapper.ts"
 import { KEYCARD_POLICY_VERSION } from "../version.ts"
 
-/** The highest version this implementation supports natively - SPEC_V1-0-0.md §2. PATCH never affects compatibility. Single-sourced from {@link KEYCARD_POLICY_VERSION}, alongside `PolicyBuilder`'s `BUILDER_VERSION`, so the two can never drift apart. */
+/** The highest version this implementation supports natively - SPEC_V1-0.md §2. PATCH never affects compatibility. Single-sourced from {@link KEYCARD_POLICY_VERSION}, alongside `PolicyBuilder`'s `BUILDER_VERSION`, so the two can never drift apart. */
 const SUPPORTED_VERSION = KEYCARD_POLICY_VERSION
 const SUPPORTED_MAJOR = semver.major(SUPPORTED_VERSION)
 const SUPPORTED_MINOR = semver.minor(SUPPORTED_VERSION)
@@ -54,17 +56,29 @@ export class Policy<
 > {
   private readonly definition: PolicyDefinition
   private readonly resolver: ConditionResolver
+  private readonly config: KeycardConfig<TOperators>
 
+  /**
+   * @param config shared, optional config also accepted by `PolicyBuilder`
+   *   (SPEC_V1-0-0.md §3.2.2/§7.4.12 and the SubjectFieldMapper feature):
+   *   `actions`/`subjects` widen the `meta.actions`/`meta.subjects`
+   *   catalogs (EC-8) beyond what `definition.meta` itself declares;
+   *   `operators`, when given, is used instead of `options.operators`;
+   *   `mapper` is consulted for a subject's fields whenever the `Subject`
+   *   passed to {@link can} doesn't carry its own `fieldMapper`.
+   */
   constructor(
     definition: PolicyDefinition,
     options: PolicyOptions<TOperators> = {},
+    config: KeycardConfig<TOperators> = {},
   ) {
     Policy.validateVersion(definition.version)
 
     this.definition = definition
-    this.resolver = new ConditionResolver(options.operators)
+    this.config = config
+    this.resolver = new ConditionResolver(config.operators ?? options.operators)
     Policy.validateOperatorsRegistered(definition, this.resolver)
-    Policy.validateRules(definition)
+    Policy.validateRules(definition, config)
   }
 
   /**
@@ -80,8 +94,9 @@ export class Policy<
   >(
     definition: PolicyDefinition,
     options: PolicyOptions<TOperators> = {},
+    config: KeycardConfig<TOperators> = {},
   ): Policy<TActions, TSubjects, TOperators> {
-    return new Policy(definition, options)
+    return new Policy(definition, options, config)
   }
 
   private static validateVersion(version: string): void {
@@ -91,7 +106,7 @@ export class Policy<
     const coerced = semver.coerce(version)
     if (!coerced || !semver.satisfies(coerced, COMPATIBLE_RANGE)) {
       throw new PolicyVersionException(
-        `Unsupported policy version "${version}": this implementation supports ${SUPPORTED_MAJOR}.0.0 through ${SUPPORTED_MAJOR}.${SUPPORTED_MINOR}.x (SPEC_V1-0-0.md §2).`,
+        `Unsupported policy version "${version}": this implementation supports ${SUPPORTED_MAJOR}.0.0 through ${SUPPORTED_MAJOR}.${SUPPORTED_MINOR}.x (SPEC_V1-0.md §2).`,
       )
     }
   }
@@ -111,19 +126,27 @@ export class Policy<
     resolver.assertAllRegistered(declared)
   }
 
-  private static validateRules(definition: PolicyDefinition): void {
+  /** @param config `actions`/`subjects`, when given, widen the `meta.actions`/`meta.subjects` catalogs below (EC-8) beyond what `definition.meta` declares. */
+  private static validateRules(definition: PolicyDefinition, config: Pick<KeycardConfig, "actions" | "subjects">): void {
     const meta = definition.meta
     const anyAction = effectiveAnyAction(meta)
     const anySubject = effectiveAnySubject(meta)
 
-    const actionsCatalog = meta?.actions ? new Set(meta.actions) : undefined
-    const subjectsCatalog = meta?.subjects ? new Set(meta.subjects) : undefined
+    const configActionNames = config.actions?.map((action) => action.name) ?? []
+    const configSubjectNames = config.subjects?.map((subject) => subject.name) ?? []
+
+    const actionsCatalog = meta?.actions || configActionNames.length > 0
+      ? new Set([...(meta?.actions ?? []), ...configActionNames])
+      : undefined
+    const subjectsCatalog = meta?.subjects || configSubjectNames.length > 0
+      ? new Set([...(meta?.subjects ?? []), ...configSubjectNames])
+      : undefined
     const operatorsCatalog = meta?.operators ? new Set(meta.operators) : undefined
 
     for (const rule of definition.rules as RuleTuple[]) {
       if (!Array.isArray(rule) || rule.length < 3) {
         throw new PolicyLoadException(
-          `Malformed rule tuple (fewer than 3 elements): ${JSON.stringify(rule)} (SPEC_V1-0-0.md §3.3, EC-10).`,
+          `Malformed rule tuple (fewer than 3 elements): ${JSON.stringify(rule)} (SPEC_V1-0.md §3.3, EC-10).`,
         )
       }
 
@@ -131,17 +154,17 @@ export class Policy<
 
       if (effect !== "allow" && effect !== "deny") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: effect must be "allow" or "deny", got ${JSON.stringify(effect)} (SPEC_V1-0-0.md §3.3, EC-10).`,
+          `Malformed rule tuple: effect must be "allow" or "deny", got ${JSON.stringify(effect)} (SPEC_V1-0.md §3.3, EC-10).`,
         )
       }
       if (typeof action !== "string") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: action must be a string, got ${JSON.stringify(action)} (SPEC_V1-0-0.md §3.3, EC-10).`,
+          `Malformed rule tuple: action must be a string, got ${JSON.stringify(action)} (SPEC_V1-0.md §3.3, EC-10).`,
         )
       }
       if (typeof subjectName !== "string") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: subject must be a string, got ${JSON.stringify(subjectName)} (SPEC_V1-0-0.md §3.3, EC-10).`,
+          `Malformed rule tuple: subject must be a string, got ${JSON.stringify(subjectName)} (SPEC_V1-0.md §3.3, EC-10).`,
         )
       }
 
@@ -150,18 +173,18 @@ export class Policy<
 
       if (isWildcardAction && isWildcardSubject && conditions) {
         throw new PolicyLoadException(
-          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V1-0-0.md §6 property 5, EC-6).`,
+          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V1-0.md §6 property 5, EC-6).`,
         )
       }
 
       if (actionsCatalog && !isWildcardAction && !actionsCatalog.has(action)) {
         throw new PolicyLoadException(
-          `Rule action "${action}" is not covered by meta.actions (SPEC_V1-0-0.md §3.2.2, EC-8).`,
+          `Rule action "${action}" is not covered by meta.actions (SPEC_V1-0.md §3.2.2, EC-8).`,
         )
       }
       if (subjectsCatalog && !isWildcardSubject && !subjectsCatalog.has(subjectName)) {
         throw new PolicyLoadException(
-          `Rule subject "${subjectName}" is not covered by meta.subjects (SPEC_V1-0-0.md §3.2.2, EC-8).`,
+          `Rule subject "${subjectName}" is not covered by meta.subjects (SPEC_V1-0.md §3.2.2, EC-8).`,
         )
       }
 
@@ -171,7 +194,7 @@ export class Policy<
         for (const op of used) {
           if (!operatorsCatalog.has(op)) {
             throw new PolicyLoadException(
-              `Rule uses custom operator "${op}" not covered by meta.operators (SPEC_V1-0-0.md §3.2.3, EC-13).`,
+              `Rule uses custom operator "${op}" not covered by meta.operators (SPEC_V1-0.md §3.2.3, EC-13).`,
             )
           }
         }
@@ -198,7 +221,7 @@ export class Policy<
   }
 
   /**
-   * SPEC_V1-0-0.md §6: reverse scan over `rules`, returning the effect of
+   * SPEC_V1-0.md §6: reverse scan over `rules`, returning the effect of
    * the first (i.e. most-recently-declared) rule whose action, subject,
    * and (if present) conditions all match. There is no independent
    * "allow AND NOT deny" veto and no combination of multiple matching
@@ -221,7 +244,7 @@ export class Policy<
         // A conditional rule can never be satisfied by a bare-type/no-instance
         // check - there's no instance data for the condition to inspect (EC-7).
         if (subject.instance === undefined) continue
-        if (!this.resolver.evaluate(subject.instance, ruleConditions)) continue
+        if (!this.resolver.evaluate(subject.instance, ruleConditions, this.resolveFieldMapper(subject))) continue
         return effect === "allow"
       }
 
@@ -229,6 +252,11 @@ export class Policy<
     }
 
     return false // EC-1, EC-2: default deny.
+  }
+
+  /** The subject's own `fieldMapper` (set via `createSubject`) takes precedence; `config.mapper`, keyed by `subject.name`, is the fallback. */
+  private resolveFieldMapper(subject: TSubjects): SubjectFieldMapper<unknown> | undefined {
+    return (subject.fieldMapper as SubjectFieldMapper<unknown> | undefined) ?? this.config.mapper?.get(subject.name)
   }
 
   private matchesAction(action: TActions, ruleAction: string, anyAction: string | typeof DISABLED): boolean {

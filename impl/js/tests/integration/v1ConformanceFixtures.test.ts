@@ -13,7 +13,7 @@ import { KEYCARD_POLICY_VERSION } from "../../src/version.ts"
 /**
  * Reads the v1 conformance suite under test/fixtures/v1 (see the README
  * there) - the shared, spec-derived fixtures every implementation MUST
- * read, per SPEC_V1-0-0.md §6. Each `*.yaml` file is a sequence of
+ * read, per SPEC_V1-0.md §6. Each `*.yaml` file is a sequence of
  * `---`-separated documents; each document is one self-contained
  * `{ name, rules, cases }` test suite in the v1 `PolicyDefinition` shape.
  *
@@ -69,7 +69,7 @@ function discoverFixtureFiles(): FixtureFile[] {
 
 /**
  * Some v1 conformance suites exercise a custom condition operator, which -
- * per SPEC_V1-0-0.md §7.4.12 - only the host application (here, this test
+ * per SPEC_V1-0.md §7.4.12 - only the host application (here, this test
  * suite) can implement; declaring it in meta.operators documents it but
  * doesn't wire up behavior. Keyed by fixture file name.
  */

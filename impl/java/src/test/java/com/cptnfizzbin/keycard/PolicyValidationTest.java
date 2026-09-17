@@ -5,6 +5,7 @@ import org.junit.Test;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
+import com.cptnfizzbin.keycard.conditions.Conditions;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import com.cptnfizzbin.keycard.policy.Policy;
@@ -15,14 +16,13 @@ import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-/** Construction-time validation required by SPEC_V1-0-0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section). */
+/** Construction-time validation required by SPEC_V1-0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section). */
 public class PolicyValidationTest {
 
     @Test
@@ -54,7 +54,7 @@ public class PolicyValidationTest {
     public void throwsPolicyLoadExceptionForARuleWildcardedOnBothSidesCarryingACondition() {
         assertThrows(PolicyLoadException.class, () ->
             Policy.from(new PolicyDefinition("1.0.0", List.of(
-                new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Map.of("owner_id", 1))
+                new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Conditions.op("owner_id", 1))
             ))));
     }
 
@@ -74,11 +74,11 @@ public class PolicyValidationTest {
 
         assertThrows(PolicyLoadException.class, () ->
             Policy.from(new PolicyDefinition("1.0.0", null, null, meta, List.of(
-                new PolicyDefinition.Rule("allow", "Read", "Article", Map.of("$isAdmin", true))
+                new PolicyDefinition.Rule("allow", "Read", "Article", Conditions.op("$isAdmin", true))
             ))));
     }
 
-    // --- Issue 3: operator registry collisions (SPEC_V1-0-0.md §3.2.3, EC-16) ---
+    // --- Issue 3: operator registry collisions (SPEC_V1-0.md §3.2.3, EC-16) ---
 
     @Test
     public void throwsPolicyLoadExceptionWhenACustomOperatorCollidesWithABuiltin() {
@@ -127,7 +127,7 @@ public class PolicyValidationTest {
         ); // should not throw
     }
 
-    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch (SPEC_V1-0-0.md §3.2.1) ---
+    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch (SPEC_V1-0.md §3.2.1) ---
 
     @Test
     public void falseDisablesTheActionWildcardJustLikeNull() {
@@ -167,7 +167,7 @@ public class PolicyValidationTest {
 
         PolicyDefinition def = new PolicyBuilder(List.of(hasRole))
             .allow(read, article)
-            .allow(update, user, Map.of("$hasRole", "admin"))
+            .allow(update, user, Conditions.op("$hasRole", "admin"))
             .buildDef();
 
         assertEquals(List.of("Read", "Update"), def.getMeta().getActions());
@@ -210,6 +210,65 @@ public class PolicyValidationTest {
     public void wildcardOnlyConstructorStillCatchesEc6AtAddRuleTime() {
         assertThrows(PolicyArgumentException.class, () ->
             new PolicyBuilder("*", "*")
-                .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Map.of("owner_id", 1)));
+                .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Conditions.op("owner_id", 1)));
+    }
+
+    // --- KeycardConfig, accepted by both PolicyBuilder and Policy ---
+
+    @Test
+    public void keycardConfigActionsAndSubjectsAreFoldedIntoMetaAlongsideWhatUsageDerives() {
+        KeycardConfig config = KeycardConfig.builder()
+            .actions(List.of(ActionFactory.create("Delete")))
+            .subjects(List.of(SubjectFactory.create("Comment")))
+            .build();
+
+        PolicyDefinition def = new PolicyBuilder(config)
+            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+            .buildDef();
+
+        assertEquals(List.of("Read", "Delete"), def.getMeta().getActions());
+        assertEquals(List.of("Article", "Comment"), def.getMeta().getSubjects());
+    }
+
+    @Test
+    public void keycardConfigOperatorsIsUsedByPolicyBuilder() {
+        Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> true);
+        KeycardConfig config = KeycardConfig.builder().operators(List.of(hasRole)).build();
+        Subject<Object> article = SubjectFactory.create("Article");
+
+        Policy policy = new PolicyBuilder(config)
+            .allow(ActionFactory.create("Read"), article, Map.of("$hasRole", "admin"))
+            .build();
+
+        assertTrue(policy.can(ActionFactory.create("Read"), article.wrap(new Object())));
+    }
+
+    @Test
+    public void keycardConfigLeavesWildcardTokensUndeclaredByDefault() {
+        PolicyDefinition def = new PolicyBuilder(KeycardConfig.builder().build())
+            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+            .buildDef();
+
+        assertEquals(null, def.getMeta().getAnyAction());
+        assertEquals(null, def.getMeta().getAnySubject());
+    }
+
+    @Test
+    public void keycardConfigAnyActionAndAnySubjectDeclareTheWildcardTokens() {
+        KeycardConfig config = KeycardConfig.builder().anyAction("*").anySubject(false).build();
+
+        Policy policy = new PolicyBuilder(config)
+            .allow(ActionFactory.create("*"), SubjectFactory.create("Article"))
+            .allow(ActionFactory.create("Read"), SubjectFactory.create("*"))
+            .build();
+
+        // "*" is now the action wildcard token: a rule naming it as its
+        // action matches any incoming action.
+        assertTrue(policy.can(ActionFactory.create("AnythingGoes"), SubjectFactory.create("Article")));
+
+        // The subject wildcard is disabled (false): a rule's literal "*"
+        // subject only matches an incoming subject also literally named "*".
+        assertFalse(policy.can(ActionFactory.create("Read"), SubjectFactory.create("AnySubjectName")));
+        assertTrue(policy.can(ActionFactory.create("Read"), SubjectFactory.create("*")));
     }
 }

@@ -1,5 +1,6 @@
 package com.cptnfizzbin.keycard.integration;
 
+import com.cptnfizzbin.keycard.conditions.Conditions;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
 
@@ -98,7 +99,7 @@ public class ComplianceFixturesTest {
     public void resolveTagsInstanceDataWithDunderName() {
         Policy policy = Policy.from(new PolicyDefinition(
             "1.0.0",
-            List.of(new PolicyDefinition.Rule("allow", "Update", "Article", Map.of("owner_id", 1)))
+            List.of(new PolicyDefinition.Rule("allow", "Update", "Article", Conditions.op("owner_id", 1)))
         ));
         ComplianceFixtures.TestCase matching = new ComplianceFixtures.TestCase(
             "n", "Update", "Article", Map.of("owner_id", 1), true
