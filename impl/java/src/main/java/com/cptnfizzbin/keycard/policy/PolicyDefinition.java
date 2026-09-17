@@ -13,7 +13,7 @@ import java.util.Map;
 /** The PolicyDefinition document shape - SPEC_V1-0.md §3. */
 @Data
 public final class PolicyDefinition {
-    /** Required SemVer string, e.g. "1.0" - see SPEC_V1-0.md §2. */
+    /** Required SemVer string, e.g. "1.0.0" - see SPEC_V1-0.md §2. */
     private final String version;
     /** Informational only - plays no role in evaluation. */
     private final String name;

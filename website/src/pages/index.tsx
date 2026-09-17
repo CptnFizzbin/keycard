@@ -10,7 +10,7 @@ import { LanguageSwapper } from "@site/src/components/languageSwapper"
 
 import styles from "./index.module.css"
 
-const POLICY_SAMPLE = `version: "1.0"
+const POLICY_SAMPLE = `version: "1.0.0"
 rules:
   - [allow, Create, Article]
   - [allow, Update, Article, { owner_id: 1 }]
@@ -27,7 +27,7 @@ function HomepageHeader() {
         </Heading>
         <p className={styles.heroSubtitle}>
           Define in <LanguageSwapper languages={["Java"]} /> -
-          Apply in <LanguageSwapper languages={["Javascript"]} />
+          Apply in <LanguageSwapper languages={["JavaScript"]} />
         </p>
         <div className={styles.decoRule} />
         <div className={styles.buttons}>
@@ -53,7 +53,7 @@ function PolicySample() {
       <div className={styles.codePanel}>
         <div className={styles.codePanelHeader}>
           <span>Policy Definition</span>
-          <span>v1.0</span>
+          <span>v1.0.0</span>
         </div>
         <CodeBlock language="yaml">{POLICY_SAMPLE}</CodeBlock>
       </div>

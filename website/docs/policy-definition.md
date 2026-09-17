@@ -14,7 +14,7 @@ usable in another.
 ## Envelope
 
 ```yaml
-version: "1.0"           # KeyCard policy spec version (SemVer)
+version: "1.0.0"          # KeyCard policy spec version (SemVer)
 meta: # optional
   actions: [ Create, Update, Delete ]
   subjects: [ Article ]
@@ -27,7 +27,7 @@ rules:
 ```
 
 - **`version`** — the SemVer version of the KeyCard policy spec this document
-  conforms to (currently `"1.0"`).
+  conforms to (currently `"1.0.0"`).
 - **`meta`** — optional. Can rename or disable the default wildcard
   tokens (`anyAction` / `anySubject`), and — if `actions` / `subjects`
   are declared — **enforces** them: constructing a `Policy` throws if
