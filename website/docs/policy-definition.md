@@ -14,7 +14,7 @@ usable in another.
 ## Envelope
 
 ```yaml
-version: "1.0.0"          # KeyCard policy spec version (SemVer)
+version: "1.0"            # KeyCard policy spec version (SemVer)
 meta: # optional
   actions: [ Create, Update, Delete ]
   subjects: [ Article ]
@@ -27,7 +27,9 @@ rules:
 ```
 
 - **`version`** — the SemVer version of the KeyCard policy spec this document
-  conforms to (currently `"1.0.0"`).
+  conforms to (currently `"1.0"`). `PATCH` never carries compatibility
+  meaning, so it's optional and generally excluded — `"1.0"` is shorthand
+  for `"1.0.0"`.
 - **`meta`** — optional. Can rename or disable the default wildcard
   tokens (`anyAction` / `anySubject`), and — if `actions` / `subjects`
   are declared — **enforces** them: constructing a `Policy` throws if
@@ -35,7 +37,7 @@ rules:
   matching catalog. A custom-operator catalog (`meta.operators`) and an
   opaque `meta.application` slot for host-application data are also
   available; see
-  [§4.2 of the v1.0.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#42-meta)
+  [§4.2 of the v1.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#42-meta)
   for the full `meta` shape.
 - **`rules`** — required. An ordered list of rule tuples, evaluated as described
   below.

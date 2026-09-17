@@ -53,7 +53,7 @@ const post = createSubject<Post>("Post", {
 });
 
 const policy = Policy.from({
-  version: "1.0.0",
+  version: "1.0",
   rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
 });
 
@@ -84,7 +84,7 @@ const config = { subjects: [post], mapper: mappers };
 // here even though this raw definition declares no meta.subjects of its
 // own (see Policy Definition's `meta` section for catalog enforcement):
 const policy = Policy.from(
-  { version: "1.0.0", rules: [["allow", "Read", "Post", { authorName: "Alice" }]] },
+  { version: "1.0", rules: [["allow", "Read", "Post", { authorName: "Alice" }]] },
   {},
   config,
 );

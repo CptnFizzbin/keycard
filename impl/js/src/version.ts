@@ -5,4 +5,4 @@
  * suites' baked-in compliant version all read from, so the three can
  * never drift apart.
  */
-export const KEYCARD_POLICY_VERSION = "1.0.0"
+export const KEYCARD_POLICY_VERSION = "1.0"

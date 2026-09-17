@@ -140,7 +140,7 @@ rules are evaluated.
 ## 4. Definition Structure
 
 ```yaml
-version: "1.0.0"                    # required, SemVer string — see §4.1
+version: "1.0"                      # required, SemVer string — see §4.1
 name: string                        # optional, informational only
 description: string                 # optional, informational only
 
@@ -159,7 +159,9 @@ rules:
 ### 4.1 Envelope
 
 - `version` — **REQUIRED**. A SemVer string (`MAJOR.MINOR.PATCH`; see §2
-  for what each component conceptually means).
+  for what each component conceptually means). `PATCH` (and `MINOR`)
+  **MAY** be omitted per §2.1's shorthand — `"1.0"` is the canonical form
+  for a policy document's own `version`, equivalent to `"1.0.0"`.
   - Implementations **MAY** support a different `MAJOR` version than the
     one they primarily target (e.g. a 2.x implementation **MAY** still
     understand 1.x documents). If an implementation does not support a
@@ -1014,7 +1016,7 @@ assumed anywhere above.
 ## Appendix: worked example
 
 ```yaml
-version: "1.0.0"
+version: "1.0"
 name: "Article Ownership Policy"
 description: "Users can only modify their own articles"
 
