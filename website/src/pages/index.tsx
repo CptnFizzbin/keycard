@@ -26,8 +26,8 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className={styles.heroSubtitle}>
-          Define in <LanguageSwapper languages={["Java"]} /> -
-          Apply in <LanguageSwapper languages={["JavaScript"]} />
+          Define in <LanguageSwapper /> -
+          Apply in <LanguageSwapper />
         </p>
         <div className={styles.decoRule} />
         <div className={styles.buttons}>
