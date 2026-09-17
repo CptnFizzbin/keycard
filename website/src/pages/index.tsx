@@ -27,8 +27,8 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className={styles.heroSubtitle}>
-          Define in <LanguageSwapper languages={SOURCE_LANGUAGES} /> -
-          Apply in <LanguageSwapper languages={TARGET_LANGUAGES} />
+          Write permissions in <LanguageSwapper languages={SOURCE_LANGUAGES} /> -
+          Check them in <LanguageSwapper languages={TARGET_LANGUAGES} />
         </p>
         <div className={styles.decoRule} />
         <div className={styles.buttons}>
