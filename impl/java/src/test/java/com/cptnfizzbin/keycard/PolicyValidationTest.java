@@ -16,6 +16,7 @@ import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -15,8 +15,15 @@ import { KEYCARD_POLICY_VERSION } from "../version.ts"
 
 /** The highest version this implementation supports natively - SPEC_V1-0.md §2. PATCH never affects compatibility. Single-sourced from {@link KEYCARD_POLICY_VERSION}, alongside `PolicyBuilder`'s `BUILDER_VERSION`, so the two can never drift apart. */
 const SUPPORTED_VERSION = KEYCARD_POLICY_VERSION
-const SUPPORTED_MAJOR = semver.major(SUPPORTED_VERSION)
-const SUPPORTED_MINOR = semver.minor(SUPPORTED_VERSION)
+// §2.1: MINOR/PATCH may be omitted from KEYCARD_POLICY_VERSION itself
+// ("1.0" is valid shorthand for "1.0.0"), so coerce here too rather than
+// the strict major()/minor(), which throw on a non-three-component string.
+const SUPPORTED_COERCED = semver.coerce(SUPPORTED_VERSION)
+if (!SUPPORTED_COERCED) {
+  throw new Error(`KEYCARD_POLICY_VERSION "${SUPPORTED_VERSION}" is not a valid SemVer version string.`)
+}
+const SUPPORTED_MAJOR = SUPPORTED_COERCED.major
+const SUPPORTED_MINOR = SUPPORTED_COERCED.minor
 /** Same MAJOR as SUPPORTED_VERSION, MINOR no higher - PATCH is irrelevant either way (§2). */
 const COMPATIBLE_RANGE = `>=${SUPPORTED_MAJOR}.0.0 <${SUPPORTED_MAJOR}.${SUPPORTED_MINOR + 1}.0`
 
