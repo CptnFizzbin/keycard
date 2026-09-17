@@ -12,7 +12,7 @@ const config: Config = {
   tagline: "Define your access policy once. Enforce it everywhere.",
   favicon: "img/favicon.svg",
 
-  url: "https://keycard.cptnfizzbin.com",
+  url: "https://keycard.cptnfizzbin.dev",
   baseUrl: "/",
 
   organizationName: "CptnFizzbin",
