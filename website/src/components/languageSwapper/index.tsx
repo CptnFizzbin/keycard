@@ -1,5 +1,5 @@
 import type { FC } from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import styles from "./styles.module.css"
 
@@ -9,6 +9,7 @@ interface LanguageSwapperProps {
 
 const MIN_INTERVAL_MS = 3000
 const MAX_INTERVAL_MS = 5000
+const TRANSITION_DURATION_MS = 450
 
 function randomInterval(): number {
   return MIN_INTERVAL_MS + Math.random() * (MAX_INTERVAL_MS - MIN_INTERVAL_MS)
@@ -22,6 +23,9 @@ function pickRandomLanguage(languages: readonly string[], exclude?: string): str
 
 export const LanguageSwapper: FC<LanguageSwapperProps> = ({ languages }) => {
   const [language, setLanguage] = useState(() => pickRandomLanguage(languages))
+  const [previousLanguage, setPreviousLanguage] = useState<string | null>(null)
+  const languageRef = useRef(language)
+  languageRef.current = language
   const maxLength = Math.max(...languages.map((lang) => lang.length))
 
   useEffect(() => {
@@ -29,7 +33,9 @@ export const LanguageSwapper: FC<LanguageSwapperProps> = ({ languages }) => {
 
     const scheduleSwap = () => {
       timeoutId = setTimeout(() => {
-        setLanguage((current) => pickRandomLanguage(languages, current))
+        const current = languageRef.current
+        setPreviousLanguage(current)
+        setLanguage(pickRandomLanguage(languages, current))
         scheduleSwap()
       }, randomInterval())
     }
@@ -38,9 +44,22 @@ export const LanguageSwapper: FC<LanguageSwapperProps> = ({ languages }) => {
     return () => clearTimeout(timeoutId)
   }, [languages])
 
+  useEffect(() => {
+    if (previousLanguage === null) {
+      return undefined
+    }
+    const clearId = setTimeout(() => setPreviousLanguage(null), TRANSITION_DURATION_MS)
+    return () => clearTimeout(clearId)
+  }, [previousLanguage])
+
   return (
     <span className={styles.box} style={{ width: `${maxLength}ch` }}>
-      <span key={language} className={styles.text}>
+      {previousLanguage !== null && (
+        <span key={`exit-${previousLanguage}`} className={`${styles.text} ${styles.exit}`}>
+          {previousLanguage}
+        </span>
+      )}
+      <span key={`enter-${language}`} className={`${styles.text} ${styles.enter}`}>
         {language}
       </span>
     </span>
