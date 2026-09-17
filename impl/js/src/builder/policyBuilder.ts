@@ -4,6 +4,7 @@ import type { Condition } from "../conditions/index.ts"
 import type { AnyOperator, InferCondition } from "../conditions/operators/operator.ts"
 import { PolicyArgumentError } from "../errors/index.ts"
 import type { KeycardConfig } from "../keycardConfig.ts"
+import { buildCatalog, resolveName } from "../lib/catalog.ts"
 import { DEFAULT_WILDCARD } from "../lib/wildcard.ts"
 import { Policy } from "../policy/policy.ts"
 import type { Effect, Meta, PolicyDefinition, RuleTuple } from "../policy/policyDefinition.ts"
@@ -33,11 +34,12 @@ export interface PolicyBuilderOptions<TOperators extends AnyOperator = never> {
   operators?: TOperators[]
 }
 
-function wildcardNameOf(value: Action | Subject | string | undefined | null): string | null {
+/** @param reverseMap resolves a dynamic Action/Subject's random name to its catalog key - see `lib/catalog.ts`. */
+function wildcardNameOf(value: Action | Subject | string | undefined | null, reverseMap: Map<string, string>): string | null {
   if (value === null) return null
   if (typeof value === "undefined") return DEFAULT_WILDCARD
   if (typeof value === "string") return value
-  return value.name
+  return resolveName(reverseMap, value.name)
 }
 
 /**
@@ -62,20 +64,34 @@ export class PolicyBuilder<
   private readonly actionsUsed = new Set<string>()
   private readonly subjectsUsed = new Set<string>()
   private readonly config: KeycardConfig<TOperators>
+  private readonly actionCatalog: Map<string, string>
+  private readonly subjectCatalog: Map<string, string>
+  private readonly configActionNames: string[]
+  private readonly configSubjectNames: string[]
 
   /**
    * @param config shared, optional config also accepted by `Policy`:
    *   `actions`/`subjects` are folded into `meta.actions`/`meta.subjects`
-   *   alongside whatever `allow`/`deny` actually used; `operators`, when
-   *   given, is used instead of `options.operators`; `mapper` is carried
-   *   through to the built `Policy` unchanged.
+   *   alongside whatever `allow`/`deny` actually used; a keyed
+   *   (`Record<string, Action|Subject>`) `actions`/`subjects` is also a
+   *   catalog resolving a dynamic (no-name) Action/Subject's random name
+   *   to its key, built once here and cached (see `lib/catalog.ts`);
+   *   `operators`, when given, is used instead of `options.operators`;
+   *   `mapper` is carried through to the built `Policy` unchanged.
    */
   constructor(
     options: PolicyBuilderOptions<TOperators> = {},
     config: KeycardConfig<TOperators> = {},
   ) {
-    this.anyAction = wildcardNameOf(options.anyAction)
-    this.anySubject = wildcardNameOf(options.anySubject)
+    const actions = buildCatalog(config.actions, "action")
+    const subjects = buildCatalog(config.subjects, "subject")
+    this.actionCatalog = actions.reverseMap
+    this.subjectCatalog = subjects.reverseMap
+    this.configActionNames = actions.names
+    this.configSubjectNames = subjects.names
+
+    this.anyAction = wildcardNameOf(options.anyAction, this.actionCatalog)
+    this.anySubject = wildcardNameOf(options.anySubject, this.subjectCatalog)
     this.config = config
     this.operators = config.operators ?? options.operators ?? []
   }
@@ -136,12 +152,9 @@ export class PolicyBuilder<
 
   /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config.actions`/`config.subjects` additionally declare - see the class doc. */
   private buildMeta(): Meta {
-    const configActionNames = this.config.actions?.map((action) => action.name) ?? []
-    const configSubjectNames = this.config.subjects?.map((subject) => subject.name) ?? []
-
     const meta: Meta = {
-      actions: Array.from(new Set([...this.actionsUsed, ...configActionNames])),
-      subjects: Array.from(new Set([...this.subjectsUsed, ...configSubjectNames])),
+      actions: Array.from(new Set([...this.actionsUsed, ...this.configActionNames])),
+      subjects: Array.from(new Set([...this.subjectsUsed, ...this.configSubjectNames])),
     }
     if (this.anyAction !== DEFAULT_WILDCARD) meta.anyAction = this.anyAction
     if (this.anySubject !== DEFAULT_WILDCARD) meta.anySubject = this.anySubject
@@ -150,6 +163,20 @@ export class PolicyBuilder<
   }
 
   private addRule(effect: Effect, action: TActions, subject: TSubjects, conditions?: AnyCondition): this {
+    if (action.__dynamic && !this.actionCatalog.has(action.name)) {
+      throw new PolicyArgumentError(
+        `This Action was created via createAction() with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use.`,
+      )
+    }
+    if (subject.__dynamic && !this.subjectCatalog.has(subject.name)) {
+      throw new PolicyArgumentError(
+        `This Subject was created via createSubject() with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use.`,
+      )
+    }
+
+    const actionName = resolveName(this.actionCatalog, action.name)
+    const subjectName = resolveName(this.subjectCatalog, subject.name)
+
     if (conditions) {
       // SPEC_V1-0.md §6 property 5, EC-6: a rule wildcarded on both the
       // action and the subject MUST NOT carry a Conditions element - the
@@ -158,8 +185,8 @@ export class PolicyBuilder<
       const anyAction = effectiveAnyAction({ anyAction: this.anyAction })
       const anySubject = effectiveAnySubject({ anySubject: this.anySubject })
       if (
-        anyAction !== DISABLED && action.name === anyAction
-        && anySubject !== DISABLED && subject.name === anySubject
+        anyAction !== DISABLED && actionName === anyAction
+        && anySubject !== DISABLED && subjectName === anySubject
       ) {
         throw new PolicyArgumentError(
           `A rule wildcarded on both the action ("${anyAction}") and the subject ("${anySubject}") MUST NOT carry a Conditions element (SPEC_V1-0.md §6 property 5, EC-6).`,
@@ -167,12 +194,12 @@ export class PolicyBuilder<
       }
     }
 
-    this.actionsUsed.add(action.name)
-    this.subjectsUsed.add(subject.name)
+    this.actionsUsed.add(actionName)
+    this.subjectsUsed.add(subjectName)
 
     const rule: RuleTuple = conditions !== undefined
-      ? [effect, action.name, subject.name, conditions]
-      : [effect, action.name, subject.name]
+      ? [effect, actionName, subjectName, conditions]
+      : [effect, actionName, subjectName]
     this.rules.push(rule)
     return this
   }

@@ -21,6 +21,15 @@ export interface Subject<TData = unknown> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly fieldMapper?: SubjectFieldMapper<any>
   readonly __brand: "subject"
+  /**
+   * Set only by `createSubject()` called with no name - `name` then holds a
+   * randomly-generated id rather than a developer-chosen name, and this
+   * Subject MUST be registered (as a catalog value) in the `KeycardConfig`
+   * handed to any `PolicyBuilder`/`Policy` that uses it, so its catalog key
+   * can resolve to a real, stable, serializable name. Carried through
+   * `.wrap()` unchanged, same as `name`/`fieldMapper`.
+   */
+  readonly __dynamic?: true
   /** Returns a new Subject of the same name, wrapping `obj` as its instance. */
   wrap(obj: TData): Subject<TData>
 }

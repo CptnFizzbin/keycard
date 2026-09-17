@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 
 import { Policy } from "./policy.ts"
 import { createAction } from "../action/index.ts"
@@ -179,5 +179,66 @@ describe("Policy: construction-time validation", () => {
         },
       ),
     ).not.toThrow()
+  })
+})
+
+describe("Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig catalog", () => {
+  test("a dynamic def resolves via its catalog key to match a rule written against that key", () => {
+    const create = createAction()
+    const article = createSubject()
+
+    const policy = Policy.from(
+      { version: "1.0.0", rules: [["allow", "create", "article"]] },
+      {},
+      { actions: { create }, subjects: { article } },
+    )
+
+    expect(policy.can(create, article)).toBe(true)
+  })
+
+  test("EC-8 coverage is still enforced using catalog-resolved names", () => {
+    expect(() =>
+      Policy.from(
+        { version: "1.0.0", rules: [["allow", "write", "article"]] },
+        {},
+        { actions: { read: createAction() } },
+      ),
+    ).toThrow(PolicyLoadException)
+  })
+
+  test("an unregistered dynamic Action passed to .can() warns once (deduped) via config.logger and denies", () => {
+    const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const ghost = createAction()
+    const article = createSubject("Article")
+
+    const policy = Policy.from(
+      { version: "1.0.0", rules: [["allow", "Read", "Article"]] },
+      {},
+      { logger },
+    )
+
+    expect(policy.can(ghost, article)).toBe(false)
+    expect(policy.can(ghost, article)).toBe(false)
+    expect(logger.warn).toHaveBeenCalledTimes(1)
+  })
+
+  test("an unregistered dynamic def still falls through to a matching wildcard rule", () => {
+    const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    const ghost = createAction()
+
+    const policy = Policy.from(
+      { version: "1.0.0", meta: { anyAction: "_ANY_" }, rules: [["allow", "_ANY_", "Article"]] },
+      {},
+      { logger },
+    )
+
+    expect(policy.can(ghost, createSubject("Article"))).toBe(true)
+  })
+
+  test("omitting config.logger falls back to the module-level logger without throwing", () => {
+    const ghost = createAction()
+    const policy = Policy.from({ version: "1.0.0", rules: [] })
+
+    expect(() => policy.can(ghost, createSubject("Article"))).not.toThrow()
   })
 })
