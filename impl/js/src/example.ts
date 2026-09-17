@@ -7,57 +7,66 @@ const logger = getLogger()
 
 // Define your action types
 const Actions = {
-  Create: createAction("Create"),
-  Read: createAction("Read"),
-  Update: createAction("Update"),
-  Delete: createAction("Delete"),
+  create: createAction("create"),
+  read: createAction("read"),
+  update: createAction("update"),
+  delete: createAction("delete"),
 } as const
 
 type AppActions = InferActions<typeof Actions>
 
 // Define your subject types
 const Subjects = {
-  Article: createSubject<{ id: number, owner_id: number, status: string }>("Article"),
-  ListItem: createSubject<{ id: number, title: string, owner_id: number }>("ListItem"),
+  article: createSubject<{ id: number, ownerId: number }>("article"),
+  comment: createSubject<{ userId: number, articleId: number }>("comment"),
 } as const
 
 type AppSubjects = InferSubjects<typeof Subjects>
 
-// Bundle the action/subject vocabulary into one KeycardConfig, shared by
-// PolicyBuilder and Policy instead of kept in sync by hand
+// Bundle the action/subject vocabulary into one KeycardConfig, built once
+// and shared by every PolicyBuilder/Policy instead of kept in sync by hand
 const config: KeycardConfig = {
   actions: Object.values(Actions),
   subjects: Object.values(Subjects),
 }
 
-// Build a policy using the type-safe definitions
-const policyDef = new PolicyBuilder<AppActions, AppSubjects>({}, config)
-  .allow(Actions.Create, Subjects.Article)
-  .allow(Actions.Read, Subjects.Article)
-  .allow(Actions.Update, Subjects.Article, { owner_id: 1 })
-  .deny(Actions.Delete, Subjects.Article, { status: { $not: "archived" } })
-  .buildDef()
+// Build a policy scoped to one user - owners can update their own articles
+function createUserPolicy(user: { id: number }): Policy<AppActions, AppSubjects> {
+  return new PolicyBuilder<AppActions, AppSubjects>({}, config)
+    .allow(Actions.create, Subjects.article)
+    .allow(Actions.read, Subjects.article)
+    .allow(Actions.update, Subjects.article, { ownerId: user.id })
+    .build()
+}
 
-// Create a policy instance
-const policy = new Policy<AppActions, AppSubjects>(policyDef, {}, config)
+const policy = createUserPolicy({ id: 5 })
 
 // Type-safe permission checks
-const article = Subjects.Article.wrap({ id: 1, owner_id: 1, status: "published" })
+const ownArticle = Subjects.article.wrap({ id: 1, ownerId: 5 })
+const othersArticle = Subjects.article.wrap({ id: 2, ownerId: 6 })
 
-if (policy.can(Actions.Create, Subjects.Article)) {
+if (policy.can(Actions.create, Subjects.article)) {
   logger.info("✓ Can create articles")
 }
 
-if (policy.can(Actions.Update, article)) {
+if (policy.can(Actions.update, ownArticle)) {
   logger.info("✓ Can update own article")
 }
 
-if (policy.can(Actions.Delete, article)) {
-  logger.info("✓ Can delete article")
+if (policy.can(Actions.update, othersArticle)) {
+  logger.info("✓ Can update others' article")
 } else {
-  logger.info("✗ Cannot delete non-archived article")
+  logger.info("✗ Cannot update others' article")
 }
 
+// PolicyDefinitions are plain JSON - a policy built once can be serialized,
+// sent anywhere, and reloaded with the same shared config
+const json = JSON.stringify(policy.def())
+const def = JSON.parse(json)
+const restoredPolicy = new Policy<AppActions, AppSubjects>(def, {}, config)
+
+logger.info(`Restored policy agrees: ${restoredPolicy.can(Actions.update, ownArticle)}`)
+
 // Type safety: these would be caught at compile time
-// policy.can(Actions.Create, "InvalidSubject"); // ❌ Type error
-// policy.can("InvalidAction", Subjects.Article); // ❌ Type error
+// policy.can(Actions.create, "InvalidSubject"); // ❌ Type error
+// policy.can("InvalidAction", Subjects.article); // ❌ Type error

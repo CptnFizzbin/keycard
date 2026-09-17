@@ -13,10 +13,8 @@ further down:
 
 ```java
 KeycardConfig config = KeycardConfig.builder()
-    .action(create)
-    .action(update)
-    .action(delete)
-    .subject(article)
+    .actions(List.of(create, update, delete))
+    .subjects(List.of(article))
     .build();
 ```
 
@@ -31,7 +29,7 @@ policy.can(create, article);
 
 ```java
 // Check if the user can update THIS article (with conditions)
-Article data = new Article(1, userId, "published");
+Article data = new Article(1, userId);
 Subject<Article> ref = article.wrap(data);
 policy.can(update, ref);
 ```
@@ -43,7 +41,7 @@ new PolicyBuilder(config)
     .allow(update, article, Map.of(
         "$and", List.of(
             Map.of("ownerId", userId),
-            Map.of("status", Map.of("$not", "archived"))
+            Map.of("id", Map.of("$ne", 1))
         )
     ))
     .build();
@@ -59,7 +57,7 @@ failing silently at evaluation time:
 new PolicyBuilder(config)
     .allow(update, article, Conditions.and(
         Conditions.eq(Article::getOwnerId, userId),
-        Conditions.ne(Article::getStatus, "archived")
+        Conditions.ne(Article::getId, 1)
     ))
     .build();
 ```

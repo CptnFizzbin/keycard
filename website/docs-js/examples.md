@@ -6,15 +6,31 @@ slug: /examples
 
 # Examples (JavaScript)
 
-Every example below shares one `KeycardConfig`, built once from the
-actions/subjects in play and handed to both `PolicyBuilder` and `Policy`
-instead of kept in sync by hand — see [`KeycardConfig`](#keycardconfig)
-further down:
+Every example below builds on the same `Actions`/`Subjects` from the
+[Quick start](./intro.md#quick-start):
+
+```typescript
+const Actions = {
+  create: createAction("create"),
+  read: createAction("read"),
+  update: createAction("update"),
+  delete: createAction("delete"),
+} as const;
+
+const Subjects = {
+  article: createSubject<{ id: number; ownerId: number }>("article"),
+  comment: createSubject<{ userId: number; articleId: number }>("comment"),
+} as const;
+```
+
+...and shares one `KeycardConfig`, built once from that vocabulary and
+handed to both `PolicyBuilder` and `Policy` instead of kept in sync by
+hand — see [`KeycardConfig`](#keycardconfig) further down:
 
 ```typescript
 const config: KeycardConfig = {
-  actions: [Actions.Create, Actions.Read, Actions.Update, Actions.Delete],
-  subjects: [Subjects.Article],
+  actions: Object.values(Actions),
+  subjects: Object.values(Subjects),
 };
 ```
 
@@ -24,24 +40,24 @@ No conditions needed — this checks whether the action/subject pair is allowed 
 all, ignoring any specific instance:
 
 ```typescript
-policy.can(Actions.Create, Subjects.Article);
+policy.can(Actions.create, Subjects.article);
 ```
 
 ### Condition-based check
 
 ```typescript
-const article = Subjects.Article.wrap({ id: 1, owner_id: userId, status: "published" });
-policy.can(Actions.Update, article);
+const article = Subjects.article.wrap({ id: 1, ownerId: userId });
+policy.can(Actions.update, article);
 ```
 
 ### Multiple conditions
 
 ```typescript
 new PolicyBuilder({}, config)
-  .allow(Actions.Update, Subjects.Article, {
+  .allow(Actions.update, Subjects.article, {
     $and: [
-      { owner_id: userId },
-      { status: { $not: "archived" } },
+      { ownerId: userId },
+      { id: { $ne: 1 } },
     ],
   })
   .buildDef();
@@ -117,7 +133,7 @@ typed API. Build that rule as a plain object instead, as shown above.
 
 ```typescript
 try {
-  policy.require(Actions.Delete, article);
+  policy.require(Actions.delete, article);
 } catch (err) {
   console.warn("Access denied:", err.message);
   sendError(403, "You do not have permission to delete this article");

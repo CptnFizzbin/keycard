@@ -36,17 +36,17 @@ npm install @cptn-fizzbin/keycard
 
 ```typescript
 import { createAction, createSubject, PolicyBuilder, Policy } from '@cptn-fizzbin/keycard';
-import type { InferActions, InferSubjects } from '@cptn-fizzbin/keycard';
+import type { InferActions, InferSubjects, KeycardConfig } from '@cptn-fizzbin/keycard';
 
 // Define your action and subject types
 const Actions = {
-  Create: createAction("Create"),
-  Update: createAction("Update"),
-  Delete: createAction("Delete"),
+  create: createAction("create"),
+  update: createAction("update"),
+  delete: createAction("delete"),
 } as const;
 
 const Subjects = {
-  Article: createSubject<{ id: number; owner_id: number; status: string }>("Article"),
+  article: createSubject<{ id: number; ownerId: number }>("article"),
 } as const;
 
 // InferActions/InferSubjects derive the union types PolicyBuilder
@@ -55,29 +55,36 @@ const Subjects = {
 type AppActions = InferActions<typeof Actions>;
 type AppSubjects = InferSubjects<typeof Subjects>;
 
-// Build a policy
-const policyDef = new PolicyBuilder<AppActions, AppSubjects>()
-  .allow(Actions.Create, Subjects.Article)
-  .allow(Actions.Update, Subjects.Article, { owner_id: 1 })
-  .deny(Actions.Delete, Subjects.Article, { status: { $not: "archived" } })
-  .buildDef();
+// Bundle the action/subject vocabulary into one KeycardConfig, built once
+// and shared by every PolicyBuilder/Policy instead of kept in sync by hand
+const config: KeycardConfig = {
+  actions: Object.values(Actions),
+  subjects: Object.values(Subjects),
+};
 
-// Create and use policy
-const policy = new Policy<AppActions, AppSubjects>(policyDef);
+// Build a policy scoped to one user
+function createUserPolicy(user: { id: number }): Policy<AppActions, AppSubjects> {
+  return new PolicyBuilder<AppActions, AppSubjects>({}, config)
+    .allow(Actions.create, Subjects.article)
+    .allow(Actions.update, Subjects.article, { ownerId: user.id })
+    .build();
+}
+
+const policy = createUserPolicy({ id: 1 });
 
 // Check by subject definition
-if (policy.can(Actions.Create, Subjects.Article)) {
+if (policy.can(Actions.create, Subjects.article)) {
   // Create article
 }
 
 // Check by subject instance
-const article = Subjects.Article.wrap({ id: 1, owner_id: 1, status: "published" });
-if (policy.can(Actions.Update, article)) {
+const article = Subjects.article.wrap({ id: 1, ownerId: 1 });
+if (policy.can(Actions.update, article)) {
   // Update article
 }
 
 // Require permission (throws if denied)
-policy.require(Actions.Delete, article); // Throws PolicyError if not allowed
+policy.require(Actions.delete, article); // Throws PolicyError if not allowed
 ```
 
 ## Type safety
