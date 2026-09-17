@@ -1,14 +1,23 @@
-.wrapper {
+.box {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  vertical-align: bottom;
+  height: 1.5em;
+  padding: 0 0.5em;
+  box-sizing: content-box;
+  border: 1px solid var(--deco-gold, #a9781f);
+  background: rgba(201, 147, 47, 0.08);
+  font-family: var(--ifm-code-font-family, 'Space Mono', SFMono-Regular, Menlo, monospace);
+  vertical-align: middle;
 }
 
 .text {
   display: inline-block;
   font-weight: 700;
   color: var(--deco-gold-bright, #c9932f);
+  white-space: nowrap;
   animation: slideDown 0.45s ease-out;
 }
 

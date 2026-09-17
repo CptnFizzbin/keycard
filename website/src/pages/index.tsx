@@ -7,6 +7,7 @@ import type { ReactNode } from "react"
 
 import HomepageFeatures from "@site/src/components/homepageFeatures"
 import { LanguageSwapper } from "@site/src/components/languageSwapper"
+import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "@site/src/data/languages"
 
 import styles from "./index.module.css"
 
@@ -26,8 +27,8 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className={styles.heroSubtitle}>
-          Define in <LanguageSwapper /> -
-          Apply in <LanguageSwapper />
+          Define in <LanguageSwapper languages={SOURCE_LANGUAGES} /> -
+          Apply in <LanguageSwapper languages={TARGET_LANGUAGES} />
         </p>
         <div className={styles.decoRule} />
         <div className={styles.buttons}>
