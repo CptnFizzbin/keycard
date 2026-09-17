@@ -1,0 +1,254 @@
+/**
+ * KeyCard — Retro-Future Art Deco theme.
+ *
+ * Palette: gunmetal black + brass/gold + verdigris teal, borrowed from
+ * 1920s-1930s Art Deco signage crossed with a chrome-and-neon "world of
+ * tomorrow" aesthetic. Infima variables are overridden below; the
+ * geometric motifs (stepped borders, sunbursts, chevrons) live in the
+ * component-level CSS modules.
+ */
+
+@import url('https://fonts.googleapis.com/css2?display=swap&family=Poiret+One');
+@import url('https://fonts.googleapis.com/css2?display=swap&family=Josefin+Sans:wght@300;400;500;600;700');
+@import url('https://fonts.googleapis.com/css2?display=swap&family=Space+Mono:wght@400;700');
+
+:root {
+    /* Brand palette (light mode: cream + bronze, still deco, less neon) */
+    --deco-black: #14110f;
+    --deco-charcoal: #1f1b17;
+    --deco-ivory: #f6ecd9;
+    --deco-ivory-dim: #ece0c8;
+    --deco-gold: #a9781f;
+    --deco-gold-bright: #c9932f;
+    --deco-teal: #0d6e63;
+    --deco-teal-bright: #128f80;
+    --deco-rust: #8a3324;
+
+    --ifm-color-primary: #7a5a17;
+    --ifm-color-primary-dark: #6e5115;
+    --ifm-color-primary-darker: #684c14;
+    --ifm-color-primary-darkest: #563f10;
+    --ifm-color-primary-light: #866319;
+    --ifm-color-primary-lighter: #8c681a;
+    --ifm-color-primary-lightest: #a1791e;
+
+    --ifm-background-color: var(--deco-ivory);
+    --ifm-font-color-base: #241d14;
+    --ifm-heading-color: #1c150e;
+    --ifm-navbar-background-color: var(--deco-black);
+    --ifm-footer-background-color: var(--deco-black);
+    --ifm-code-font-size: 92%;
+    --ifm-font-family-base: 'Josefin Sans', system-ui, sans-serif;
+    --ifm-heading-font-family: 'Poiret One', var(--ifm-font-family-base);
+    --ifm-code-font-family: 'Space Mono', SFMono-Regular, Menlo, monospace;
+
+    --deco-line: repeating-linear-gradient(
+            90deg,
+            var(--deco-gold) 0,
+            var(--deco-gold) 6px,
+            transparent 6px,
+            transparent 10px
+    );
+
+    --docusaurus-highlighted-code-line-bg: rgba(169, 120, 31, 0.15);
+}
+
+[data-theme='dark'] {
+    --deco-ivory: #efe6cf;
+    --ifm-color-primary: #d9a53b;
+    --ifm-color-primary-dark: #cf9829;
+    --ifm-color-primary-darker: #c39025;
+    --ifm-color-primary-darkest: #a1761d;
+    --ifm-color-primary-light: #deb254;
+    --ifm-color-primary-lighter: #e1b862;
+    --ifm-color-primary-lightest: #eaca88;
+
+    --ifm-background-color: #100d0a;
+    --ifm-background-surface-color: #17130f;
+    --ifm-font-color-base: #e9dfc7;
+    --ifm-heading-color: #f2e6c8;
+    --ifm-navbar-background-color: #0b0908;
+    --ifm-footer-background-color: #0b0908;
+    --ifm-toc-border-color: #33291a;
+    --ifm-table-border-color: #33291a;
+    --ifm-hr-border-color: #33291a;
+
+    --docusaurus-highlighted-code-line-bg: rgba(217, 165, 59, 0.14);
+}
+
+html {
+    overflow-x: hidden;
+}
+
+/* ---------- Global typography ---------- */
+
+h1,
+h2,
+h3 {
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+h2 {
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 64px;
+    height: 3px;
+    background: var(--deco-line);
+}
+
+a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+code {
+    border-radius: 0;
+}
+
+/* ---------- Navbar ---------- */
+
+.navbar {
+    border-bottom: 1px solid var(--deco-gold);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.navbar__title {
+    font-family: 'Poiret One', var(--ifm-font-family-base);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--deco-gold-bright);
+}
+
+.navbar__link,
+.navbar__item {
+    font-family: 'Poiret One', var(--ifm-font-family-base);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.92rem;
+}
+
+html[data-theme='dark'] .navbar__link {
+    color: var(--deco-ivory);
+}
+
+.navbar__link:hover,
+.navbar__link--active {
+    color: var(--deco-gold-bright) !important;
+}
+
+/* ---------- Sidebar ---------- */
+
+.theme-doc-sidebar-container {
+    border-right: 1px solid rgba(169, 120, 31, 0.35) !important;
+}
+
+.menu__link {
+    font-family: 'Josefin Sans', sans-serif;
+    letter-spacing: 0.02em;
+}
+
+.menu__link--active,
+.menu__link--active:hover {
+    font-weight: 600;
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+    border-top: 4px double var(--deco-gold);
+}
+
+.footer--dark {
+    background-color: var(--deco-black);
+}
+
+.footer__title {
+    font-family: 'Poiret One', var(--ifm-font-family-base);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--deco-gold-bright);
+}
+
+.footer--dark {
+    --ifm-footer-color: var(--deco-ivory-dim);
+}
+
+/* ---------- Buttons ---------- */
+
+.button {
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'Poiret One', var(--ifm-font-family-base);
+}
+
+.button--outline {
+    border-width: 2px;
+}
+
+/* ---------- Admonitions: squared-off, deco-lined ---------- */
+
+.theme-admonition {
+    border-radius: 0;
+    border-left-width: 4px;
+}
+
+.theme-admonition-tip {
+    --ifm-color-success: var(--deco-teal-bright);
+    --ifm-color-success-dark: var(--deco-teal);
+    --ifm-color-success-contrast-background: rgba(18, 143, 128, 0.12);
+    --ifm-color-success-contrast-foreground: var(--ifm-font-color-base);
+}
+
+.theme-admonition-note {
+    --ifm-color-secondary: var(--deco-gold);
+    --ifm-color-secondary-dark: var(--deco-gold);
+    --ifm-color-secondary-contrast-background: rgba(169, 120, 31, 0.12);
+    --ifm-color-secondary-contrast-foreground: var(--ifm-font-color-base);
+}
+
+.theme-admonition-warning {
+    --ifm-color-warning: var(--deco-gold-bright);
+    --ifm-color-warning-dark: var(--deco-gold);
+    --ifm-color-warning-contrast-background: rgba(201, 147, 47, 0.14);
+    --ifm-color-warning-contrast-foreground: var(--ifm-font-color-base);
+}
+
+.theme-admonition-danger,
+.theme-admonition-caution {
+    --ifm-color-danger: var(--deco-rust);
+    --ifm-color-danger-dark: var(--deco-rust);
+    --ifm-color-danger-contrast-background: rgba(138, 51, 36, 0.14);
+    --ifm-color-danger-contrast-foreground: var(--ifm-font-color-base);
+}
+
+/* ---------- Tables ---------- */
+
+table thead tr {
+    border-bottom: 2px solid var(--deco-gold);
+}
+
+/* ---------- Pagination / breadcrumb accents ---------- */
+
+.pagination-nav__link {
+    border-radius: 0;
+    border-color: rgba(169, 120, 31, 0.4);
+}
+
+.breadcrumbs__link {
+    border-radius: 0;
+}
+
+.theme-code-block {
+    margin-bottom: 0;
+    border-radius: 0;
+}

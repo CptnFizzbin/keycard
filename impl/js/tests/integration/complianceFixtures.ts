@@ -1,6 +1,8 @@
-import * as fs from "fs";
-import * as path from "path";
-import { Action, Subject, createAction, createSubject } from "../../src";
+import * as fs from "fs"
+import * as path from "path"
+
+import type { Action, Subject } from "../../src/index.ts"
+import { createAction, createSubject } from "../../src/index.ts"
 
 /**
  * Shared helpers for every compliance-fixture-driven integration suite -
@@ -18,8 +20,8 @@ import { Action, Subject, createAction, createSubject } from "../../src";
 
 /** The bit of a parsed case every fixture format shares, regardless of how its `expected` field is spelled. */
 export interface ComplianceCase {
-  subject: string;
-  subjectData?: Record<string, unknown>;
+  subject: string
+  subjectData?: Record<string, unknown>
 }
 
 /** `*.yaml` files directly under `dir` for which `filter` holds (operators: all of them), sorted by name. */
@@ -28,12 +30,12 @@ export function listYamlFiles(dir: string, filter: (fileName: string) => boolean
     .readdirSync(dir)
     .filter((f) => f.endsWith(".yaml") && filter(f))
     .sort()
-    .map((f) => path.join(dir, f));
+    .map((f) => path.join(dir, f))
 }
 
 /** The action argument every fixture-driven suite passes to `Policy.can`. */
 export function actionArgFor(testCase: { action: string }): Action {
-  return createAction(testCase.action);
+  return createAction(testCase.action)
 }
 
 /**
@@ -42,20 +44,20 @@ export function actionArgFor(testCase: { action: string }): Action {
  * or one wrapping `subjectData` as its instance when there is.
  */
 export function subjectArgFor(testCase: ComplianceCase): Subject {
-  const subject = createSubject(testCase.subject);
-  return testCase.subjectData ? subject.wrap(testCase.subjectData) : subject;
+  const subject = createSubject(testCase.subject)
+  return testCase.subjectData ? subject.wrap(testCase.subjectData) : subject
 }
 
 /** A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V1-0.md §2. */
 export interface SemVer {
-  major: number;
-  minor: number;
-  patch: number;
+  major: number
+  minor: number
+  patch: number
 }
 
 export function parseSemVer(raw: string): SemVer {
-  const [major, minor, patch] = raw.split(".").map((part) => parseInt(part, 10));
-  return { major, minor: minor ?? 0, patch: patch ?? 0 };
+  const [major, minor, patch] = raw.split(".").map((part) => parseInt(part, 10))
+  return { major, minor: minor ?? 0, patch: patch ?? 0 }
 }
 
 /**
@@ -65,9 +67,9 @@ export function parseSemVer(raw: string): SemVer {
  * affects compatibility.
  */
 export function isCompatible(fixtureVersion: string, maxSupportedVersion: string): boolean {
-  const fixture = parseSemVer(fixtureVersion);
-  const max = parseSemVer(maxSupportedVersion);
-  return fixture.major === max.major && fixture.minor <= max.minor;
+  const fixture = parseSemVer(fixtureVersion)
+  const max = parseSemVer(maxSupportedVersion)
+  return fixture.major === max.major && fixture.minor <= max.minor
 }
 
 /**
@@ -77,7 +79,7 @@ export function isCompatible(fixtureVersion: string, maxSupportedVersion: string
  * (the common case) means "use whatever version the compliance suite
  * itself bakes in".
  */
-export const MAX_VERSION_ENV_VAR = "KEYCARD_FIXTURES_MAX_VERSION";
+export const MAX_VERSION_ENV_VAR = "KEYCARD_FIXTURES_MAX_VERSION"
 
 /**
  * True when a fixture declaring `fixtureVersion` should run against a
@@ -90,6 +92,6 @@ export const MAX_VERSION_ENV_VAR = "KEYCARD_FIXTURES_MAX_VERSION";
  * `MAX_VERSION_ENV_VAR` overrides that baked-in operators when set.
  */
 export function isIncluded(fixtureVersion: string, compliantVersion: string): boolean {
-  const override = process.env[MAX_VERSION_ENV_VAR];
-  return isCompatible(fixtureVersion, override || compliantVersion);
+  const override = process.env[MAX_VERSION_ENV_VAR]
+  return isCompatible(fixtureVersion, override || compliantVersion)
 }

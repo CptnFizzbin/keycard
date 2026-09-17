@@ -1,0 +1,124 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+.heroBanner {
+    position: relative;
+    overflow: hidden;
+    padding: 6rem 1rem 5rem;
+    text-align: center;
+    background: var(--ifm-navbar-background-color);
+    color: var(--deco-ivory, #efe6cf);
+    border-bottom: 1px solid var(--deco-gold, #a9781f);
+}
+
+.heroBanner::before {
+    content: '';
+    position: absolute;
+    inset: -20% -20% 0%;
+    background: repeating-conic-gradient(
+            from 0deg,
+            rgba(201, 147, 47, 0.16) 0deg 4deg,
+            transparent 4deg 12deg
+    );
+    mask-image: radial-gradient(circle at 50% 30%, black, transparent 65%);
+    -webkit-mask-image: radial-gradient(
+            circle at 50% 30%,
+            black,
+            transparent 65%
+    );
+    pointer-events: none;
+}
+
+.heroInner {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.eyebrow {
+    display: inline-block;
+    margin-bottom: 1.25rem;
+    padding: 0.35rem 1rem;
+    border: 1px solid var(--deco-gold-bright, #c9932f);
+    color: var(--deco-gold-bright, #c9932f);
+    font-family: 'Poiret One', sans-serif;
+    letter-spacing: 0.3em;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.heroTitle {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    margin-bottom: 1rem;
+    color: var(--deco-gold-bright, #c9932f);
+    text-shadow: 0 0 24px rgba(201, 147, 47, 0.35);
+}
+
+.heroSubtitle {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: var(--deco-ivory, #efe6cf);
+    opacity: 0.92;
+    margin-bottom: 2.5rem;
+}
+
+.decoRule {
+    width: 140px;
+    height: 12px;
+    margin: 0 auto 2.5rem;
+    background-image: var(--deco-line);
+    opacity: 0.9;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.stepEdge {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 18px;
+    background: repeating-linear-gradient(
+            45deg,
+            var(--ifm-background-color) 0,
+            var(--ifm-background-color) 10px,
+            transparent 10px,
+            transparent 20px
+    );
+    opacity: 0.06;
+    pointer-events: none;
+}
+
+.codePanelSection {
+    padding: 4rem 1rem;
+}
+
+.codePanel {
+    max-width: 720px;
+    margin: 0 auto;
+    border: 1px solid var(--deco-gold, #a9781f);
+    padding: 0;
+}
+
+.codePanelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1.25rem;
+    border-bottom: 1px solid var(--deco-gold, #a9781f);
+    font-family: 'Poiret One', sans-serif;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}

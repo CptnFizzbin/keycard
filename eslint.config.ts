@@ -1,13 +1,18 @@
 import js from "@eslint/js"
 import stylistic from "@stylistic/eslint-plugin"
-import {defineConfig} from "eslint/config"
-import {createTypeScriptImportResolver} from "eslint-import-resolver-typescript"
+import { defineConfig, globalIgnores } from "eslint/config"
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript"
 import checkFile from "eslint-plugin-check-file"
-import {importX} from "eslint-plugin-import-x"
+import { importX } from "eslint-plugin-import-x"
 import globals from "globals"
 import tseslint from "typescript-eslint"
 
 export default defineConfig([
+  globalIgnores([
+    "**/target/",
+    "**/dist/",
+    "**/.docusaurus",
+  ]),
   tseslint.configs.recommended,
   js.configs.recommended,
   importX.flatConfigs.recommended,
@@ -27,7 +32,7 @@ export default defineConfig([
     languageOptions: {
       // __APP_VERSION__ is a build-time constant injected by vite.config.ts's `define` — see
       // src/data/appVersion.ts and src/viteEnv.d.ts.
-      globals: {...globals.browser, __APP_VERSION__: "readonly"},
+      globals: { ...globals.browser, __APP_VERSION__: "readonly" },
       parserOptions: {
         projectService: true,
       },
@@ -102,7 +107,7 @@ export default defineConfig([
       ...{ // eslint-plugin-import-x rules
         "import-x/consistent-type-specifier-style": ["error", "prefer-top-level"],
         "import-x/default": "off",
-        "import-x/extensions": ["error", "ignorePackages", {fix: true}],
+        "import-x/extensions": ["error", "ignorePackages", { fix: true }],
         "import-x/no-cycle": "error",
         "import-x/no-named-as-default-member": "off",
         "import-x/first": "error",
@@ -164,19 +169,11 @@ export default defineConfig([
     },
   },
   {
-    // Namespaced selector catalogs (see docs/adr/0014-selector-input-decomposition.md) rely on
-    // the TS `namespace` construct so members can reference each other by bare identifier without
-    // clashing with the legacy top-level selectors kept in the same file. That's also why
-    // `no-shadow` is off here: a namespace member deliberately reusing a legacy selector's name
-    // (e.g. `ProfileSelectors.selectLifestyle` alongside the module-level `selectLifestyle`) is
-    // the intended shape, not an accidental shadow.
     files: [
-      "**/*.selectors.ts",
-      "**/*.selector.ts",
+      "scripts/**/*",
     ],
     rules: {
-      "@typescript-eslint/no-namespace": "off",
-      "no-shadow": "off",
+      "check-file/filename-naming-convention": "off",
     },
   },
   {

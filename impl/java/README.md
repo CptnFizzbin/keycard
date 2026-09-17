@@ -179,7 +179,7 @@ Evaluates conditions:
 
 Serializable policy, per SPEC_V1-0.md §3:
 
-- `getVersion()` - Get the SemVer spec version, e.g. `"1.0.0"`
+- `getVersion()` - Get the SemVer spec version, e.g. `"1.0"`
 - `getMeta()` - Get the optional `meta` object (wildcard tokens, catalogs,
   application data)
 - `getRules()` - Get the ordered list of
@@ -245,7 +245,7 @@ Policy policy = new PolicyBuilder()
 Gson gson = new Gson();
 String json = gson.toJson(policy.getDefinition());
 
-// Can be loaded in TypeScript, Rust, etc.
+// Can be loaded in JavaScript, Rust, etc.
 ```
 
 ## Building and Testing
@@ -262,10 +262,3 @@ Run the example:
 ```bash
 mvn exec:java -Dexec.mainClass="com.cptnfizzbin.keycard.Example"
 ```
-
-## See Also
-
-- [SPEC.md](../SPEC.md) - Complete specification
-- [TYPE_SAFETY.md](../TYPE_SAFETY.md) - Type safety patterns
-- [node/README.md](../node/README.md) - TypeScript implementation
-- [rust/README.md](../rust/README.md) - Rust implementation
