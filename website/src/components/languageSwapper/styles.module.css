@@ -1,0 +1,57 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.text {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--deco-gold-bright, #c9932f);
+  animation: slideDown 0.45s ease-out;
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .text {
+    background: linear-gradient(
+      100deg,
+      var(--deco-gold, #a9781f) 20%,
+      #fff6d8 50%,
+      var(--deco-gold, #a9781f) 80%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation:
+      slideDown 0.45s ease-out,
+      shimmer 2.5s linear infinite;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text {
+    animation: none;
+  }
+}

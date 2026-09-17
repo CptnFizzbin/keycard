@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 
 import { SUPPORTED_LANGUAGES } from "@site/src/data/languages"
 
+import styles from "./styles.module.css"
+
 const SWAP_INTERVAL_MS = 2000
 
 function pickRandomLanguage(exclude?: string): string {
@@ -21,5 +23,11 @@ export const LanguageSwapper: FC = () => {
     return () => clearInterval(intervalId)
   }, [])
 
-  return <>{language}</>
+  return (
+    <span className={styles.wrapper}>
+      <span key={language} className={styles.text}>
+        {language}
+      </span>
+    </span>
+  )
 }
