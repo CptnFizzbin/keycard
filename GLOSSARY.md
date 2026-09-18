@@ -4,9 +4,16 @@ Term definitions for KeyCard. See [`SPEC.md`](SPEC.md) for the informal
 overview and [`SPEC_V1-0.md`](docs/spec/SPEC_V1-0.md) for the normative v1
 specification.
 
-- **Claims** - Object(s) that can be used by a builder to create a Policy
-  Definition
-  - e.g. a JWT, or `{ ownerOf: number[] }`
+- **Claims** - an object of values used either for building a policy
+  (**Policy Claims**) or for checking a subject (**Subject Claims**)
+  - **Policy Claims** - the actor-side input a `PolicyBuilder` uses to
+    decide which rules to generate
+    - e.g. a JWT, or `{ ownerOf: number[] }`
+  - **Subject Claims** - the resource-side fields a `Subject` carries for
+    Conditions to check against when a `Policy` is evaluated
+    - should be composable and scoped to only the fields a policy's
+      Conditions actually need - not the raw entity
+    - e.g. `{ ownerId: number, status: string }` for an `Article`
 - **Action** - a string that indicates that the user would like to do
   something to a subject
   - e.g. `Create`, `Read`, `Update`, `Delete`, `MarkDone`, `Archive`, ...

@@ -45,7 +45,7 @@ evaluates the exact same rules the exact same way.
 
 | Term | Meaning |
 | --- | --- |
-| **Claims** | The input used to build a policy — a JWT, a user record, anything |
+| **Claims** | An object of values used to build a policy (Policy Claims) or check a subject (Subject Claims) |
 | **Action** | What the user wants to do — `Create`, `Read`, `Update`, `Delete`, ... |
 | **Subject** | What the user wants to do it to — `Article`, `Project`, ... |
 | **Rule** | An `[effect, action, subject, conditions?]` tuple |

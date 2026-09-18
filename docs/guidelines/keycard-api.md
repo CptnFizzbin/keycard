@@ -40,7 +40,11 @@ Subject shape: a narrow projection, not the entity
 
 `createSubject<TData>`'s `TData` should be a small, deliberately chosen
 subset of fields — the ones Conditions actually need to compare against —
-not the ORM/domain entity class itself.
+not the ORM/domain entity class itself. This projection is what
+`GLOSSARY.md` calls **Subject Claims**: it should be composable (its own
+named type, not inlined at every call site, so it can be built up or
+reused across `toSubject()`/`for()`-style mappings) and scoped to only the
+fields the policy's Conditions actually need.
 
 ```typescript
 // Good: narrow, structural, no entity import needed
@@ -48,6 +52,28 @@ Subjects.Article = createSubject<{ id: number; owner_id: number; status: string 
 
 // Avoid: the raw entity
 Subjects.Article = createSubject<ArticleEntity>("Article");
+```
+
+The same idea in Java — a dedicated, composable `*SubjectClaims` type,
+scoped to just the fields `Article`'s Conditions need:
+
+```java
+@Data
+@Accessors(fluent = true, chain = true)
+public class ArticleSubjectClaims {
+    public static final Subject<ArticleSubjectClaims> SUBJECT = new Subject<>("article");
+
+    private long ownerId;
+    private String status;
+
+    public static Subject<ArticleSubjectClaims> of(Article article) {
+        return SUBJECT.wrap(
+            new ArticleSubjectClaims()
+                .ownerId(article.getOwnerId())
+                .status(article.getStatus())
+        );
+    }
+}
 ```
 
 Why this matters, concretely:
@@ -226,19 +252,21 @@ from the caller's side. Dedup the warning per distinct unregistered id
 rather than per call, so a ghost def in a hot path logs once, not on every
 invocation.
 
+Resolved questions
+------------------
+
+- **"Claims" terminology.** `GLOSSARY.md` now distinguishes **Policy
+  Claims** (actor-side data a `PolicyBuilder` uses to decide which rules
+  to generate, e.g. a JWT or `{ ownerOf: number[] }`) from **Subject
+  Claims** (the resource-side fields `Subject.instance`/`.wrap()` carries,
+  checked by Conditions against literals in a rule — in the shipped
+  example, `Article`'s own fields). "The object `toSubject()` produces" is
+  always a Subject Claims projection; don't call it "claims" without that
+  qualifier when the distinction from Policy Claims matters.
+
 Open questions (not yet resolved)
 ------------------------------------
 
-- **"Claims" terminology.** `GLOSSARY.md` defines Claims as input to a
-  `PolicyBuilder` (actor-side data used to construct rules, e.g. a JWT or
-  `{ ownerOf: number[] }`). `Subject.instance` (what `.wrap()` sets) is
-  checked by Conditions against the *resource* being acted on — in the
-  shipped example, `Article`'s own fields. These are two different things.
-  Decide, per call site, whether "the object `toSubject()` produces" means
-  a resource-fields projection (Conditions comparing against literals in
-  the rule) or an actor-claims projection (used to parameterize which
-  rules a `PolicyBuilder` even generates) — and don't call both of them
-  "claims" without being explicit about which.
 - **Actor-aware `toSubject()`.** If a mapping ever needs to precompute
   something like `isOwner: boolean` against the current actor, that moves
   authorization logic out of the declarative Condition and into
