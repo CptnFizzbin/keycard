@@ -105,6 +105,15 @@ to an `allow`/`deny` outcome. Those requirements should be covered
 separately, e.g. by implementation-specific unit tests asserting the right
 exception type.
 
+This format is also distinct from a `PolicyDefinition`'s own optional
+`tests` field (SPEC_V1-0.md §4.4, added in `1.1.0`): that field is data a
+policy document carries about *itself*, for an implementation's own
+test-runner to execute (§6.2.3); this directory's `cases:` sequences are
+the conformance harness's fixtures, external to any one policy document,
+used to validate an *implementation's* evaluation engine against the spec.
+`12-tests-field.yaml` exercises both at once - see its own file list entry
+below.
+
 ## Files
 
 - `01-action-subject-matching.yaml` — exact action/subject matching, case
@@ -130,3 +139,10 @@ exception type.
 - `10-subject-shapes.yaml` — bare type vs. wrapped instance.
 - `11-worked-example.yaml` — an end-to-end mirror of the spec's own Appendix
   policy.
+- `12-tests-field.yaml` — a `1.1.0` policy (SPEC_V1-0.md §4.4) whose own
+  embedded `tests` field is evaluation-inert: this file's `cases` (the
+  conformance-harness format below, unrelated to the policy's own `tests`)
+  confirm `can`/`cannot`/`require` behave the same with or without it.
+  Declares `"1.1.0"`, so it's skipped by a compliance suite whose
+  `COMPLIANT_VERSION` hasn't caught up yet — see "Filtering by version"
+  below.

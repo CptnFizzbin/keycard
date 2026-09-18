@@ -1,6 +1,10 @@
-# KeyCard Policy Specification — v1.0.0
+# KeyCard Policy Specification — v1.1.0
 
-Status: Normative for `version` `1.x.x` policy documents (§2).
+Status: Normative for `version` `1.x.x` policy documents (§2). This
+revision documents every `1.x.x` release up to and including `1.1.0`; a
+`1.0.x` document is unaffected by anything added since `1.0.0` (§4.4 is the
+only change) and remains valid and behaviorally identical under this
+revision.
 
 This document is the authoritative definition of the `PolicyDefinition`
 format and its evaluation semantics for the v1 line. `SPEC.md` at the repository
@@ -30,6 +34,8 @@ This document defines:
 - The rule-evaluation algorithm — `can`/`cannot`/`require` (§6.2.2).
 - The condition language and the evaluation semantics of every operator
   (§5).
+- The optional, embedded test-case format for a policy document, `tests`
+  (§4.4), added in `1.1.0`.
 
 It does not define the `PolicyBuilder`'s fluent API, wire format (YAML vs.
 JSON), or any language-specific type system — those are implementation
@@ -40,10 +46,12 @@ in §6.1.1.
 ## 2. Versioning
 
 `version` is a [SemVer](https://semver.org/) string, `MAJOR.MINOR.PATCH`
-(e.g. `"1.0.0"`). This document specifies `1.0.0`. The full field
-requirements — what's required, how compatibility is decided, and how
-serialization must stamp or preserve it — live in §4.1; this section only
-describes what the three components mean:
+(e.g. `"1.0.0"`). This document specifies every `1.x.x` release up through
+`1.1.0` — the current `MINOR` line — and, per the compatibility rules
+below, remains the correct reference for an older `1.0.x` document too. The
+full field requirements — what's required, how compatibility is decided,
+and how serialization must stamp or preserve it — live in §4.1; this
+section only describes what the three components mean:
 
 - **`MAJOR`** identifies a breaking change — one where a document valid and
   meaningful under the old `MAJOR` version could parse differently, mean
@@ -79,6 +87,14 @@ checks at runtime.
   `PATCH` carries no compatibility meaning, a policy document's `version`
   field can omit it — `"1.0"` is a valid shorthand for `"1.0.0"`, with
   `PATCH` implicitly `0`.
+
+### 2.2 What's new in `1.1.0`
+
+`1.1.0` is a `MINOR` release: purely additive, per §2.1. It adds one
+optional top-level field, `tests` (§4.4) — a way to embed test cases
+directly in a `PolicyDefinition`. A document that doesn't declare `tests`
+behaves identically whether read as `1.0.x` or `1.1.0`; nothing about
+`rules`, `meta`, or evaluation (§5, §6.2.2) changed.
 
 ## 3. Terminology
 
@@ -154,6 +170,14 @@ meta: # optional
 
 rules:
   - [ Effect, Action, Subject, Conditions? ]
+
+tests:                                # optional, added in 1.1.0 - see §4.4
+  - name: string
+    description: string               # optional
+    cases:
+      - name: string                  # optional
+        check: [ Action, Subject, SubjectData? ]
+        expected: boolean
 ```
 
 ### 4.1 Envelope
@@ -347,6 +371,74 @@ following fields are **OPTIONAL** as well.
   immediately when called this way, rather than waiting for eventual
   construction to catch it (§6.1.1). A rule wildcarded on only *one* side
   **MAY** carry a condition; see §6.2.2 property 5 for the full rationale.
+
+### 4.4 Tests
+
+*Added in `1.1.0` (§2.2).*
+
+`tests` is an **OPTIONAL** top-level field that embeds test cases directly
+in a `PolicyDefinition`, so a policy's expected `can` outcomes travel with
+the policy document itself instead of living only in a separate,
+out-of-band test suite:
+
+```yaml
+tests:
+  - name: string                      # required — the suite's name
+    description: string               # optional
+    cases:
+      - name: string                  # optional — the case's name
+        check: [ Action, Subject, SubjectData? ]
+        expected: boolean
+```
+
+- When present, `tests` **MUST** be an array of **Test Suite** objects. It
+  **MAY** be an empty array.
+- A **Test Suite** groups related cases under a name:
+  - `name` — **REQUIRED**. A human-readable identifier for the suite (e.g.
+    for a test runner's output). Unlike `meta.actions`/`meta.subjects`,
+    nothing about this string is validated against `rules` — it's purely a
+    label.
+  - `description` — **OPTIONAL**. Informational only, like the
+    top-level `description` (§4.1).
+  - `cases` — **REQUIRED**. An array of **Test Case** objects. **MAY** be
+    empty (an empty suite is unusual but not malformed).
+- A **Test Case** is one expected `can` outcome:
+  - `name` — **OPTIONAL**. A human-readable identifier for the case.
+  - `check` — **REQUIRED**. A tuple `[ Action, Subject ]` or `[ Action,
+    Subject, SubjectData ]` — the same arguments a `can`/`cannot`/`require`
+    call takes (§6.2.2). A two-element `check` **MUST** be evaluated as a
+    `SubjectDef`-style check (subject type only, no instance data); a
+    three-element `check` **MUST** be evaluated as a `SubjectRef`-style
+    check, with the third element as the wrapped instance's value —
+    exactly the `subjectData` shape already used by the conformance
+    fixtures under `test/fixtures/v1/` (see that directory's `README.md`).
+  - `expected` — **REQUIRED**. A boolean: the result of calling `can` with
+    `check`'s elements as its arguments **MUST** equal `expected` for the
+    case to pass.
+- **`tests` plays no role in evaluation.** `can`/`cannot`/`require`
+  (§6.2.2) **MUST** behave identically for every input whether or not a
+  `tests` field is present, and regardless of its contents — exactly like
+  `name`, `description`, and `meta.application` (§4.2.4). It exists purely
+  for tooling — a CLI, a test runner, a CI check — to load a
+  `PolicyDefinition` and assert every case's `expected` outcome against the
+  policy's actual behavior, as a way to catch a rule-ordering or condition
+  mistake (§6.2.2) before it reaches production.
+- This spec does not require an implementation to ship a test-runner, and
+  does not define one's invocation surface (§1) — the same way it does not
+  define the `PolicyBuilder`'s fluent API. An implementation that does
+  provide one **MUST** evaluate each case via the same `can` semantics
+  defined in §6.2.2 (see §6.2.3), so its results are identical to calling
+  `can` directly with the same arguments.
+- Malformed `tests` (a suite missing `name`/`cases`, a case missing
+  `check`/`expected`, a `check` that isn't a 2- or 3-element array, an
+  `expected` that isn't a boolean) is a structural error, but — unlike a
+  malformed rule tuple (§4.3) — it cannot corrupt evaluation, since `tests`
+  is never consulted by `can`/`cannot`/`require`. Implementations **MAY**
+  validate `tests` eagerly at `Policy.from(...)` time and throw
+  `PolicyLoadException` for it (mirroring §4.3's rule-tuple validation),
+  but are **not required** to; an implementation that defers this
+  validation **MUST** still surface it as an error — not a silently-skipped
+  or silently-passing case — at the point it actually runs that test.
 
 ## 5. Operators
 
@@ -999,6 +1091,23 @@ reopening something an earlier `deny` closed. Because only one rule ever
 decides the outcome, implementation documentation **SHOULD** encourage this
 convention explicitly.
 
+#### 6.2.3 Running `tests`
+
+*Added in `1.1.0` (§2.2, §4.4).*
+
+- An implementation that exposes a way to run a `PolicyDefinition`'s
+  embedded `tests` (§4.4) — whatever it calls that operation, and whatever
+  shape its report takes — **MUST**, for each case, call `can` (§6.2.2)
+  with that case's `check` elements as arguments, and **MUST** report the
+  case as passing if and only if the boolean result equals `expected`.
+- Running `tests` **MUST NOT** mutate the `Policy` instance or otherwise
+  affect its subsequent `can`/`cannot`/`require` behavior.
+- This spec does not mandate a report format, a CLI surface, or that
+  `Policy.from(...)` reject an otherwise-valid `PolicyDefinition` merely
+  because a declared test case would fail — whether and how a failing case
+  blocks construction, a build, or a CI job is an application/tooling
+  concern outside this spec's scope (§1).
+
 ## 7. Prior work
 
 KeyCard's condition language and rule-based `allow`/`deny` model draw on
@@ -1032,6 +1141,24 @@ rules:
   - [ allow, Delete, Article, { owner_id: 1 } ]
   - [ deny, Delete, Article, { status: archived } ]
   - [ allow, Delete, Article, { $hasRole: admin } ]
+
+tests:
+  - name: "ownership"
+    cases:
+      - name: "owner can update their own article"
+        check: [ Update, Article, { owner_id: 1 } ]
+        expected: true
+      - name: "non-owner cannot update someone else's article"
+        check: [ Update, Article, { owner_id: 2 } ]
+        expected: false
+  - name: "archived articles"
+    cases:
+      - name: "owner cannot delete their own archived article"
+        check: [ Delete, Article, { owner_id: 1, status: archived, roles: [] } ]
+        expected: false
+      - name: "admin can delete an archived article regardless of ownership"
+        check: [ Delete, Article, { owner_id: 1, status: archived, roles: [admin] } ]
+        expected: true
 ```
 
 The first rule uses this policy's default wildcard-subject token, `_ANY_`
@@ -1055,3 +1182,11 @@ admin-only check fail closed with no clue why once evaluation eventually
 reached it. Note this rule is wildcarded on *neither* side (it names both a
 concrete action, `Delete`, and a concrete subject, `Article`), so it isn't
 subject to §6.2.2 property 5's both-sides-wildcarded restriction regardless.
+
+The `tests` block (§4.4) documents this policy's own intent as executable
+cases: the "ownership" suite exercises the third and fourth rules directly,
+and the "archived articles" suite pins down exactly the last-rule-wins
+interaction the two paragraphs above describe in prose — an admin deleting
+an archived article — so a future edit that reorders or narrows those rules
+and breaks that guarantee is caught by re-running `tests`, not just by
+re-reading the document.

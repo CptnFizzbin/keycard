@@ -82,6 +82,31 @@ See [`SPEC_V1-0.md`](docs/spec/SPEC_V1-0.md) §5 for full operator semantics,
 including `$substr`'s pattern language (§5.4.6), the top-level-only field
 restriction (§5.4.10), and why regex matching (`$rgx`) isn't part of v1.
 
+Tests
+-----
+
+- a policy document MAY embed its own expected `can` outcomes, so they
+  travel with the policy instead of living only in a separate test suite
+
+example:
+
+```yaml
+tests:
+  - name: "ownership"
+    cases:
+      - check: [Update, Article, { owner_id: 1 }] # action, subject, subjectData?
+        expected: true
+      - check: [Update, Article, { owner_id: 2 }]
+        expected: false
+```
+
+`tests` plays no role in evaluation — it's purely for tooling (a CLI, a
+test runner, a CI check) to load a `PolicyDefinition` and assert each
+case's `expected` outcome against `can(...check)`. Added in `1.1.0`; see
+[`SPEC_V1-0.md`](docs/spec/SPEC_V1-0.md) §4.4 for the full field
+requirements and §6.2.3 for how an implementation that runs `tests` must
+behave.
+
 Policy
 ------
 
