@@ -156,3 +156,7 @@ const json = JSON.stringify(policy.def());
 See `src/example.ts` in the
 [`impl/js`](https://github.com/CptnFizzbin/keycard/tree/main/impl/js)
 package for a complete working example.
+
+See [Vision: Quickstart](./vision-quickstart.md) and
+[Vision: A Real Backend](./vision-real-backend.md) for a look at where
+this API is headed — not shipped, not compiling against `impl/js` today.

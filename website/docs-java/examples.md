@@ -157,3 +157,8 @@ Build with Maven:
 mvn clean package
 mvn test
 ```
+
+See [Vision: Quickstart](./vision-quickstart.md) and
+[Vision: A Real Backend](./vision-real-backend.md) for a look at where
+this API is headed — not shipped, not compiling against `impl/java`
+today.
