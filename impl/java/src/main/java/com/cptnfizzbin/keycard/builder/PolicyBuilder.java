@@ -118,12 +118,12 @@ public final class PolicyBuilder {
 
         Catalog.Resolution actionsResolution = Catalog.build(
             config != null ? config.getActions() : null,
-            config != null ? config.getActionCatalog() : null,
+            config != null && config.getActionCatalog() != null ? config.getActionCatalog().toMap() : null,
             Action::getNameStr,
             "action");
         Catalog.Resolution subjectsResolution = Catalog.build(
             config != null ? config.getSubjects() : null,
-            config != null ? config.getSubjectCatalog() : null,
+            config != null && config.getSubjectCatalog() != null ? config.getSubjectCatalog().toMap() : null,
             Subject::getName,
             "subject");
         this.actionReverseMap = actionsResolution.reverseMap();

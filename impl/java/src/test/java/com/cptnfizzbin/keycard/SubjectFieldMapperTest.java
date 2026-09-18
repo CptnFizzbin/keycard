@@ -167,7 +167,7 @@ public class SubjectFieldMapperTest {
     public void wrapOnADynamicSubjectPreservesItsIdentitySoItStillResolvesViaTheSameCatalogEntryAfterWrapping() {
         Subject<Post> post = SubjectFactory.create();
         KeycardConfig config = KeycardConfig.builder()
-            .subjectCatalog(Map.of("Post", post))
+            .addSubject("Post", post)
             .build();
 
         Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(

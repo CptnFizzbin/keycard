@@ -12,12 +12,9 @@ specification.
   - e.g. `Create`, `Read`, `Update`, `Delete`, `MarkDone`, `Archive`, ...
 - **Subject** - the value that the user wants to do something with
   - e.g. `ToDoItem`, `Project`, ...
-- **Catalog** - a keyed collection of Actions or Subjects (a
-  `Record<string, Action>` / `Map<String, Action<?>>`, and symmetrically for
-  Subjects) handed to `KeycardConfig`, whose keys become the serialized
-  names for their entries - what lets `createAction()`/`createSubject()`
-  (JS) and `Action.create()`/`Subject.create()` (Java) be called with no
-  name at all
+- **Catalog** - a keyed collection of Actions or Subjects whose keys become
+  the serialized names for their entries - what lets an Action or Subject
+  be created without a name at all
 - **PolicyBuilder** - takes in claims, and produces a Policy or
   PolicyDefinition
 - **Rule** - an allowed or denied tuple of effect, action, subject, and

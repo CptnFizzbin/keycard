@@ -15,7 +15,6 @@ import com.cptnfizzbin.keycard.subject.SubjectFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -103,8 +102,8 @@ public class DynamicCatalogTest {
         Subject<?> article = SubjectFactory.create();
 
         KeycardConfig config = KeycardConfig.builder()
-            .actionCatalog(Map.of("create", create))
-            .subjectCatalog(Map.of("article", article))
+            .addAction("create", create)
+            .addSubject("article", article)
             .build();
 
         PolicyDefinition def = new PolicyBuilder(config).allow(create, article).buildDef();
@@ -135,7 +134,7 @@ public class DynamicCatalogTest {
         Action<String> create = ActionFactory.create();
         Subject<?> article = SubjectFactory.create("Article");
         KeycardConfig config = KeycardConfig.builder()
-            .actionCatalog(Map.of("update", ActionFactory.<String>create()))
+            .addAction("update", ActionFactory.create())
             .build();
 
         assertThrows(PolicyArgumentException.class, () -> new PolicyBuilder(config).allow(create, article));
@@ -152,10 +151,10 @@ public class DynamicCatalogTest {
     @Test
     public void registeringTheSameDynamicActionUnderTwoDifferentCatalogKeysThrowsAtConstruction() {
         Action<String> create = ActionFactory.create();
-        Map<String, Action<?>> catalog = new java.util.LinkedHashMap<>();
-        catalog.put("create", create);
-        catalog.put("submit", create);
-        KeycardConfig config = KeycardConfig.builder().actionCatalog(catalog).build();
+        KeycardConfig config = KeycardConfig.builder()
+            .addAction("create", create)
+            .addAction("submit", create)
+            .build();
 
         assertThrows(PolicyArgumentException.class, () -> new PolicyBuilder(config));
     }
@@ -168,8 +167,8 @@ public class DynamicCatalogTest {
         Subject<?> article = SubjectFactory.create("Article");
 
         KeycardConfig config = KeycardConfig.builder()
-            .actionCatalog(Map.of("submit", create))
-            .subjectCatalog(Map.of("post", article))
+            .addAction("submit", create)
+            .addSubject("post", article)
             .build();
 
         PolicyDefinition def = new PolicyBuilder(config).allow(create, article).buildDef();
@@ -186,8 +185,8 @@ public class DynamicCatalogTest {
         Subject<?> article = SubjectFactory.create();
 
         KeycardConfig config = KeycardConfig.builder()
-            .actionCatalog(Map.of("create", create))
-            .subjectCatalog(Map.of("article", article))
+            .addAction("create", create)
+            .addSubject("article", article)
             .build();
 
         Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
@@ -200,7 +199,7 @@ public class DynamicCatalogTest {
     @Test
     public void ec8CoverageIsStillEnforcedUsingCatalogResolvedNames() {
         KeycardConfig config = KeycardConfig.builder()
-            .actionCatalog(Map.of("read", ActionFactory.<String>create()))
+            .addAction("read", ActionFactory.create())
             .build();
 
         assertThrows(PolicyLoadException.class, () ->
