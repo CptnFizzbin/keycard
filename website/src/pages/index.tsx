@@ -6,7 +6,7 @@ import type { ReactNode } from "react"
 
 import HomepageFeatures from "@site/src/components/homepageFeatures"
 import { LanguageSwapper } from "@site/src/components/languageSwapper"
-import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "@site/src/data/languages"
+import { DEFINE_LANGUAGES, ENFORCE_LANGUAGES, SERIALIZE_LANGUAGES } from "@site/src/data/languages"
 
 import styles from "./index.module.css"
 
@@ -19,9 +19,11 @@ function HomepageHeader() {
         <Heading as="h1" className={styles.heroTitle}>
           {siteConfig.title}
         </Heading>
-        <p className={styles.heroSubtitle}>
-          Write permissions in <LanguageSwapper languages={SOURCE_LANGUAGES} /> -
-          Check them in <LanguageSwapper languages={TARGET_LANGUAGES} />
+        <p className={styles.heroSubtitle}>Cross-language Permissions</p>
+        <p className={styles.heroFlow}>
+          Define in <LanguageSwapper languages={DEFINE_LANGUAGES} /> -
+          Serialize to <LanguageSwapper languages={SERIALIZE_LANGUAGES} /> -
+          Enforce in <LanguageSwapper languages={ENFORCE_LANGUAGES} />
         </p>
         <p className={styles.preAlphaNotice}>
           Pre-alpha: the API and policy format may still change without notice.
