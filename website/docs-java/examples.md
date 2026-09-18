@@ -6,6 +6,18 @@ slug: /examples
 
 # Examples (Java)
 
+Every example below shares one `KeycardConfig`, built once from the
+actions/subjects in play and handed to both `PolicyBuilder` and `Policy`
+instead of kept in sync by hand — see [`KeycardConfig`](#keycardconfig)
+further down:
+
+```java
+KeycardConfig config = KeycardConfig.builder()
+    .actions(List.of(create, update, delete))
+    .subjects(List.of(article))
+    .build();
+```
+
 ### Schema-only check
 
 ```java
@@ -17,7 +29,7 @@ policy.can(create, article);
 
 ```java
 // Check if the user can update THIS article (with conditions)
-Article data = new Article(1, userId, "published");
+Article data = new Article(1, userId);
 Subject<Article> ref = article.wrap(data);
 policy.can(update, ref);
 ```
@@ -25,11 +37,11 @@ policy.can(update, ref);
 ### Multiple conditions
 
 ```java
-new PolicyBuilder()
+new PolicyBuilder(config)
     .allow(update, article, Map.of(
         "$and", List.of(
             Map.of("ownerId", userId),
-            Map.of("status", Map.of("$not", "archived"))
+            Map.of("id", Map.of("$ne", 1))
         )
     ))
     .build();
@@ -42,10 +54,10 @@ references, so a typo in a field name is caught by the compiler instead of
 failing silently at evaluation time:
 
 ```java
-new PolicyBuilder()
+new PolicyBuilder(config)
     .allow(update, article, Conditions.and(
         Conditions.eq(Article::getOwnerId, userId),
-        Conditions.ne(Article::getStatus, "archived")
+        Conditions.ne(Article::getId, 1)
     ))
     .build();
 ```
@@ -67,10 +79,15 @@ SubjectFieldMapper<Post> authorNameMapper = SubjectFieldMapper.<Post>builder()
 Subject<Post> post = SubjectFactory.create("Post", authorNameMapper);
 Action<String> read = ActionFactory.create("Read");
 
+KeycardConfig postConfig = KeycardConfig.builder()
+    .action(read)
+    .subject(post)
+    .build();
+
 // `Conditions`'s getter-based helpers can't reference "authorName" — it has
 // no real Post.getAuthorName(), only a mapper entry — so build this one
 // as a plain Map, keyed by the mapped field's synthetic name:
-Policy policy = new PolicyBuilder()
+Policy policy = new PolicyBuilder(postConfig)
     .allow(read, post, Map.of("authorName", "Alice")) // resolved via the mapper
     .build();
 ```
@@ -121,7 +138,7 @@ Policies can be serialized with Gson and shared across languages:
 
 ```java
 // Build policy in Java
-Policy policy = new PolicyBuilder()
+Policy policy = new PolicyBuilder(config)
     .allow(create, article)
     .build();
 

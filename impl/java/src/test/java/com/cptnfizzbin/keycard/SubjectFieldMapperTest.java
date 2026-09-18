@@ -164,6 +164,20 @@ public class SubjectFieldMapperTest {
     }
 
     @Test
+    public void wrapOnADynamicSubjectPreservesItsIdentitySoItStillResolvesViaTheSameCatalogEntryAfterWrapping() {
+        Subject<Post> post = SubjectFactory.create();
+        KeycardConfig config = KeycardConfig.builder()
+            .addSubject("Post", post)
+            .build();
+
+        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+            new PolicyDefinition.Rule("allow", "Read", "Post", null)
+        )), config);
+
+        assertTrue(policy.can(ActionFactory.create("Read"), post.wrap(new Post("draft", new Author("Alice")))));
+    }
+
+    @Test
     public void configActionsAndSubjectsWidenTheEc8Catalog() {
         Subject<Post> post = SubjectFactory.create("Post");
         KeycardConfig config = KeycardConfig.builder()

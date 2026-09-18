@@ -52,6 +52,7 @@ implementation 'com.cptnfizzbin:keycard:0.0.4'
 ## Quick start
 
 ```java
+import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.subject.Subject;
@@ -59,35 +60,42 @@ import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.errors.PolicyException;
+import java.util.List;
 import java.util.Map;
 
 class Article {
     public final int id;
     public final int ownerId;
-    public final String status;
 
-    public Article(int id, int ownerId, String status) {
+    public Article(int id, int ownerId) {
         this.id = id;
         this.ownerId = ownerId;
-        this.status = status;
     }
 }
 
 public class Main {
     public static void main(String[] args) {
         // Define your actions
-        Action<String> create = ActionFactory.create("Create");
-        Action<String> update = ActionFactory.create("Update");
-        Action<String> delete = ActionFactory.create("Delete");
+        Action<String> create = ActionFactory.create("create");
+        Action<String> update = ActionFactory.create("update");
+        Action<String> delete = ActionFactory.create("delete");
 
         // Define your subjects
-        Subject<Article> article = SubjectFactory.create("Article");
+        Subject<Article> article = SubjectFactory.create("article");
 
-        // Build a policy
-        Policy policy = new PolicyBuilder()
+        // Bundle the action/subject vocabulary into one KeycardConfig, built
+        // once and shared by every PolicyBuilder/Policy instead of kept in
+        // sync by hand
+        KeycardConfig config = KeycardConfig.builder()
+            .actions(List.of(create, update, delete))
+            .subjects(List.of(article))
+            .build();
+
+        // Build a policy scoped to one user
+        int userId = 1;
+        Policy policy = new PolicyBuilder(config)
             .allow(create, article)
-            .allow(update, article, Map.of("ownerId", 1))
-            .deny(delete, article, Map.of("status", Map.of("$not", "archived")))
+            .allow(update, article, Map.of("ownerId", userId))
             .build();
 
         // Check by subject type (no instance)
@@ -96,7 +104,7 @@ public class Main {
         }
 
         // Check by subject instance
-        Article data = new Article(1, 1, "published");
+        Article data = new Article(1, userId);
         Subject<Article> ref = article.wrap(data);
 
         if (policy.can(update, ref)) {
@@ -118,12 +126,12 @@ public class Main {
 Java's generic type system enforces compile-time verification:
 
 ```java
-Action<String> create = ActionFactory.create("Create");
-Subject<Article> article = SubjectFactory.create("Article");
+Action<String> create = ActionFactory.create("create");
+Subject<Article> article = SubjectFactory.create("article");
 
 policy.can(create, article);        // OK
-policy.can("Create", article);      // compiler error: action must be an Action<?>
-policy.can(create, "Article");      // compiler error: subject must be a Subject<?>
+policy.can("create", article);      // compiler error: action must be an Action<?>
+policy.can(create, "article");      // compiler error: subject must be a Subject<?>
 ```
 
 ## Beyond the basics

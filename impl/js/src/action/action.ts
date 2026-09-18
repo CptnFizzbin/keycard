@@ -8,4 +8,12 @@
 export interface Action<T extends string = string> {
   readonly name: T
   readonly __brand: "action"
+  /**
+   * Set only by `createAction()` called with no name - `name` then holds a
+   * randomly-generated id rather than a developer-chosen name, and this
+   * Action MUST be registered (as a catalog value) in the `KeycardConfig`
+   * handed to any `PolicyBuilder`/`Policy` that uses it, so its catalog key
+   * can resolve to a real, stable, serializable name.
+   */
+  readonly __dynamic?: true
 }

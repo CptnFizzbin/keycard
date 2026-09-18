@@ -36,35 +36,42 @@ implementation 'com.cptnfizzbin:keycard:0.0.4'
 
 ```java
 import com.cptnfizzbin.keycard.*;
+import java.util.List;
 import java.util.Map;
 
 class Article {
     public final int id;
     public final int ownerId;
-    public final String status;
 
-    public Article(int id, int ownerId, String status) {
+    public Article(int id, int ownerId) {
         this.id = id;
         this.ownerId = ownerId;
-        this.status = status;
     }
 }
 
 public class Main {
     public static void main(String[] args) {
         // Define your actions
-        Action<String> create = ActionFactory.create("Create");
-        Action<String> update = ActionFactory.create("Update");
-        Action<String> delete = ActionFactory.create("Delete");
+        Action<String> create = ActionFactory.create("create");
+        Action<String> update = ActionFactory.create("update");
+        Action<String> delete = ActionFactory.create("delete");
 
         // Define your subjects
-        Subject<Article> article = SubjectFactory.create("Article");
+        Subject<Article> article = SubjectFactory.create("article");
 
-        // Build a policy
-        Policy policy = new PolicyBuilder()
+        // Bundle the action/subject vocabulary into one KeycardConfig, built
+        // once and shared by every PolicyBuilder/Policy instead of kept in
+        // sync by hand
+        KeycardConfig config = KeycardConfig.builder()
+            .actions(List.of(create, update, delete))
+            .subjects(List.of(article))
+            .build();
+
+        // Build a policy scoped to one user
+        int userId = 1;
+        Policy policy = new PolicyBuilder(config)
             .allow(create, article)
-            .allow(update, article, Map.of("ownerId", 1))
-            .deny(delete, article, Map.of("status", Map.of("$not", "archived")))
+            .allow(update, article, Map.of("ownerId", userId))
             .build();
 
         // Check by subject type (no instance)
@@ -73,7 +80,7 @@ public class Main {
         }
 
         // Check by subject instance
-        Article data = new Article(1, 1, "published");
+        Article data = new Article(1, userId);
         Subject<Article> ref = article.wrap(data);
 
         if (policy.can(update, ref)) {
@@ -95,12 +102,12 @@ public class Main {
 Java's generic type system ensures compile-time verification:
 
 ```java
-Action<String> create = ActionFactory.create("Create");
-Subject<Article> article = SubjectFactory.create("Article");
+Action<String> create = ActionFactory.create("create");
+Subject<Article> article = SubjectFactory.create("article");
 
 policy.can(create, article);        // ✓ OK
-policy.can("Create", article);      // ✗ Compiler error - action must be an Action<?>
-policy.can(create, "Article");      // ✗ Compiler error - subject must be a Subject<?>
+policy.can("create", article);      // ✗ Compiler error - action must be an Action<?>
+policy.can(create, "article");      // ✗ Compiler error - subject must be a Subject<?>
 ```
 
 ## Condition Operators
@@ -128,7 +135,7 @@ policy.can(create, "Article");      // ✗ Compiler error - subject must be a Su
 Create type-safe actions:
 
 ```java
-Action<String> create = ActionFactory.create("Create");
+Action<String> create = ActionFactory.create("create");
 ```
 
 ### SubjectFactory
@@ -136,7 +143,7 @@ Action<String> create = ActionFactory.create("Create");
 Create type-safe subjects:
 
 ```java
-Subject<Article> article = SubjectFactory.create("Article");
+Subject<Article> article = SubjectFactory.create("article");
 ```
 
 ### Subject<T>
@@ -195,26 +202,26 @@ Thrown when permission check fails with `require()`.
 
 ```java
 // Allow creating any article (no conditions needed)
-policy.can(Actions.Create, Subjects.Article);
+policy.can(create, article);
 ```
 
 ### Condition-Based Check
 
 ```java
 // Check if user can update THIS article (with conditions)
-Article data = new Article(1, userId, "published");
+Article data = new Article(1, userId);
 Subject<Article> ref = article.wrap(data);
-policy.can(Actions.Update, ref);
+policy.can(update, ref);
 ```
 
 ### Multiple Conditions
 
 ```java
-new PolicyBuilder()
+new PolicyBuilder(config)
     .allow(update, article, Map.of(
         "$and", List.of(
             Map.of("ownerId", userId),
-            Map.of("status", Map.of("$not", "archived"))
+            Map.of("id", Map.of("$ne", 1))
         )
     ))
     .build();
@@ -237,7 +244,7 @@ Policies can be serialized with Gson and shared across languages:
 
 ```java
 // Build policy in Java
-Policy policy = new PolicyBuilder()
+Policy policy = new PolicyBuilder(config)
     .allow(create, article)
     .build();
 

@@ -6,30 +6,58 @@ slug: /examples
 
 # Examples (JavaScript)
 
+Every example below builds on the same `Actions`/`Subjects` from the
+[Quick start](./intro.md#quick-start):
+
+```typescript
+const Actions = {
+  create: createAction("create"),
+  read: createAction("read"),
+  update: createAction("update"),
+  delete: createAction("delete"),
+} as const;
+
+const Subjects = {
+  article: createSubject<{ id: number; ownerId: number }>("article"),
+  comment: createSubject<{ userId: number; articleId: number }>("comment"),
+} as const;
+```
+
+...and shares one `KeycardConfig`, built once from that vocabulary and
+handed to both `PolicyBuilder` and `Policy` instead of kept in sync by
+hand — see [`KeycardConfig`](#keycardconfig) further down:
+
+```typescript
+const config: KeycardConfig = {
+  actions: Object.values(Actions),
+  subjects: Object.values(Subjects),
+};
+```
+
 ### Schema-only check
 
 No conditions needed — this checks whether the action/subject pair is allowed at
 all, ignoring any specific instance:
 
 ```typescript
-policy.can(Actions.Create, Subjects.Article);
+policy.can(Actions.create, Subjects.article);
 ```
 
 ### Condition-based check
 
 ```typescript
-const article = Subjects.Article.wrap({ id: 1, owner_id: userId, status: "published" });
-policy.can(Actions.Update, article);
+const article = Subjects.article.wrap({ id: 1, ownerId: userId });
+policy.can(Actions.update, article);
 ```
 
 ### Multiple conditions
 
 ```typescript
-new PolicyBuilder()
-  .allow(Actions.Update, Subjects.Article, {
+new PolicyBuilder({}, config)
+  .allow(Actions.update, Subjects.article, {
     $and: [
-      { owner_id: userId },
-      { status: { $not: "archived" } },
+      { ownerId: userId },
+      { id: { $ne: 1 } },
     ],
   })
   .buildDef();
@@ -52,10 +80,13 @@ const post = createSubject<Post>("Post", {
   authorName: (instance) => instance.author.name,
 });
 
-const policy = Policy.from({
-  version: "1.0",
-  rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
-});
+const config: KeycardConfig = { actions: [read], subjects: [post] };
+
+const policy = Policy.from(
+  { version: "1.0", rules: [["allow", "Read", "Post", { authorName: "Alice" }]] },
+  {},
+  config,
+);
 
 policy.can(read, post.wrap({ status: "draft", author: { name: "Alice" } })); // true
 ```
@@ -102,7 +133,7 @@ typed API. Build that rule as a plain object instead, as shown above.
 
 ```typescript
 try {
-  policy.require(Actions.Delete, article);
+  policy.require(Actions.delete, article);
 } catch (err) {
   console.warn("Access denied:", err.message);
   sendError(403, "You do not have permission to delete this article");

@@ -9,6 +9,8 @@ import { ConditionResolver } from "../conditions/index.ts"
 import type { AnyOperator } from "../conditions/operators/operator.ts"
 import { PolicyError, PolicyLoadException, PolicyVersionException } from "../errors/index.ts"
 import type { KeycardConfig } from "../keycardConfig.ts"
+import { buildCatalog, resolveName } from "../lib/catalog.ts"
+import { getLogger } from "../lib/logger.ts"
 import type { Subject } from "../subject/index.ts"
 import type { SubjectFieldMapper } from "../subject/subjectFieldMapper.ts"
 import { KEYCARD_POLICY_VERSION } from "../version.ts"
@@ -64,12 +66,18 @@ export class Policy<
   private readonly definition: PolicyDefinition
   private readonly resolver: ConditionResolver
   private readonly config: KeycardConfig<TOperators>
+  private readonly actionCatalog: Map<string, string>
+  private readonly subjectCatalog: Map<string, string>
+  private readonly warnedDynamicIds = new Set<string>()
 
   /**
    * @param config shared, optional config also accepted by `PolicyBuilder`
-   *   (SPEC_V1-0-0.md §3.2.2/§7.4.12 and the SubjectFieldMapper feature):
+   *   (SPEC_V1-0.md §4.2.2/§7.4.12 and the SubjectFieldMapper feature):
    *   `actions`/`subjects` widen the `meta.actions`/`meta.subjects`
-   *   catalogs (EC-8) beyond what `definition.meta` itself declares;
+   *   catalogs beyond what `definition.meta` itself declares; a keyed
+   *   (`Record<string, Action|Subject>`) `actions`/`subjects` is also a
+   *   catalog resolving a dynamic (no-name) Action/Subject's random name
+   *   to its key, built once here and cached (see `lib/catalog.ts`);
    *   `operators`, when given, is used instead of `options.operators`;
    *   `mapper` is consulted for a subject's fields whenever the `Subject`
    *   passed to {@link can} doesn't carry its own `fieldMapper`.
@@ -81,11 +89,16 @@ export class Policy<
   ) {
     Policy.validateVersion(definition.version)
 
+    const actions = buildCatalog(config.actions, "action")
+    const subjects = buildCatalog(config.subjects, "subject")
+
     this.definition = definition
     this.config = config
+    this.actionCatalog = actions.reverseMap
+    this.subjectCatalog = subjects.reverseMap
     this.resolver = new ConditionResolver(config.operators ?? options.operators)
     Policy.validateOperatorsRegistered(definition, this.resolver)
-    Policy.validateRules(definition, config)
+    Policy.validateRules(definition, actions.names, subjects.names)
   }
 
   /**
@@ -133,14 +146,11 @@ export class Policy<
     resolver.assertAllRegistered(declared)
   }
 
-  /** @param config `actions`/`subjects`, when given, widen the `meta.actions`/`meta.subjects` catalogs below (EC-8) beyond what `definition.meta` declares. */
-  private static validateRules(definition: PolicyDefinition, config: Pick<KeycardConfig, "actions" | "subjects">): void {
+  /** @param configActionNames/@param configSubjectNames resolved catalog names (see `lib/catalog.ts`) that, when given, widen the `meta.actions`/`meta.subjects` catalogs below (§4.2.2) beyond what `definition.meta` declares. */
+  private static validateRules(definition: PolicyDefinition, configActionNames: string[], configSubjectNames: string[]): void {
     const meta = definition.meta
     const anyAction = effectiveAnyAction(meta)
     const anySubject = effectiveAnySubject(meta)
-
-    const configActionNames = config.actions?.map((action) => action.name) ?? []
-    const configSubjectNames = config.subjects?.map((subject) => subject.name) ?? []
 
     const actionsCatalog = meta?.actions || configActionNames.length > 0
       ? new Set([...(meta?.actions ?? []), ...configActionNames])
@@ -223,7 +233,9 @@ export class Policy<
 
   require(action: TActions, subject: TSubjects): void {
     if (!this.can(action, subject)) {
-      throw new PolicyError(`Access denied: cannot ${action.name} on ${subject.name}`)
+      const actionName = resolveName(this.actionCatalog, action.name)
+      const subjectName = resolveName(this.subjectCatalog, subject.name)
+      throw new PolicyError(`Access denied: cannot ${actionName} on ${subjectName}`)
     }
   }
 
@@ -261,16 +273,41 @@ export class Policy<
     return false // EC-1, EC-2: default deny.
   }
 
-  /** The subject's own `fieldMapper` (set via `createSubject`) takes precedence; `config.mapper`, keyed by `subject.name`, is the fallback. */
+  /** The subject's own `fieldMapper` (set via `createSubject`) takes precedence; `config.mapper`, keyed by the subject's resolved catalog name, is the fallback. */
   private resolveFieldMapper(subject: TSubjects): SubjectFieldMapper<unknown> | undefined {
-    return (subject.fieldMapper as SubjectFieldMapper<unknown> | undefined) ?? this.config.mapper?.get(subject.name)
+    if (subject.fieldMapper) return subject.fieldMapper as SubjectFieldMapper<unknown>
+    return this.config.mapper?.get(resolveName(this.subjectCatalog, subject.name))
   }
 
   private matchesAction(action: TActions, ruleAction: string, anyAction: string | typeof DISABLED): boolean {
-    return action.name === ruleAction || (anyAction !== DISABLED && ruleAction === anyAction)
+    this.warnIfUnregisteredDynamic(action, this.actionCatalog, "Action", "createAction")
+    const actionName = resolveName(this.actionCatalog, action.name)
+    return actionName === ruleAction || (anyAction !== DISABLED && ruleAction === anyAction)
   }
 
   private matchesSubject(subject: TSubjects, ruleSubject: string, anySubject: string | typeof DISABLED): boolean {
-    return subject.name === ruleSubject || (anySubject !== DISABLED && ruleSubject === anySubject)
+    this.warnIfUnregisteredDynamic(subject, this.subjectCatalog, "Subject", "createSubject")
+    const subjectName = resolveName(this.subjectCatalog, subject.name)
+    return subjectName === ruleSubject || (anySubject !== DISABLED && ruleSubject === anySubject)
+  }
+
+  /**
+   * A dynamic (no-name) Action/Subject never registered in any catalog
+   * reachable from this Policy can't resolve to a real name - it falls
+   * through to default-deny like any other non-match (unless a wildcard
+   * rule catches it), but that's silent otherwise, so warn once per
+   * distinct id rather than once per `.can()`/`.cannot()`/`.require()` call.
+   */
+  private warnIfUnregisteredDynamic(
+    value: { name: string, __dynamic?: true },
+    reverseMap: Map<string, string>,
+    kind: string,
+    factory: string,
+  ): void {
+    if (!value.__dynamic || reverseMap.has(value.name) || this.warnedDynamicIds.has(value.name)) return
+    this.warnedDynamicIds.add(value.name)
+    ;(this.config.logger ?? getLogger()).warn(
+      `${kind} created via ${factory}() with no name was checked but never registered in any KeycardConfig catalog reachable from this Policy - it can never match a non-wildcard rule.`,
+    )
   }
 }

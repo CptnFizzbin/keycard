@@ -91,3 +91,62 @@ describe("PolicyBuilder: meta.actions/subjects/operators are derived from usage"
     expect(policy.can(createAction("Read"), article.wrap({ id: 1 }))).toBe(true)
   })
 })
+
+describe("PolicyBuilder: dynamic (no-name) Action/Subject resolved via a KeycardConfig catalog", () => {
+  test("a keyed catalog's key - not the dynamic def's random id - is what gets serialized", () => {
+    const create = createAction()
+    const article = createSubject()
+
+    const def = new PolicyBuilder({}, { actions: { create }, subjects: { article } })
+      .allow(create, article)
+      .buildDef()
+
+    expect(def.rules).toEqual([["allow", "create", "article"]])
+    expect(def.meta?.actions).toEqual(["create"])
+    expect(def.meta?.subjects).toEqual(["article"])
+  })
+
+  test("a plain array config still works exactly as before - no catalog, no resolution", () => {
+    const def = new PolicyBuilder({}, { actions: [createAction("Delete")], subjects: [createSubject("Comment")] })
+      .allow(createAction("Read"), createSubject("Article"))
+      .buildDef()
+
+    expect(def.meta?.actions).toEqual(["Read", "Delete"])
+    expect(def.meta?.subjects).toEqual(["Article", "Comment"])
+  })
+
+  test("allow() throws PolicyArgumentError for a dynamic Action never registered in the catalog", () => {
+    const create = createAction()
+    const article = createSubject("Article")
+
+    expect(() =>
+      new PolicyBuilder({}, { actions: { update: createAction() } }).allow(create, article),
+    ).toThrow(PolicyArgumentError)
+  })
+
+  test("allow() throws PolicyArgumentError for a dynamic Subject never registered in the catalog", () => {
+    const read = createAction("Read")
+    const article = createSubject()
+
+    expect(() => new PolicyBuilder({}, {}).allow(read, article)).toThrow(PolicyArgumentError)
+  })
+
+  test("registering the same dynamic Action under two different catalog keys throws at construction", () => {
+    const create = createAction()
+
+    expect(() => new PolicyBuilder({}, { actions: { create, submit: create } })).toThrow(PolicyArgumentError)
+  })
+
+  test("an explicitly-named Action/Subject in a keyed catalog is still resolved to its catalog key", () => {
+    // "if using a catalog, defining the name is optional" - a catalog key
+    // wins for any entry, named or not.
+    const create = createAction("Create")
+    const article = createSubject("Article")
+
+    const def = new PolicyBuilder({}, { actions: { submit: create }, subjects: { post: article } })
+      .allow(create, article)
+      .buildDef()
+
+    expect(def.rules).toEqual([["allow", "submit", "post"]])
+  })
+})
