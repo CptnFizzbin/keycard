@@ -1,0 +1,27 @@
+version: "0.1"
+name: "embedded tests field is evaluation-inert"
+description: >
+  §4.4: a PolicyDefinition's optional `tests` field plays no role in
+  evaluation - can/cannot/require MUST behave identically whether or not
+  it's present, and regardless of its contents. This suite declares
+  "1.1.0" (§2.2) since `tests` is a 1.1.0 addition; a compliance suite
+  whose adapter hasn't been updated for 1.1.0 yet skips it automatically
+  (see this directory's README.md, "Filtering by version").
+
+rules:
+  - [ allow, Read, Article ]
+  - [ allow, Update, Article, { owner_id: 1 } ]
+  - [ allow, Delete, Article, { roles: { $has: admin } } ]
+
+tests:
+  - name: "even a case this suite's own tests field also covers evaluates the same way"
+    check: [ Update, Article, { owner_id: 1 } ]
+    expected: true
+
+  - name: "a case the tests field does not mention is unaffected too"
+    check: [ Read, Article ]
+    expected: true
+
+  - name: "an action/subject the tests field never checks still default-denies"
+    check: [ Delete, Article, { owner_id: 1,roles: [ ] } ]
+    expected: false

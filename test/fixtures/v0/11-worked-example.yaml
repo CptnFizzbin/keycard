@@ -1,0 +1,58 @@
+version: "0.1"
+name: "Article Ownership Policy"
+description: >
+  End-to-end mirror of the spec's own Appendix worked example
+  (SPEC_V0.md, "Appendix: worked example"), $hasRole included: this
+  conformance suite registers a real checker for it (subject.roles contains
+  the requested role), so the admin-overrides-an-archive-deny case from the
+  narrative appendix is reproduced here for real, not merely described.
+meta:
+  actions: [ Read, Create, Update, Delete ]
+  subjects: [ Article ]
+  operators: [ $hasRole ]
+rules:
+  - [ allow, Read, _ANY_ ]
+  - [ allow, Create, Article ]
+  - [ allow, Update, Article, { owner_id: 1 } ]
+  - [ allow, Delete, Article, { owner_id: 1 } ]
+  - [ deny, Delete, Article, { status: archived } ]
+  - [ allow, Delete, Article, { $hasRole: admin } ]
+
+tests:
+  - name: "Read is wide open on every subject, via the wildcard-subject rule"
+    check: [ Read, Comment ]
+    expected: true
+
+  - name: "Create on Article is unconditionally allowed"
+    check: [ Create, Article ]
+    expected: true
+
+  - name: "the owner can Update their own article"
+    check: [ Update, Article, { owner_id: 1 } ]
+    expected: true
+
+  - name: "a non-owner cannot Update the article"
+    check: [ Update, Article, { owner_id: 2 } ]
+    expected: false
+
+  - name: "the owner can Delete their own published article"
+    check: [ Delete, Article, { owner_id: 1,status: published, } ]
+    expected: true
+
+  - name: >
+      the owner cannot Delete their own archived article, because the deny
+      rule is declared after the ownership allow rule and this subject has
+      no admin role to trigger the override below it
+    check: [ Delete, Article, { owner_id: 1, status: archived } ]
+    expected: false
+
+  - name: >
+      an admin CAN delete someone else's archived article, because the last
+      rule ($hasRole: admin) is declared after - and so overrides - the
+      blanket archived-article deny rule above it (§6 last-rule-wins)
+    check: [ Delete, Article, { owner_id: 2, status: archived, roles: [ admin ], } ]
+    expected: true
+
+  - name: "a non-owner cannot Delete a published article either"
+    check: [ Delete, Article, { owner_id: 2, status: published } ]
+    expected: false

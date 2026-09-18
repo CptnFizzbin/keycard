@@ -1,0 +1,105 @@
+version: "0.1"
+name: "Advanced Admin Policy"
+description: "Complex nested conditions with logic operators"
+
+meta:
+  # $startsWithUpper is a custom operator this test suite registers a
+  # checker for - it isn't a built-in, per SPEC_V0.md §7.4.12.
+  operators: [ $startsWithUpper ]
+
+rules:
+  - [ allow, Read, Article ]
+  - [ allow, Create, Article ]
+  - [ allow, Update, Article,
+    { $or: [
+      { $and: [
+        { owner_id: 1 },
+        { status: { $in: [ draft, published ] } }
+      ] },
+      { role: admin }
+    ] } ]
+  - [ allow, Delete, Article,
+    { $and: [
+      { $or: [
+        { owner_id: 1 },
+        { role: admin }
+      ] },
+      { status: { $ne: archived } },
+      { view_count: { $lt: 100 } }
+    ] } ]
+  - [ allow, Publish, Article,
+    { $and: [
+      { owner_id: 1 },
+      { status: draft },
+      { title: { $startsWithUpper: true } }
+    ] } ]
+  - [ deny, Delete, Article,
+    { $and: [
+      { view_count: { $gte: 1000 } },
+      { status: published }
+    ] } ]
+
+tests:
+  - name: "allows Read on the Article type"
+    check: [ Read, Article ]
+    expected: true
+
+  - name: "allows Create on the Article type"
+    check: [ Create, Article ]
+    expected: true
+
+  - name: "allows Update for the owner with draft status"
+    check: [ Update, Article, { id: 2, owner_id: 1, status: draft, view_count: 0 } ]
+    expected: true
+
+  - name: "allows Update for the owner with published status"
+    check: [ Update, Article, { id: 1, owner_id: 1, status: published, view_count: 500 } ]
+    expected: true
+
+  - name: "denies Update for the owner when the article is archived"
+    check: [ Update, Article, { id: 99, owner_id: 1, status: archived, view_count: 10 } ]
+    expected: false
+
+  - name: "allows Update for an admin regardless of ownership or status"
+    check: [ Update, Article, { id: 3, owner_id: 2, status: archived, view_count: 2000, role: admin } ]
+    expected: true
+
+  - name: "allows Delete for the owner with low view count and non-archived status"
+    check: [ Delete, Article, { id: 4, owner_id: 1, status: published, view_count: 50 } ]
+    expected: true
+
+  - name: "denies Delete for the owner when view count is not low enough"
+    check: [ Delete, Article, { id: 1, owner_id: 1, status: published, view_count: 500 } ]
+    expected: false
+
+  - name: "denies Delete for the owner due to the deny rule (high view count, published)"
+    check: [ Delete, Article, { id: 1, owner_id: 1, status: published, view_count: 1500 } ]
+    expected: false
+
+  - name: "denies Delete for the owner when the article is archived"
+    check: [ Delete, Article, { id: 99, owner_id: 1, status: archived, view_count: 10 } ]
+    expected: false
+
+  - name: "allows Delete for an admin with low view count and non-archived status"
+    check: [ Delete, Article, { id: 50, owner_id: 2, status: draft, view_count: 5, role: admin } ]
+    expected: true
+
+  - name: "denies Delete for a non-owner, non-admin user"
+    check: [ Delete, Article, { id: 5, owner_id: 3, status: draft, view_count: 10 } ]
+    expected: false
+
+  - name: "allows Publish for the owner with draft status and capitalized title"
+    check: [ Publish, Article, { id: 2, owner_id: 1, status: draft, title: "Testing", view_count: 0 } ]
+    expected: true
+
+  - name: "denies Publish for a non-owner"
+    check: [ Publish, Article, { id: 5, owner_id: 3, status: draft, view_count: 10 } ]
+    expected: false
+
+  - name: "denies Publish for the owner when the title is not capitalized"
+    check: [ Publish, Article, { id: 5, owner_id: 1, status: draft, view_count: 10 } ]
+    expected: false
+
+  - name: "denies Publish for the owner when the status is not draft"
+    check: [ Publish, Article, { id: 1, owner_id: 1, status: published, view_count: 500 } ]
+    expected: false

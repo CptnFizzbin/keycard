@@ -19,7 +19,7 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
     })
 
     const policy = Policy.from({
-      version: "1.0.0",
+      version: "0.1",
       rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
     })
 
@@ -33,7 +33,7 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
     })
 
     const policy = Policy.from({
-      version: "1.0.0",
+      version: "0.1",
       rules: [["allow", "Read", "Post", { status: "draft" }]],
     })
 
@@ -42,7 +42,7 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
   })
 
   test("a field condition cannot narrow twice even with a mapper in play", () => {
-    // v1 permits only one level of field narrowing (SPEC_V1-0.md §7.4.10) -
+    // v1 permits only one level of field narrowing (SPEC_V0.md §7.4.10) -
     // a fieldMapper on Post doesn't change that: `author` is a field of
     // Post, but `author`'s own Condition can't itself be another field
     // condition (`name`), mapped or not.
@@ -51,7 +51,7 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
     })
 
     const policy = Policy.from({
-      version: "1.0.0",
+      version: "0.1",
       rules: [["allow", "Read", "Post", { author: { name: "Alice" } }]],
     })
 
@@ -67,7 +67,7 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
     })
 
     const policy = Policy.from({
-      version: "1.0.0",
+      version: "0.1",
       rules: [["allow", "Read", "Post", { authorName: { $substr: "Ali" } }]],
     })
 
@@ -81,7 +81,7 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
     })
 
     const policy = Policy.from({
-      version: "1.0.0",
+      version: "0.1",
       rules: [[
         "allow", "Read", "Post",
         { $and: [{ authorName: "Alice" }, { $or: [{ status: "draft" }, { authorName: "Alice" }] }] },
@@ -109,7 +109,7 @@ describe("SubjectFieldMapper: registered via KeycardConfig.mapper", () => {
 
     const policy = Policy.from(
       {
-        version: "1.0.0",
+        version: "0.1",
         rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
       },
       {},
@@ -129,7 +129,7 @@ describe("SubjectFieldMapper: registered via KeycardConfig.mapper", () => {
 
     const policy = Policy.from(
       {
-        version: "1.0.0",
+        version: "0.1",
         rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
       },
       {},
@@ -144,7 +144,7 @@ describe("KeycardConfig: actions/subjects widen meta.actions/meta.subjects (EC-8
   test("Policy validates rule actions/subjects against config.actions/config.subjects even without a matching meta declaration", () => {
     expect(() =>
       Policy.from(
-        { version: "1.0.0", rules: [["allow", "Write", "Post"]] },
+        { version: "0.1", rules: [["allow", "Write", "Post"]] },
         {},
         { actions: [createAction("Read")], subjects: [createSubject("Post")] },
       ),
@@ -152,7 +152,7 @@ describe("KeycardConfig: actions/subjects widen meta.actions/meta.subjects (EC-8
 
     expect(() =>
       Policy.from(
-        { version: "1.0.0", rules: [["allow", "Read", "Post"]] },
+        { version: "0.1", rules: [["allow", "Read", "Post"]] },
         {},
         { actions: [createAction("Read")], subjects: [createSubject("Post")] },
       ),

@@ -1,52 +1,54 @@
 package com.cptnfizzbin.keycard;
 
-import org.junit.Test;
-
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
 import com.cptnfizzbin.keycard.conditions.Conditions;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
-import com.cptnfizzbin.keycard.policy.Policy;
-import com.cptnfizzbin.keycard.policy.PolicyDefinition;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
 import com.cptnfizzbin.keycard.errors.PolicyVersionException;
+import com.cptnfizzbin.keycard.policy.Policy;
+import com.cptnfizzbin.keycard.policy.PolicyDefinition;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
+import com.cptnfizzbin.keycard.version.KeyCardVersion;
+import org.junit.Test;
+import org.semver4j.Semver;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-/** Construction-time validation required by SPEC_V1-0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section). */
+/**
+ * Construction-time validation required by SPEC_V0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section).
+ */
 public class PolicyValidationTest {
-
     @Test
     public void throwsPolicyVersionExceptionForAnUnsupportedMajorVersion() {
+        Semver nextMajor = KeyCardVersion.KEYCARD_POLICY_VERSION.nextMajor();
         assertThrows(PolicyVersionException.class, () ->
-            Policy.from(new PolicyDefinition("2.0.0", List.of())));
+            Policy.from(new PolicyDefinition().version(nextMajor.toString())));
     }
 
     @Test
     public void throwsPolicyVersionExceptionForAMinorNewerThanWhatsSupported() {
+        Semver nextMinor = KeyCardVersion.KEYCARD_POLICY_VERSION.nextMinor();
         assertThrows(PolicyVersionException.class, () ->
-            Policy.from(new PolicyDefinition("1.99.0", List.of())));
+            Policy.from(new PolicyDefinition().version(nextMinor.toString())));
     }
 
     @Test
     public void ignoresPatchWhenDecidingCompatibility() {
-        Policy.from(new PolicyDefinition("1.0.99", List.of())); // should not throw
+        Semver nextPatch = KeyCardVersion.KEYCARD_POLICY_VERSION.nextPatch();
+        Policy.from(new PolicyDefinition().version(nextPatch.toString())); // should not throw
     }
 
     @Test
     public void throwsPolicyLoadExceptionForAMalformedRuleTuple() {
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", List.of(
+            Policy.from(new PolicyDefinition().rules(List.of(
                 new PolicyDefinition.Rule("maybe", "Read", "Article", null)
             ))));
     }
@@ -54,44 +56,52 @@ public class PolicyValidationTest {
     @Test
     public void throwsPolicyLoadExceptionForARuleWildcardedOnBothSidesCarryingACondition() {
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", List.of(
-                new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Conditions.op("owner_id", 1))
-            ))));
+            Policy.from(new PolicyDefinition()
+                .rules(List.of(
+                    new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Conditions.op("owner_id", 1))
+                ))
+            ));
     }
 
     @Test
     public void throwsPolicyLoadExceptionWhenARulesActionIsntCoveredByADeclaredCatalog() {
-        PolicyDefinition.Meta meta = PolicyDefinition.Meta.builder().actions(List.of("Read")).build();
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta().actions(List.of("Read"));
 
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", null, null, meta, List.of(
-                new PolicyDefinition.Rule("allow", "Write", "Article", null)
-            ))));
+            Policy.from(new PolicyDefinition()
+                .meta(meta)
+                .rules(List.of(
+                    new PolicyDefinition.Rule("allow", "Write", "Article", null)
+                ))
+            ));
     }
 
     @Test
     public void throwsPolicyLoadExceptionWhenARuleUsesACustomOperatorOutsideADeclaredCatalog() {
-        PolicyDefinition.Meta meta = PolicyDefinition.Meta.builder().operators(List.of("$hasRole")).build();
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$hasRole"));
 
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", null, null, meta, List.of(
-                new PolicyDefinition.Rule("allow", "Read", "Article", Conditions.op("$isAdmin", true))
-            ))));
+            Policy.from(new PolicyDefinition()
+                .meta(meta)
+                .rules(List.of(
+                    new PolicyDefinition.Rule("allow", "Read", "Article", Conditions.op("$isAdmin", true))
+                ))
+            ));
     }
 
-    // --- Issue 3: operator registry collisions (SPEC_V1-0.md §3.2.3, EC-16) ---
+    // --- Issue 3: operator registry collisions (SPEC_V0.md §3.2.3, EC-16) ---
 
     @Test
     public void throwsPolicyLoadExceptionWhenACustomOperatorCollidesWithABuiltin() {
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", List.of()),
+            Policy.from(new PolicyDefinition(),
                 List.of(Operator.of("$eq", (s, v, ctx) -> true))));
     }
 
     @Test
     public void throwsPolicyLoadExceptionWhenTwoCustomOperatorsCollideWithEachOther() {
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", List.of()), List.of(
+            Policy.from(new PolicyDefinition(), List.of(
                 Operator.of("$hasRole", (s, v, ctx) -> true),
                 Operator.of("$hasRole", (s, v, ctx) -> false)
             )));
@@ -101,40 +111,40 @@ public class PolicyValidationTest {
 
     @Test
     public void throwsPolicyLoadExceptionWhenMetaOperatorsDeclaresANameNothingIsRegisteredFor() {
-        PolicyDefinition.Meta meta = PolicyDefinition.Meta.builder().operators(List.of("$hasRole")).build();
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$hasRole"));
 
         // Unlike EC-13 above, this throws even though no rule references
         // $hasRole at all - meta.operators' registration requirement is
         // checked in full at construction time, not merely for names rules
         // actually use.
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", null, null, meta, List.of())));
+            Policy.from(new PolicyDefinition().meta(meta)));
     }
 
     @Test
     public void metaOperatorsIsSatisfiedByABuiltinName() {
-        PolicyDefinition.Meta meta = PolicyDefinition.Meta.builder().operators(List.of("$eq")).build();
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$eq"));
 
-        Policy.from(new PolicyDefinition("1.0.0", null, null, meta, List.of())); // should not throw
+        Policy.from(new PolicyDefinition().meta(meta)); // should not throw
     }
 
     @Test
     public void metaOperatorsIsSatisfiedByARegisteredCustomOperator() {
-        PolicyDefinition.Meta meta = PolicyDefinition.Meta.builder().operators(List.of("$hasRole")).build();
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$hasRole"));
 
         Policy.from(
-            new PolicyDefinition("1.0.0", null, null, meta, List.of()),
+            new PolicyDefinition().meta(meta),
             List.of(Operator.of("$hasRole", (s, v, ctx) -> true))
         ); // should not throw
     }
 
-    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch (SPEC_V1-0.md §3.2.1) ---
+    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch (SPEC_V0.md §3.2.1) ---
 
     @Test
     public void falseDisablesTheActionWildcardJustLikeNull() {
-        PolicyDefinition.Meta meta = PolicyDefinition.Meta.builder().anyAction(false).build();
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta().anyAction(false);
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", null, null, meta, List.of(
+        Policy policy = Policy.from(new PolicyDefinition().meta(meta).rules(List.of(
             new PolicyDefinition.Rule("allow", "_ANY_", "Article", null)
         )));
 
@@ -144,26 +154,14 @@ public class PolicyValidationTest {
         assertTrue(policy.can(ActionFactory.create("_ANY_"), SubjectFactory.create("Article")));
     }
 
-    @Test
-    public void throwsPolicyLoadExceptionWhenAnyActionIsDeclaredTrue() {
-        assertThrows(PolicyLoadException.class, () ->
-            PolicyDefinition.Meta.builder().anyAction(true));
-    }
-
-    @Test
-    public void throwsPolicyLoadExceptionWhenAnyActionIsDeclaredANonBooleanNonStringValue() {
-        assertThrows(PolicyLoadException.class, () ->
-            PolicyDefinition.Meta.builder().anyAction(42));
-    }
-
     // --- PolicyBuilder derives meta.actions/subjects/operators from usage; only the wildcard tokens are ever declared explicitly ---
 
     @Test
     public void buildDefDerivesActionsSubjectsAndOperatorsFromWhatWasActuallyUsed() {
         Subject<?> article = SubjectFactory.create("Article");
         Subject<?> user = SubjectFactory.create("User");
-        Action<String> read = ActionFactory.create("Read");
-        Action<String> update = ActionFactory.create("Update");
+        Action read = ActionFactory.create("Read");
+        Action update = ActionFactory.create("Update");
         Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> true);
 
         PolicyDefinition def = new PolicyBuilder(List.of(hasRole))
@@ -171,9 +169,9 @@ public class PolicyValidationTest {
             .allow(update, user, Conditions.op("$hasRole", "admin"))
             .buildDef();
 
-        assertEquals(List.of("Read", "Update"), def.getMeta().getActions());
-        assertEquals(List.of("Article", "User"), def.getMeta().getSubjects());
-        assertEquals(List.of("$hasRole"), def.getMeta().getOperators());
+        assertEquals(List.of("Read", "Update"), def.meta().actions());
+        assertEquals(List.of("Article", "User"), def.meta().subjects());
+        assertEquals(List.of("$hasRole"), def.meta().operators());
     }
 
     @Test
@@ -186,8 +184,8 @@ public class PolicyValidationTest {
         // effectiveAnySubject fall back to the "_ANY_" default - a
         // PolicyBuilder() with no wildcard args MUST NOT come out as
         // "explicitly disabled" (that's what WildcardToken.of(null) means).
-        assertEquals(null, def.getMeta().getAnyAction());
-        assertEquals(null, def.getMeta().getAnySubject());
+        assertEquals(null, def.meta().anyAction());
+        assertEquals(null, def.meta().anySubject());
     }
 
     @Test
@@ -227,8 +225,8 @@ public class PolicyValidationTest {
             .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
             .buildDef();
 
-        assertEquals(List.of("Read", "Delete"), def.getMeta().getActions());
-        assertEquals(List.of("Article", "Comment"), def.getMeta().getSubjects());
+        assertEquals(List.of("Read", "Delete"), def.meta().actions());
+        assertEquals(List.of("Article", "Comment"), def.meta().subjects());
     }
 
     @Test
@@ -250,8 +248,8 @@ public class PolicyValidationTest {
             .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
             .buildDef();
 
-        assertEquals(null, def.getMeta().getAnyAction());
-        assertEquals(null, def.getMeta().getAnySubject());
+        assertEquals(null, def.meta().anyAction());
+        assertEquals(null, def.meta().anySubject());
     }
 
     @Test

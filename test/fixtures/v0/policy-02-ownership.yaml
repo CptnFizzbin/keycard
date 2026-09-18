@@ -1,0 +1,42 @@
+version: "0.1"
+name: "Article Ownership Policy"
+description: "Users can only modify their own articles"
+
+rules:
+  - [ allow, Read, Article ]
+  - [ allow, Create, Article ]
+  - [ allow, Update, Article, { owner_id: 1 } ]
+  - [ allow, Delete, Article, { owner_id: 1 } ]
+
+tests:
+  - name: "allows Read on the Article type"
+    check: [ Read, Article ]
+    expected: true
+
+  - name: "allows Create on the Article type"
+    check: [ Create, Article ]
+    expected: true
+
+  - name: "allows Update for the owner (owner_id 1)"
+    check: [ Update, Article, { owner_id: 1 } ]
+    expected: true
+
+  - name: "denies Update for a non-owner (owner_id 2)"
+    check: [ Update, Article, { owner_id: 2 } ]
+    expected: false
+
+  - name: "allows Delete for the owner (owner_id 1)"
+    check: [ Delete, Article, { owner_id: 1 } ]
+    expected: true
+
+  - name: "denies Delete for a non-owner (owner_id 2)"
+    check: [ Delete, Article, { owner_id: 2 } ]
+    expected: false
+
+  - name: "denies Update on the bare Article type (condition needs owner_id)"
+    check: [ Update, Article ]
+    expected: false
+
+  - name: "denies Publish on Article (no rule allows it)"
+    check: [ Publish, Article, { owner_id: 1 } ]
+    expected: false

@@ -13,21 +13,7 @@ import { buildCatalog, resolveName } from "../lib/catalog.ts"
 import { getLogger } from "../lib/logger.ts"
 import type { Subject } from "../subject/index.ts"
 import type { SubjectFieldMapper } from "../subject/subjectFieldMapper.ts"
-import { KEYCARD_POLICY_VERSION } from "../version.ts"
-
-/** The highest version this implementation supports natively - SPEC_V1-0.md §2. PATCH never affects compatibility. Single-sourced from {@link KEYCARD_POLICY_VERSION}, alongside `PolicyBuilder`'s `BUILDER_VERSION`, so the two can never drift apart. */
-const SUPPORTED_VERSION = KEYCARD_POLICY_VERSION
-// §2.1: MINOR/PATCH may be omitted from KEYCARD_POLICY_VERSION itself
-// ("1.0" is valid shorthand for "1.0.0"), so coerce here too rather than
-// the strict major()/minor(), which throw on a non-three-component string.
-const SUPPORTED_COERCED = semver.coerce(SUPPORTED_VERSION)
-if (!SUPPORTED_COERCED) {
-  throw new Error(`KEYCARD_POLICY_VERSION "${SUPPORTED_VERSION}" is not a valid SemVer version string.`)
-}
-const SUPPORTED_MAJOR = SUPPORTED_COERCED.major
-const SUPPORTED_MINOR = SUPPORTED_COERCED.minor
-/** Same MAJOR as SUPPORTED_VERSION, MINOR no higher - PATCH is irrelevant either way (§2). */
-const COMPATIBLE_RANGE = `>=${SUPPORTED_MAJOR}.0.0 <${SUPPORTED_MAJOR}.${SUPPORTED_MINOR + 1}.0`
+import { KEYCARD_POLICY_SUPPORTED_VERSIONS } from "../version.ts"
 
 /**
  * Recursively collects every non-built-in, `$`-prefixed operator name used
@@ -72,7 +58,7 @@ export class Policy<
 
   /**
    * @param config shared, optional config also accepted by `PolicyBuilder`
-   *   (SPEC_V1-0.md §4.2.2/§7.4.12 and the SubjectFieldMapper feature):
+   *   (SPEC_V0.md §4.2.2/§7.4.12 and the SubjectFieldMapper feature):
    *   `actions`/`subjects` widen the `meta.actions`/`meta.subjects`
    *   catalogs beyond what `definition.meta` itself declares; a keyed
    *   (`Record<string, Action|Subject>`) `actions`/`subjects` is also a
@@ -124,9 +110,9 @@ export class Policy<
     // shorthand for "1.0.0" - so coerce before comparing rather than
     // requiring a strict three-component string.
     const coerced = semver.coerce(version)
-    if (!coerced || !semver.satisfies(coerced, COMPATIBLE_RANGE)) {
+    if (!coerced || !semver.satisfies(coerced, KEYCARD_POLICY_SUPPORTED_VERSIONS)) {
       throw new PolicyVersionException(
-        `Unsupported policy version "${version}": this implementation supports ${SUPPORTED_MAJOR}.0.0 through ${SUPPORTED_MAJOR}.${SUPPORTED_MINOR}.x (SPEC_V1-0.md §2).`,
+        `Unsupported policy version "${coerced}": this implementation supports ${KEYCARD_POLICY_SUPPORTED_VERSIONS}.`,
       )
     }
   }
@@ -163,7 +149,7 @@ export class Policy<
     for (const rule of definition.rules as RuleTuple[]) {
       if (!Array.isArray(rule) || rule.length < 3) {
         throw new PolicyLoadException(
-          `Malformed rule tuple (fewer than 3 elements): ${JSON.stringify(rule)} (SPEC_V1-0.md §3.3, EC-10).`,
+          `Malformed rule tuple (fewer than 3 elements): ${JSON.stringify(rule)} (SPEC_V0.md §3.3, EC-10).`,
         )
       }
 
@@ -171,17 +157,17 @@ export class Policy<
 
       if (effect !== "allow" && effect !== "deny") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: effect must be "allow" or "deny", got ${JSON.stringify(effect)} (SPEC_V1-0.md §3.3, EC-10).`,
+          `Malformed rule tuple: effect must be "allow" or "deny", got ${JSON.stringify(effect)} (SPEC_V0.md §3.3, EC-10).`,
         )
       }
       if (typeof action !== "string") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: action must be a string, got ${JSON.stringify(action)} (SPEC_V1-0.md §3.3, EC-10).`,
+          `Malformed rule tuple: action must be a string, got ${JSON.stringify(action)} (SPEC_V0.md §3.3, EC-10).`,
         )
       }
       if (typeof subjectName !== "string") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: subject must be a string, got ${JSON.stringify(subjectName)} (SPEC_V1-0.md §3.3, EC-10).`,
+          `Malformed rule tuple: subject must be a string, got ${JSON.stringify(subjectName)} (SPEC_V0.md §3.3, EC-10).`,
         )
       }
 
@@ -190,18 +176,18 @@ export class Policy<
 
       if (isWildcardAction && isWildcardSubject && conditions) {
         throw new PolicyLoadException(
-          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V1-0.md §6 property 5, EC-6).`,
+          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md §6 property 5, EC-6).`,
         )
       }
 
       if (actionsCatalog && !isWildcardAction && !actionsCatalog.has(action)) {
         throw new PolicyLoadException(
-          `Rule action "${action}" is not covered by meta.actions (SPEC_V1-0.md §3.2.2, EC-8).`,
+          `Rule action "${action}" is not covered by meta.actions (SPEC_V0.md §3.2.2, EC-8).`,
         )
       }
       if (subjectsCatalog && !isWildcardSubject && !subjectsCatalog.has(subjectName)) {
         throw new PolicyLoadException(
-          `Rule subject "${subjectName}" is not covered by meta.subjects (SPEC_V1-0.md §3.2.2, EC-8).`,
+          `Rule subject "${subjectName}" is not covered by meta.subjects (SPEC_V0.md §3.2.2, EC-8).`,
         )
       }
 
@@ -211,7 +197,7 @@ export class Policy<
         for (const op of used) {
           if (!operatorsCatalog.has(op)) {
             throw new PolicyLoadException(
-              `Rule uses custom operator "${op}" not covered by meta.operators (SPEC_V1-0.md §3.2.3, EC-13).`,
+              `Rule uses custom operator "${op}" not covered by meta.operators (SPEC_V0.md §3.2.3, EC-13).`,
             )
           }
         }
@@ -240,7 +226,7 @@ export class Policy<
   }
 
   /**
-   * SPEC_V1-0.md §6: reverse scan over `rules`, returning the effect of
+   * SPEC_V0.md §6: reverse scan over `rules`, returning the effect of
    * the first (i.e. most-recently-declared) rule whose action, subject,
    * and (if present) conditions all match. There is no independent
    * "allow AND NOT deny" veto and no combination of multiple matching

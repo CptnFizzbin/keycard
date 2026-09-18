@@ -1,0 +1,110 @@
+version: "0.1"
+name: "last matching rule wins"
+description: >
+  Each rule's condition is evaluated independently against the same
+  instance; only the last-declared rule among those whose conditions are
+  satisfied decides the outcome — not an "any deny beats any allow" veto.
+
+rules:
+  - [ allow, Update, Article, { owner_id: 1 } ]
+  - [ deny, Update, Article, { status: archived } ]
+
+tests:
+  - name: "owner, not archived: only the allow rule matches"
+    check: [ Update, Article, { owner_id: 1, status: published } ]
+    expected: true
+
+  - name: "owner, archived: the later-declared deny rule wins even though the earlier allow also matches"
+    check: [ Update, Article, { owner_id: 1, status: archived } ]
+    expected: false
+
+  - name: "not owner, archived: only the deny rule matches"
+    check: [ Update, Article, { owner_id: 2, status: archived } ]
+    expected: false
+
+  - name: "not owner, not archived: neither rule matches (default deny)"
+    check: [ Update, Article, { owner_id: 2, status: published } ]
+    expected: false
+
+---
+version: "0.1"
+name: "a later, narrower allow reopens what an earlier deny closed"
+rules:
+  - [ allow, Delete, Article, { owner_id: 1 } ]
+  - [ deny, Delete, Article, { status: archived } ]
+  - [ allow, Delete, Article, { override: true } ]
+
+tests:
+  - name: "owner, not archived, no override: first allow rule matches"
+    check: [ Delete, Article, { owner_id: 1, status: published, override: false } ]
+    expected: true
+
+  - name: "owner, archived, no override: deny rule wins"
+    check: [ Delete, Article, { owner_id: 1, status: archived, override: false } ]
+    expected: false
+
+  - name: "owner, archived, override: the last-declared allow rule wins over the deny between it and the first allow"
+    check: [ Delete, Article, { owner_id: 1, status: archived, override: true } ]
+    expected: true
+
+  - name: "non-owner, archived, override: the override rule's own condition is independent of ownership"
+    check: [ Delete, Article, { owner_id: 2, status: archived, override: true } ]
+    expected: true
+
+---
+version: "0.1"
+name: "a trailing blanket deny shadows every earlier rule for the same action/subject"
+description: >
+  A blanket (unconditional) rule declared after other rules for the same
+  action/subject makes them unreachable — the documented anti-pattern the
+  spec warns about. This is still required, spec-correct behavior, not a bug:
+  place a blanket rule first if it's meant to be overridden by more specific
+  rules declared after it.
+rules:
+  - [ allow, Update, Article, { owner_id: 1 } ]
+  - [ deny, Update, Article ]
+
+tests:
+  - name: "even the owner is denied, because the blanket deny is declared last"
+    check: [ Update, Article, { owner_id: 1 } ]
+    expected: false
+
+  - name: "a bare, no-instance check also hits the unconditional blanket rule"
+    check: [ Update, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "double-wildcard unconditional rule ordering"
+description: >
+  An unconditional [allow, _ANY_, _ANY_] rule is a legal, single rule (§6.2.2
+  property 5) whose position relative to other rules still follows
+  last-rule-wins like any other rule.
+rules:
+  - [ deny, Delete, Article ]
+  - [ allow, _ANY_, _ANY_ ]
+
+tests:
+  - name: "the trailing superuser rule overrides the earlier specific deny"
+    check: [ Delete, Article ]
+    expected: true
+
+  - name: "the superuser rule matches anything"
+    check: [ Anything, Whatever ]
+    expected: true
+
+---
+version: "0.1"
+name: "double-wildcard unconditional rule declared first is overridable"
+rules:
+  - [ allow, _ANY_, _ANY_ ]
+  - [ deny, Delete, Article ]
+
+tests:
+  - name: "the later, specific deny overrides the earlier superuser rule"
+    check: [ Delete, Article ]
+    expected: false
+
+  - name: "anything not covered by the later deny still falls through to the superuser allow"
+    check: [ Read, Article ]
+    expected: true

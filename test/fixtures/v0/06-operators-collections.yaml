@@ -1,0 +1,66 @@
+version: "0.1"
+name: "$in (§7.4.4)"
+rules:
+  - [ allow, Read, Article, { status: { $in: [ published, featured ] } } ]
+
+tests:
+  - name: "value present in the list: allowed"
+    check: [ Read, Article, { status: published } ]
+    expected: true
+
+  - name: "another value present in the list: allowed"
+    check: [ Read, Article, { status: featured } ]
+    expected: true
+
+  - name: "value absent from the list: denied"
+    check: [ Read, Article, { status: draft } ]
+    expected: false
+
+  - name: "missing field: denied"
+    check: [ Read, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "$in with a non-array operand is a type issue, always false (§7.4.4)"
+rules:
+  - [ allow, Read, Article, { status: { $in: published } } ]
+
+tests:
+  - name: "operand is not an array: never matches, even for an otherwise-plausible value"
+    check: [ Read, Article, { status: published } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$has (§7.4.5)"
+rules:
+  - [ allow, Read, Article, { tags: { $has: featured } } ]
+
+tests:
+  - name: "array contains the value: allowed"
+    check: [ Read, Article, { tags: [ featured, news ] } ]
+    expected: true
+
+  - name: "array does not contain the value: denied"
+    check: [ Read, Article, { tags: [ news ] } ]
+    expected: false
+
+  - name: "empty array: denied"
+    check: [ Read, Article, { tags: [ ] } ]
+    expected: false
+
+  - name: "missing field: denied"
+    check: [ Read, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "$has against a non-array subject value is a type issue, always false (§7.4.5)"
+rules:
+  - [ allow, Read, Article, { tags: { $has: featured } } ]
+
+tests:
+  - name: "subject field is not an array: never matches"
+    check: [ Read, Article, { tags: featured, } ]
+    expected: false

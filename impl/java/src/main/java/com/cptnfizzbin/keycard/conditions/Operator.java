@@ -1,7 +1,7 @@
 package com.cptnfizzbin.keycard.conditions;
 
 /**
- * A single `$`-prefixed condition operator (SPEC_V1-0.md §7.4) - built-in
+ * A single `$`-prefixed condition operator (SPEC_V0.md §7.4) - built-in
  * or custom. Both are the exact same type and are registered, looked up,
  * and dispatched identically (§7.4.12): {@link DefaultOperators} supplies
  * one {@code Operator} per built-in, and a host application supplies its

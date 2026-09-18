@@ -8,28 +8,25 @@ slug: /intro
 
 :::warning[Pre-alpha]
 KeyCard is in **pre-alpha**. The API and policy format are still subject to
-breaking changes without notice. It is not yet recommended for production
-use.
+breaking changes without notice. It is not yet recommended for production use.
 :::
 
-Cross-language access-control library inspired by CASL.js. Provides
-type-safe, composable authorization policies for the JVM.
+Cross-language access-control library inspired by CASL.js. Provides type-safe,
+composable authorization policies for the JVM.
 
-New to KeyCard's concepts? Read the language-agnostic
-**[Guide](/docs/intro)** first — Policy Definition, Rules, and the
-condition language are the same across every implementation.
+New to KeyCard's concepts? Read the language-agnostic **[Guide](/docs/intro)**
+first — Policy Definition, Rules, and the condition language are the same across
+every implementation.
 
 ## Features
 
 - **Type-safe** — generics ensure only valid actions and subjects are used
-- **Composable** — build complex policies from simple rules using a
-  fluent API
-- **Flexible conditions** — comparison, pattern matching, and logical
-  operators
-- **Cross-platform** — `PolicyDefinition`s serialize to JSON for
-  cross-language use
-- **Zero runtime overhead** — type safety enforced at compile time via
-  Java generics
+- **Composable** — build complex policies from simple rules using a fluent API
+- **Flexible conditions** — comparison, pattern matching, and logical operators
+- **Cross-platform** — `PolicyDefinition`s serialize to JSON for cross-language
+  use
+- **Zero runtime overhead** — type safety enforced at compile time via Java
+  generics
 
 ## Installation
 
@@ -76,9 +73,9 @@ class Article {
 public class Main {
     public static void main(String[] args) {
         // Define your actions
-        Action<String> create = ActionFactory.create("create");
-        Action<String> update = ActionFactory.create("update");
-        Action<String> delete = ActionFactory.create("delete");
+        Action create = ActionFactory.create("create");
+        Action update = ActionFactory.create("update");
+        Action delete = ActionFactory.create("delete");
 
         // Define your subjects
         Subject<Article> article = SubjectFactory.create("article");
@@ -126,11 +123,11 @@ public class Main {
 Java's generic type system enforces compile-time verification:
 
 ```java
-Action<String> create = ActionFactory.create("create");
+Action create = ActionFactory.create("create");
 Subject<Article> article = SubjectFactory.create("article");
 
 policy.can(create, article);        // OK
-policy.can("create", article);      // compiler error: action must be an Action<?>
+policy.can("create", article);      // compiler error: action must be an Action
 policy.can(create, "article");      // compiler error: subject must be a Subject<?>
 ```
 

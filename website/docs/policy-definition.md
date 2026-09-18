@@ -37,7 +37,7 @@ rules:
   matching catalog. A custom-operator catalog (`meta.operators`) and an
   opaque `meta.application` slot for host-application data are also
   available; see
-  [§4.2 of the v1.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#42-meta)
+  [§4.2 of the v1.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V0.md#42-meta)
   for the full `meta` shape.
 - **`rules`** — required. An ordered list of rule tuples, evaluated as described
   below.
@@ -119,4 +119,4 @@ or even on the same continent.
 
 For the exact matching algorithm (including case-sensitivity rules and how
 missing/`null` fields are treated), see
-[§6.2.2 of the v1.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#622-can--cannot--require).
+[§6.2.2 of the v1.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V0.md#622-can--cannot--require).

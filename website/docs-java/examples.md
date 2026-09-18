@@ -49,9 +49,9 @@ new PolicyBuilder(config)
 
 ### The same conditions, with `Conditions`
 
-`Conditions` builds the same `Map<String, Object>` shape from method
-references, so a typo in a field name is caught by the compiler instead of
-failing silently at evaluation time:
+`Conditions` builds the same `Map<String, Object>` shape from method references,
+so a typo in a field name is caught by the compiler instead of failing silently
+at evaluation time:
 
 ```java
 new PolicyBuilder(config)
@@ -64,11 +64,11 @@ new PolicyBuilder(config)
 
 ### Field mappers for renamed or computed fields
 
-A `SubjectFieldMapper` resolves a condition field through an explicit
-getter instead of reflection — handy when a policy-facing field name
-doesn't match the instance's own shape, like flattening a nested
-`post.getAuthor().getName()` into a single top-level `authorName` field
-(recall conditions can only narrow one field deep — see
+A `SubjectFieldMapper` resolves a condition field through an explicit getter
+instead of reflection — handy when a policy-facing field name doesn't match the
+instance's own shape, like flattening a nested
+`post.getAuthor().getName()` into a single top-level `authorName` field (recall
+conditions can only narrow one field deep — see
 [Condition Operators](/docs/condition-operators#v1-supports-only-top-level-field-access)):
 
 ```java
@@ -77,7 +77,7 @@ SubjectFieldMapper<Post> authorNameMapper = SubjectFieldMapper.<Post>builder()
     .build();
 
 Subject<Post> post = SubjectFactory.create("Post", authorNameMapper);
-Action<String> read = ActionFactory.create("Read");
+Action read = ActionFactory.create("Read");
 
 KeycardConfig postConfig = KeycardConfig.builder()
     .action(read)
@@ -92,10 +92,9 @@ Policy policy = new PolicyBuilder(postConfig)
     .build();
 ```
 
-A field the mapper doesn't define still falls back to ordinary reflection,
-and a mapped field's own value can still use any non-field operator
-(`$substr`, `$in`, ...) — only narrowing is restricted to one level, not
-operator use.
+A field the mapper doesn't define still falls back to ordinary reflection, and a
+mapped field's own value can still use any non-field operator (`$substr`,
+`$in`, ...) — only narrowing is restricted to one level, not operator use.
 
 ### `KeycardConfig`
 
@@ -159,6 +158,6 @@ mvn test
 ```
 
 See [Vision: Quickstart](./vision-quickstart.md) and
-[Vision: A Real Backend](./vision-real-backend.md) for a look at where
-this API is headed — not shipped, not compiling against `impl/java`
+[Vision: A Real Backend](./vision-real-backend.md) for a look at where this API
+is headed — not shipped, not compiling against `impl/java`
 today.

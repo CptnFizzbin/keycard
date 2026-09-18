@@ -1,0 +1,43 @@
+version: "0.1"
+name: "Status-Based Policy"
+description: "Complex conditions based on article status"
+
+rules:
+  - [ allow, Read, Article ]
+  - [ allow, Create, Article ]
+  - [ allow, Update, Article, { $and: [ { owner_id: 1 }, { status: { $ne: archived } } ] } ]
+  - [ allow, Delete, Article, { owner_id: 1 } ]
+  - [ deny, Delete, Article, { status: archived } ]
+
+tests:
+  - name: "allows Read on the Article type"
+    check: [ Read, Article ]
+    expected: true
+
+  - name: "allows Create on the Article type"
+    check: [ Create, Article ]
+    expected: true
+
+  - name: "allows Update for the owner with published (non-archived) status"
+    check: [ Update, Article, { owner_id: 1, status: published } ]
+    expected: true
+
+  - name: "allows Update for the owner with draft (non-archived) status"
+    check: [ Update, Article, { owner_id: 1, status: draft } ]
+    expected: true
+
+  - name: "denies Update for a non-owner even with non-archived status"
+    check: [ Update, Article, { owner_id: 2, status: draft } ]
+    expected: false
+
+  - name: "denies Update for the owner when the article is archived"
+    check: [ Update, Article, { owner_id: 1, status: archived } ]
+    expected: false
+
+  - name: "denies Delete on an archived article (deny rule)"
+    check: [ Delete, Article, { owner_id: 1, status: archived } ]
+    expected: false
+
+  - name: "denies Update on the bare Article type (conditions need owner_id/status)"
+    check: [ Update, Article ]
+    expected: false
