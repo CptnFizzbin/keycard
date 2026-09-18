@@ -7,36 +7,9 @@ slug: /vision-real-backend
 # Vision: A Real Backend (Java)
 
 :::info[Vision — not yet implemented]
-This page is a design exploration, not shipped API. It doesn't compile
-against the current `impl/java` package — treat it as a target to
-design toward, not a reference for what `Action`, `Subject`,
-`PolicyBuilder`, and `KeycardConfig` do today. See
-[`docs/guidelines/keycard-api.md`](https://github.com/CptnFizzbin/keycard/blob/main/docs/guidelines/keycard-api.md)
-for the reasoning behind it, and
-[Vision: Quickstart](./vision-quickstart.md) for the same ideas in a
-single-file script.
+This page is a design exploration for what version 0.1.0 of KeyCard may look 
+like
 :::
-
-A multi-tenant project tracker, as a Spring service: `PolicyClaims`
-comes off the Spring Security `Jwt` principal, a `PermissionService`
-wraps `require()` into a 403, and one endpoint ships the raw
-`PolicyDefinition` — the exact wire format the JavaScript client in the
-[JavaScript version](/js/vision-real-backend) hydrates. Every `Action`
-and `Subject` here is dynamic — unnamed at construction, named only by
-the catalog key it's registered under — and
-`AppActions`/`AppSubjects`/`AppOperators` are their own classes, each
-building its own `catalog` field inline: `catalog.set(name, new
-Action())` registers and returns in the same expression, so there's no
-separate method re-listing every name a second time, and a name
-collision in one registry can never shadow an entry in the other. A bare
-operator lambda has no name of its own to read, so `AppOperators` always
-needs that two-arg form — unlike a manually-named `Subject` (the
-[quickstart](./vision-quickstart.md)'s `ArticleSubject("article")`),
-where `catalog.set(subject)` can read the name straight off the object.
-`ProjectSubject`/`TaskSubject` fold the claims mapping into the
-`Subject` itself, so a call site does one
-`AppSubjects.Task.from(task, project)` instead of a
-claims-then-`wrap()` two-step.
 
 ### `policy/AppActions.java`
 
@@ -103,9 +76,6 @@ public record PolicyClaims(String userId, String orgId, Role role) {
 ### `policy/ProjectSubject.java`
 
 ```java
-// Subject Claims: narrow, composable projections - never the raw entity.
-// The claims mapping lives on the Subject itself: one from(...) call builds
-// the Claims and wraps them, so a caller never sees the two-step.
 public class ProjectSubject extends Subject<ProjectSubject.Claims, ProjectSubject> {
     public ProjectSubject() { super(); }
     private ProjectSubject(String id, Claims instance) { super(id, instance); }
@@ -132,14 +102,13 @@ public class ProjectSubject extends Subject<ProjectSubject.Claims, ProjectSubjec
 }
 ```
 
-**Never the raw entity.** Handing `Subject.wrap(...)` a JPA/ORM entity
-directly, instead of a narrow claims projection like these, risks
-triggering lazy-loaded relation getters and circular references, and
-turns a DB column rename into a Condition that silently stops matching
-instead of a compile error — see
-[`docs/guidelines/keycard-api.md`](https://github.com/CptnFizzbin/keycard/blob/main/docs/guidelines/keycard-api.md)'s
-"Subject shape: a narrow projection, not the entity" for the full case
-against it.
+Subject Types are recommended to be minimal focused subsets or computable 
+fields from one or more objects. It is strongly recommended not to use the
+full object as the type.
+
+Extending the Subject class is recommended as it provides both the ability to
+focus a full object down into a set of Subject Claims, as well as provide a way
+to map an object's properties and fields to predictable strings.
 
 ### `policy/TaskSubject.java`
 
@@ -172,17 +141,6 @@ public class TaskSubject extends Subject<TaskSubject.Claims, TaskSubject> {
 }
 ```
 
-`Condition<T>` (with its `where`/`and`/`or`/`field` helpers, used below)
-is part of the library itself, not application code, so it isn't shown
-as a file here. `field()` takes a getter reference, not a string —
-renaming `TaskSubject.Claims.assigneeId()` is then a compile error at
-every call site, not a policy rule that silently stops matching. The
-property name comes off the getter's `SerializedLambda` once, at first
-use, and is cached — not resolved per check. The wire format is
-untouched: it still serializes to the same
-`[effect, action, subject, conditions]` tuples from
-[`SPEC.md`](https://github.com/CptnFizzbin/keycard/blob/main/SPEC.md).
-
 ### `policy/AppPolicyBuilder.java`
 
 ```java
@@ -192,11 +150,21 @@ public class AppPolicyBuilder {
         .actions(AppActions.catalog)
         .subjects(AppSubjects.catalog)
         .operators(AppOperators.catalog)
-        // fail-fast catalog/operator validation, and the diagnostic meta a
-        // PolicyDefinition carries alongside its rules - both cheap, both
-        // worth it in dev, both dead weight in prod once CI has already run
-        // them once
-        .emitMeta(!"production".equals(System.getenv("APP_ENV")));
+        /* 
+        Enables the ablity to perform fail-fast checks while loading a 
+        policy during development. When added, the library is able to confirm 
+        that all actions, subjects, and operators needed for the policy are 
+        registered.
+        */
+        .emitMeta(Environment.isDevelopment()) // default: true
+        /*
+        Enables the ability for shared test cases to be added to the policy
+        file to allow for confirmations that two or more languages are operating
+        with the same permissions. The recommendation is to define test cases 
+        on your server and save the resulting policy and tests as a fixture 
+        that can be tested on other platforms via Policy.selfTest()
+        */
+        .emitTests(Environment.isDevelopment()) // default: false
 
     public Policy buildFor(PolicyClaims claims) {
         PolicyBuilder builder = new PolicyBuilder(CONFIG)
