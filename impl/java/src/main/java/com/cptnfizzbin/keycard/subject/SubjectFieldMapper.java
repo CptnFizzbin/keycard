@@ -1,7 +1,9 @@
 package com.cptnfizzbin.keycard.subject;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -14,39 +16,14 @@ import java.util.function.Function;
  * fields). Consulted per-field: a field this mapper doesn't define still
  * falls back to reflection.
  */
-public final class SubjectFieldMapper<T> {
-    private final Map<String, Function<T, Object>> getters;
-
-    private SubjectFieldMapper(Map<String, Function<T, Object>> getters) {
-        this.getters = new LinkedHashMap<>(getters);
+public final class SubjectFieldMapper<T> extends HashMap<String, Function<T, Object>> {
+    public SubjectFieldMapper<T> map(String field, Function<T, Object> getter) {
+        this.put(field, getter);
+        return this;
     }
 
-    public static <T> Builder<T> builder() {
-        return new Builder<>();
-    }
-
-    public boolean hasField(String fieldName) {
-        return getters.containsKey(fieldName);
-    }
-
-    /** Applies the getter registered for {@code fieldName} to {@code instance}. Callers MUST check {@link #hasField} first. */
-    @SuppressWarnings("unchecked")
-    public Object get(Object instance, String fieldName) {
-        return getters.get(fieldName).apply((T) instance);
-    }
-
-    public static final class Builder<T> {
-        private final Map<String, Function<T, Object>> getters = new LinkedHashMap<>();
-
-        private Builder() {}
-
-        public Builder<T> field(String name, Function<T, Object> getter) {
-            getters.put(name, getter);
-            return this;
-        }
-
-        public SubjectFieldMapper<T> build() {
-            return new SubjectFieldMapper<>(getters);
-        }
+    public Optional<Object> getValue(String field, T obj) {
+        return Optional.ofNullable(this.get(field))
+            .map(getter -> getter.apply(obj));
     }
 }

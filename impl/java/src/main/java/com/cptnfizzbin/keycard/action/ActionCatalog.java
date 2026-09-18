@@ -1,58 +1,28 @@
 package com.cptnfizzbin.keycard.action;
 
+import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
+
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
-/**
- * A keyed catalog of Actions - each key becomes the serialized name for its
- * Action, which is how an {@link Action#create()} call with no name gets a
- * real, stable name. Handed to {@code KeycardConfig} via {@code
- * actionCatalog}; {@code KeycardConfig.Builder#addAction} is a shorthand
- * for building one entry-by-entry alongside the rest of the config.
- */
-public final class ActionCatalog {
-    private final Map<String, Action> actions;
+public final class ActionCatalog extends HashMap<String, Action> {
+    private final HashMap<String, String> namesById = new HashMap<>();
 
-    private ActionCatalog(Map<String, Action> actions) {
-        this.actions = actions;
+    public ActionCatalog add(Action action) {
+        if (action.dynamic())
+            throw new PolicyArgumentException("Dynamic actions must added to the catalog with a name");
+        return this.add(action.id(), action);
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public ActionCatalog add(String name, Action action) {
+        this.put(name, action);
+        this.namesById.put(action.id(), name);
+        return this;
     }
 
-    /**
-     * A snapshot of this catalog's entries.
-     */
-    public Map<String, Action> toMap() {
-        return Map.copyOf(actions);
-    }
-
-    /**
-     * A builder pre-populated with this catalog's existing entries - the basis for {@code KeycardConfig.Builder#addAction}.
-     */
-    public Builder toBuilder() {
-        return new Builder(actions);
-    }
-
-    public static final class Builder {
-        private final Map<String, Action> actions;
-
-        private Builder() {
-            this.actions = new LinkedHashMap<>();
-        }
-
-        private Builder(Map<String, Action> actions) {
-            this.actions = new LinkedHashMap<>(actions);
-        }
-
-        public Builder add(String key, Action action) {
-            actions.put(key, action);
-            return this;
-        }
-
-        public ActionCatalog build() {
-            return new ActionCatalog(new LinkedHashMap<>(actions));
-        }
+    public Optional<String> getNameById(String id) {
+        return Optional.ofNullable(this.namesById.get(id));
     }
 }
