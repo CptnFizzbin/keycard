@@ -7,34 +7,10 @@ slug: /vision-real-backend
 # Vision: A Real Backend (JavaScript)
 
 :::info[Vision — not yet implemented]
-This page is a design exploration, not shipped API. It doesn't compile
-against the current `impl/js` package — treat it as a target to design
-toward, not a reference for what `createAction`, `createSubject`,
-`PolicyBuilder`, and `KeycardConfig` do today. See
-[`docs/guidelines/keycard-api.md`](https://github.com/CptnFizzbin/keycard/blob/main/docs/guidelines/keycard-api.md)
-for the reasoning behind it, and
-[Vision: Quickstart](./vision-quickstart.md) for the same ideas in a
-single-file script.
+This page is a design exploration for what version 0.1.0 of KeyCard may look 
+like
 :::
-
-A multi-tenant project tracker: an Express API builds a policy from the
-caller's JWT on every request, a React client hydrates the same
-`PolicyDefinition` to gate the UI, and one custom Condition operator
-handles a rule the built-in set can't express. Every
-`Action`/`Subject`/operator is dynamic — `createAction()` with no name —
-because the catalog object's own key is already the thing that gets
-serialized into a rule tuple. `Actions`/`Subjects`/`Operators`, typed
-with the library's own `ActionCatalog`/`SubjectCatalog`/
-`OperatorCatalog`, *are* the catalogs, so `config` can hand them
-straight to `KeycardConfig` with no separate registration step — the
-same move `AppActions`/`AppSubjects`/`AppOperators` make in the
-[Java version](/java/vision-real-backend). `createSubject({ from })`
-folds the claims mapping in too, so `Subjects.Task.from(task, project)`
-replaces a standalone `toTaskSubject()` helper. Keys are PascalCase
-(`Actions.Create`, `Subjects.Task`) to match `AppActions`/`AppSubjects`
-in Java one-for-one — except the operator catalog, where the object key
-*is* the wire name a rule's Condition references (`$withinDays`), so it
-can't be recased the way a static field name can.
+:::
 
 ### `policy/catalog.ts`
 

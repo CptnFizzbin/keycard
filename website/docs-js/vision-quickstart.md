@@ -7,19 +7,9 @@ slug: /vision-quickstart
 # Vision: Quickstart (JavaScript)
 
 :::info[Vision — not yet implemented]
-This page is a design exploration, not shipped API. It doesn't compile
-against the current `impl/js` package — treat it as a target to design
-toward, not a reference for what `createAction`, `createSubject`,
-`PolicyBuilder`, and `KeycardConfig` do today. See
-[`docs/guidelines/keycard-api.md`](https://github.com/CptnFizzbin/keycard/blob/main/docs/guidelines/keycard-api.md)
-for the reasoning behind it, and
-[Vision: A Real Backend](./vision-real-backend.md) for the same ideas
-applied to a full application.
+This page is a design exploration for what version 0.1.0 of KeyCard may look 
+like
 :::
-
-One builder call, two checks. `config` is optional on `PolicyBuilder` —
-skip it and you lose catalog-backed validation and dynamic-subject name
-resolution, neither of which a single-file script needs.
 
 ```typescript
 import { createAction, createSubject, PolicyBuilder } from "@cptn-fizzbin/keycard";

@@ -7,33 +7,9 @@ slug: /vision-quickstart
 # Vision: Quickstart (Java)
 
 :::info[Vision — not yet implemented]
-This page is a design exploration, not shipped API. It doesn't compile
-against the current `impl/java` package — treat it as a target to
-design toward, not a reference for what `Action`, `Subject`,
-`PolicyBuilder`, and `KeycardConfig` do today. See
-[`docs/guidelines/keycard-api.md`](https://github.com/CptnFizzbin/keycard/blob/main/docs/guidelines/keycard-api.md)
-for the reasoning behind it, and
-[Vision: A Real Backend](./vision-real-backend.md) for the same ideas
-applied to a full application.
+This page is a design exploration for what version 0.1.0 of KeyCard may look 
+like
 :::
-
-Same shape as the real [Examples](./examples.md) above, once `Action`
-drops its factory class and generic — `new Action(name)`, always just a
-name — and `Subject` gains a composable `from(...)` that folds its
-claims mapping in, so `ArticleSubject` builds and wraps in one call
-instead of a separate `Conditions`-and-`wrap()` step. `AppSubjects`
-carries a small `catalog` too — just enough to show
-`catalog.set(subject)`: when a `Subject` already carries its own name
-(`new ArticleSubject("article")`, not dynamic), `set()` reads it
-straight off the object instead of taking a separate name argument, the
-same way `AppActions`/`AppSubjects` do in
-[Vision: A Real Backend](./vision-real-backend.md) when the
-Action/Subject is dynamic. A typed `Condition<T>` builder stands in for
-today's `Conditions` helpers, but built on getter references instead of
-static method calls — `Condition.field(...)` takes a getter reference
-instead of a string, so it's part of the library itself, not
-application code, and isn't shown as a file here. `config` is optional
-on `PolicyBuilder` too — this constructor drops it.
 
 ### `Main.java`
 

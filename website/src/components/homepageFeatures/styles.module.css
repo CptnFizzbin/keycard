@@ -44,6 +44,7 @@
 
     .featureLeft {
         width: 400px;
+        flex-shrink: 0;
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -57,11 +58,23 @@
 
     .featureRight {
         flex-grow: 1;
+        min-width: 0;
         align-self: stretch;
     }
 
     .featureCode {
         font-size: 0.85rem;
         flex-grow: 1;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .featureCard {
+        flex-direction: column;
+
+        .featureLeft {
+            width: 100%;
+        }
     }
 }

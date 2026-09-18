@@ -53,7 +53,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     number: "II",
-    title: "Encode",
+    title: "Seralize",
     language: "yaml",
     code: EXAMPLE_YAML_POLICY_DEF,
     description: (
@@ -65,7 +65,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     number: "III",
-    title: "Apply",
+    title: "Enforce",
     language: "typescript",
     code: EXAMPLE_TS_POLICY_USAGE,
     description: (
