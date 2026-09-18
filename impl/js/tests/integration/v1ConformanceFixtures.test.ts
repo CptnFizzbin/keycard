@@ -110,8 +110,22 @@ describe.each(fixtureFiles)("v1 conformance fixture: $fileName", ({ fileName, fi
   describe.each(suites)("$name", (suite) => {
     // Skips (rather than silently omitting) a suite whose declared version
     // exceeds this suite's own baked-in COMPLIANT_VERSION - see
-    // complianceFixtures.ts's isIncluded.
-    describe.skipIf(!isIncluded(suite.version, COMPLIANT_VERSION))(`version ${suite.version}`, () => {
+    // complianceFixtures.ts's isIncluded. The version check MUST happen
+    // before Policy.from is ever called: Vitest still invokes a
+    // describe.skipIf(...) callback body during collection even when the
+    // condition is true (skipIf only marks the tests it registers as
+    // skipped, it doesn't prevent the callback from running) - so
+    // constructing the Policy inside that callback unconditionally would
+    // throw PolicyVersionException for any suite whose version this
+    // implementation doesn't support yet, defeating the skip entirely.
+    const included = isIncluded(suite.version, COMPLIANT_VERSION)
+
+    describe(`version ${suite.version}`, () => {
+      if (!included) {
+        test.skip(`skipped: exceeds COMPLIANT_VERSION ${COMPLIANT_VERSION}`, () => {})
+        return
+      }
+
       const policy = Policy.from(suite, { operators })
       const cases = suite.cases.map((c) => ({
         ...c,
