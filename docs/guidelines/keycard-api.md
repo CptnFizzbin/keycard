@@ -8,10 +8,13 @@ KeyCard API Guidelines
 > yet implemented. Where the two differ, that's called out explicitly.
 
 See [`GLOSSARY.md`](../../GLOSSARY.md) and [`SPEC.md`](../../SPEC.md) for
-term definitions and the base spec these guidelines build on. See the
-"vision" section at the end of each language's Examples page —
-[`website/docs-js/examples.md`](../../website/docs-js/examples.md) and
-[`website/docs-java/examples.md`](../../website/docs-java/examples.md)
+term definitions and the base spec these guidelines build on. See each
+language's "Vision" pages —
+[`website/docs-js/vision-quickstart.md`](../../website/docs-js/vision-quickstart.md) /
+[`vision-real-backend.md`](../../website/docs-js/vision-real-backend.md)
+and
+[`website/docs-java/vision-quickstart.md`](../../website/docs-java/vision-quickstart.md) /
+[`vision-real-backend.md`](../../website/docs-java/vision-real-backend.md)
 — for complete quickstart and production-shape examples that put these
 guidelines together end to end.
 
