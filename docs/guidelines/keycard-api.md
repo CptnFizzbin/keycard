@@ -8,7 +8,10 @@ KeyCard API Guidelines
 > yet implemented. Where the two differ, that's called out explicitly.
 
 See [`GLOSSARY.md`](../../GLOSSARY.md) and [`SPEC.md`](../../SPEC.md) for
-term definitions and the base spec these guidelines build on.
+term definitions and the base spec these guidelines build on. See
+[`full-examples.md`](full-examples.md) for complete quickstart and
+production-shape examples, in both TypeScript and Java, that put these
+guidelines together end to end.
 
 Subjects and Actions: one static catalog per app
 -------------------------------------------------
