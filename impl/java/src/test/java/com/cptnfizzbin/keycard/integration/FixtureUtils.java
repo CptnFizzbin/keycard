@@ -3,11 +3,8 @@ package com.cptnfizzbin.keycard.integration;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.policy.Policy;
-import com.cptnfizzbin.keycard.policy.PolicyDefinition;
-import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.semver4j.Semver;
@@ -15,7 +12,6 @@ import org.semver4j.Semver;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,19 +25,20 @@ import java.util.stream.Collectors;
  * today, and any future fixture set. Not a test class itself.
  * <p>
  * Factors out the parts that don't depend on a fixture format's on-disk
- * shape: discovering `*.yaml` files, parsing the v1 `rules`/`meta` shape
- * (SPEC_V0.md §3) shared by every fixture format, the `{ action,
- * subject, subjectData?, expected }` shape every format's individual
- * cases boil down to once parsed, resolving one such case against a
- * {@link Policy}, and filtering fixtures by the SemVer `version` they
- * declare - so each format-specific loader only has to own parsing its
- * own document's outer shape into that common {@link TestCase}, not the
- * discovery/resolution/filtering mechanics around it.
+ * shape: discovering `*.yaml` files, the `{ action, subject,
+ * subjectData?, expected }` shape every format's individual cases boil
+ * down to once parsed, resolving one such case against a {@link Policy},
+ * and filtering fixtures by the SemVer `version` they declare - so each
+ * format-specific loader only has to own parsing its own document's
+ * outer shape into that common {@link TestCase}, not the
+ * discovery/resolution/filtering mechanics around it. Parsing a
+ * document's `rules`/`meta` shape (SPEC_V0.md §3) isn't this class's job
+ * any more either - {@code PolicyDefinition}/{@code Rule}/{@code Meta}
+ * are Jackson-annotated and bind straight from a document themselves.
  * <p>
- * KeyCard itself never reads or writes policy.yaml text; parsing it into a
- * plain PolicyDefinition (via jackson-dataformat-yaml, a test-only
- * dependency) is this test suite's job, mirroring what an application
- * would do.
+ * KeyCard itself never reads or writes policy.yaml text; parsing one
+ * (via jackson-dataformat-yaml, a test-only dependency) is this test
+ * suite's job, mirroring what an application would do.
  */
 final class FixtureUtils {
     private FixtureUtils() {
@@ -49,8 +46,9 @@ final class FixtureUtils {
 
     /**
      * Shared Jackson YAML mapper for every fixture loader - reads a
-     * fixture's YAML and binds it directly to the typed record shapes
-     * below (e.g. {@link RuleDoc}), rather than a raw Map/List tree that
+     * fixture's YAML and binds it directly to typed Java types (a
+     * {@code PolicyDefinition} for the policy document shape; see
+     * {@link Fixtures.SuiteDoc}), rather than a raw Map/List tree that
      * then has to be walked and cast by hand. Construction isn't free,
      * and it's stateless/reusable. Unknown fields (e.g. an informational
      * `description:`) are tolerated, since a fixture isn't required to
@@ -59,16 +57,6 @@ final class FixtureUtils {
     static final YAMLMapper YAML = YAMLMapper.builder()
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .build();
-
-    /**
-     * `[effect, action, subject, conditions?]` - SPEC_V0.md §3.3 - as
-     * Jackson binds it straight from a YAML flow sequence: {@code
-     * @JsonFormat(shape = ARRAY)} maps each element to a field
-     * positionally, leaving a missing trailing `conditions` {@code null}.
-     */
-    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-    record RuleDoc(String effect, String action, String subject, Map<String, Object> conditions) {
-    }
 
     /**
      * One `{ action, subject, subjectData?, expected }` case, common to
@@ -99,65 +87,6 @@ final class FixtureUtils {
         try (var parser = YAML.createParser(yamlFile.toFile())) {
             return YAML.readValues(parser, type).readAll();
         }
-    }
-
-    /**
-     * Converts a `rules:` list of parsed {@link RuleDoc} tuples into `Rule`s (SPEC_V0.md §3.3).
-     */
-    static List<PolicyDefinition.Rule> toRules(List<RuleDoc> rawRules) {
-        List<PolicyDefinition.Rule> rules = new ArrayList<>();
-        for (RuleDoc rule : rawRules) {
-            rules.add(new PolicyDefinition.Rule(rule.effect(), rule.action(), rule.subject(), rule.conditions()));
-        }
-        return rules;
-    }
-
-    /**
-     * Parses a raw `meta:` map into a {@link PolicyDefinition.Meta},
-     * preserving the "not declared" vs. "explicitly declared" distinction
-     * for anyAction/anySubject (SPEC_V0.md §3.2.1) via {@code
-     * containsKey}, since a Jackson-parsed map can tell the two apart
-     * where a plain nullable field can't. Whatever raw value Jackson
-     * parsed for `anyAction`/`anySubject` (a string, {@code null}, {@code
-     * false}, or anything else) is passed straight through to {@code
-     * Meta.Builder}, which applies §3.2.1's four-way dispatch itself (see
-     * {@link com.cptnfizzbin.keycard.policy.WildcardToken#of}).
-     */
-    static PolicyDefinition.Meta toMeta(Map<String, Object> rawMeta) {
-        if (rawMeta == null) return null;
-        PolicyDefinition.Meta meta = new PolicyDefinition.Meta();
-
-        if (rawMeta.containsKey("anyAction")) {
-            meta.anyAction(WildcardToken.of(rawMeta.get("anyAction")));
-        }
-
-        if (rawMeta.containsKey("anySubject")) {
-            meta.anySubject(WildcardToken.of(rawMeta.get("anySubject")));
-        }
-
-        if (rawMeta.get("actions") != null) {
-            meta.actions(toStringList((List<?>) rawMeta.get("actions")));
-        }
-
-        if (rawMeta.get("subjects") != null) {
-            meta.subjects(toStringList((List<?>) rawMeta.get("subjects")));
-        }
-
-        if (rawMeta.get("operators") != null) {
-            meta.operators(toStringList((List<?>) rawMeta.get("operators")));
-        }
-
-        if (rawMeta.containsKey("application")) {
-            meta.application(rawMeta.get("application"));
-        }
-
-        return meta;
-    }
-
-    private static List<String> toStringList(List<?> raw) {
-        List<String> result = new ArrayList<>();
-        for (Object o : raw) result.add(String.valueOf(o));
-        return result;
     }
 
     /**

@@ -56,6 +56,18 @@
             <version>2.10.1</version>
         </dependency>
 
+        <!-- PolicyDefinition/Rule/Meta carry Jackson annotations (incl. custom
+             (de)serializers for WildcardToken) so any consumer with a Jackson
+             (de)serializer for their format of choice can bind a document
+             straight to/from these types. This is databind only - no format
+             module (e.g. YAML) - so KeyCard itself still never reads or
+             writes policy.yaml text. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.2</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
