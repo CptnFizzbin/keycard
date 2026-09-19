@@ -42,7 +42,7 @@ public class ConformanceFixtureTest {
             for (Fixtures.Suite suite : Fixtures.loadSuites(fixtureFile)) {
                 for (FixtureUtils.TestCase testCase : suite.cases()) {
                     params.add(new Object[]{
-                        fixtureFile.getFileName().toString(), suite.name(), testCase.name(), suite, testCase
+                        fixtureFile.getFileName().toString(), suite.definition().name(), testCase.name(), suite, testCase
                     });
                 }
             }
@@ -65,8 +65,8 @@ public class ConformanceFixtureTest {
     @Test
     public void resolvesExpectedResult() {
         assumeTrue(
-            "suite version " + suite.version() + " exceeds this suite's compliant version " + KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS,
-            Objects.requireNonNull(Semver.coerce(suite.version())).satisfies(KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS)
+            "suite version " + suite.definition().version() + " exceeds this suite's compliant version " + KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS,
+            Objects.requireNonNull(Semver.coerce(suite.definition().version())).satisfies(KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS)
         );
 
         Policy policy = Policy.from(suite.definition(), Fixtures.operatorsFor(fixtureName));

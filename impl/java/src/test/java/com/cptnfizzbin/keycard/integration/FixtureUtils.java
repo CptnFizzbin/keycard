@@ -3,18 +3,18 @@ package com.cptnfizzbin.keycard.integration;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.policy.Policy;
-import com.cptnfizzbin.keycard.policy.PolicyDefinition;
-import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
-import org.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import org.semver4j.Semver;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -25,27 +25,38 @@ import java.util.stream.Collectors;
  * today, and any future fixture set. Not a test class itself.
  * <p>
  * Factors out the parts that don't depend on a fixture format's on-disk
- * shape: discovering `*.yaml` files, parsing the v1 `rules`/`meta` shape
- * (SPEC_V0.md §3) shared by every fixture format, the `{ action,
- * subject, subjectData?, expected }` shape every format's individual
- * cases boil down to once parsed, resolving one such case against a
- * {@link Policy}, and filtering fixtures by the SemVer `version` they
- * declare - so each format-specific loader only has to own parsing its
- * own document's outer shape into that common {@link TestCase}, not the
- * discovery/resolution/filtering mechanics around it.
+ * shape: discovering `*.yaml` files, the `{ action, subject,
+ * subjectData?, expected }` shape every format's individual cases boil
+ * down to once parsed, resolving one such case against a {@link Policy},
+ * and filtering fixtures by the SemVer `version` they declare - so each
+ * format-specific loader only has to own parsing its own document's
+ * outer shape into that common {@link TestCase}, not the
+ * discovery/resolution/filtering mechanics around it. Parsing a
+ * document's `rules`/`meta` shape (SPEC_V0.md §3) isn't this class's job
+ * any more either - {@code PolicyDefinition}/{@code Rule}/{@code Meta}
+ * are Jackson-annotated and bind straight from a document themselves.
  * <p>
- * KeyCard itself never reads or writes policy.yaml text; parsing it into a
- * plain PolicyDefinition (via SnakeYaml, a test-only dependency) is this
- * test suite's job, mirroring what an application would do.
+ * KeyCard itself never reads or writes policy.yaml text; parsing one
+ * (via jackson-dataformat-yaml, a test-only dependency) is this test
+ * suite's job, mirroring what an application would do.
  */
 final class FixtureUtils {
     private FixtureUtils() {
     }
 
     /**
-     * Shared SnakeYaml instance for every fixture loader - construction isn't free, and it's stateless/reusable.
+     * Shared Jackson YAML mapper for every fixture loader - reads a
+     * fixture's YAML and binds it directly to typed Java types (a
+     * {@code PolicyDefinition} for the policy document shape; see
+     * {@link Fixtures.SuiteDoc}), rather than a raw Map/List tree that
+     * then has to be walked and cast by hand. Construction isn't free,
+     * and it's stateless/reusable. Unknown fields (e.g. an informational
+     * `description:`) are tolerated, since a fixture isn't required to
+     * stick to only the fields a loader happens to model.
      */
-    static final Yaml YAML = new Yaml();
+    static final YAMLMapper YAML = YAMLMapper.builder()
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .build();
 
     /**
      * One `{ action, subject, subjectData?, expected }` case, common to
@@ -70,68 +81,12 @@ final class FixtureUtils {
     }
 
     /**
-     * Parses a raw `rules:` list of `[effect, action, subject, conditions?]` tuples into `Rule`s (SPEC_V0.md §3.3).
+     * Every `---`-separated YAML document in {@code yamlFile}, bound directly to {@code type}.
      */
-    @SuppressWarnings("unchecked")
-    static List<PolicyDefinition.Rule> toRules(List<?> rawRules) {
-        List<PolicyDefinition.Rule> rules = new ArrayList<>();
-        for (Object o : rawRules) {
-            List<?> tuple = (List<?>) o;
-            String effect = String.valueOf(tuple.get(0));
-            String action = String.valueOf(tuple.get(1));
-            String subjectName = String.valueOf(tuple.get(2));
-            Map<String, Object> conditions = tuple.size() > 3 ? (Map<String, Object>) tuple.get(3) : null;
-            rules.add(new PolicyDefinition.Rule(effect, action, subjectName, conditions));
+    static <T> List<T> loadYamlDocuments(Path yamlFile, Class<T> type) throws IOException {
+        try (var parser = YAML.createParser(yamlFile.toFile())) {
+            return YAML.readValues(parser, type).readAll();
         }
-        return rules;
-    }
-
-    /**
-     * Parses a raw `meta:` map into a {@link PolicyDefinition.Meta},
-     * preserving the "not declared" vs. "explicitly declared" distinction
-     * for anyAction/anySubject (SPEC_V0.md §3.2.1) via {@code
-     * containsKey}, since a SnakeYaml-parsed map can tell the two apart
-     * where a plain nullable field can't. Whatever raw value SnakeYaml
-     * parsed for `anyAction`/`anySubject` (a string, {@code null}, {@code
-     * false}, or anything else) is passed straight through to {@code
-     * Meta.Builder}, which applies §3.2.1's four-way dispatch itself (see
-     * {@link com.cptnfizzbin.keycard.policy.WildcardToken#of}).
-     */
-    static PolicyDefinition.Meta toMeta(Map<String, Object> rawMeta) {
-        if (rawMeta == null) return null;
-        PolicyDefinition.Meta meta = new PolicyDefinition.Meta();
-
-        if (rawMeta.containsKey("anyAction")) {
-            meta.anyAction(WildcardToken.of(rawMeta.get("anyAction")));
-        }
-
-        if (rawMeta.containsKey("anySubject")) {
-            meta.anySubject(WildcardToken.of(rawMeta.get("anySubject")));
-        }
-
-        if (rawMeta.get("actions") != null) {
-            meta.actions(toStringList((List<?>) rawMeta.get("actions")));
-        }
-
-        if (rawMeta.get("subjects") != null) {
-            meta.subjects(toStringList((List<?>) rawMeta.get("subjects")));
-        }
-
-        if (rawMeta.get("operators") != null) {
-            meta.operators(toStringList((List<?>) rawMeta.get("operators")));
-        }
-
-        if (rawMeta.containsKey("application")) {
-            meta.application(rawMeta.get("application"));
-        }
-
-        return meta;
-    }
-
-    private static List<String> toStringList(List<?> raw) {
-        List<String> result = new ArrayList<>();
-        for (Object o : raw) result.add(String.valueOf(o));
-        return result;
     }
 
     /**
@@ -150,35 +105,18 @@ final class FixtureUtils {
     }
 
     /**
-     * A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V0.md §2.
-     */
-    record SemVer(int major, int minor, int patch) implements Comparable<SemVer> {
-        static SemVer parse(String raw) {
-            String[] parts = raw.split("\\.");
-            int major = Integer.parseInt(parts[0]);
-            int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
-            int patch = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
-            return new SemVer(major, minor, patch);
-        }
-
-        @Override
-        public int compareTo(SemVer other) {
-            if (major != other.major) return Integer.compare(major, other.major);
-            if (minor != other.minor) return Integer.compare(minor, other.minor);
-            return Integer.compare(patch, other.patch);
-        }
-    }
-
-    /**
      * True when a fixture declaring {@code fixtureVersion} is compatible
      * with an implementation targeting {@code maxSupportedVersion}, per
      * SPEC_V0.md §2: the same MAJOR, and a MINOR no higher than what's
-     * supported. PATCH never affects compatibility.
+     * supported. PATCH never affects compatibility. Parsing/comparison is
+     * delegated to semver4j - the same library {@link
+     * com.cptnfizzbin.keycard.version.KeyCardVersion} uses - rather than
+     * hand-rolled MAJOR.MINOR.PATCH parsing.
      */
     static boolean isCompatible(String fixtureVersion, String maxSupportedVersion) {
-        SemVer fixture = SemVer.parse(fixtureVersion);
-        SemVer max = SemVer.parse(maxSupportedVersion);
-        return fixture.major() == max.major() && fixture.minor() <= max.minor();
+        Semver fixture = Objects.requireNonNull(Semver.coerce(fixtureVersion));
+        Semver max = Objects.requireNonNull(Semver.coerce(maxSupportedVersion));
+        return fixture.getMajor() == max.getMajor() && fixture.getMinor() <= max.getMinor();
     }
 
     /**
