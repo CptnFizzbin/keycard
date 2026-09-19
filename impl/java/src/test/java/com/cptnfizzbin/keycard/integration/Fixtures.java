@@ -57,6 +57,17 @@ final class Fixtures {
                 return roles instanceof List && ((List<?>) roles).contains(value);
             }));
         }
+        if ("policy-05-advanced.yaml".equals(fixtureFileName)) {
+            // A custom operator checking whether a field's string value starts with an uppercase letter.
+            return List.of(Operator.of("$startsWithUpper", (subject, value, ctx) -> {
+                if (!(subject instanceof String) || !(value instanceof Boolean) || ((String) subject).isEmpty()) {
+                    return false;
+                }
+                char first = ((String) subject).charAt(0);
+                boolean isUpper = Character.toUpperCase(first) == first;
+                return isUpper == (Boolean) value;
+            }));
+        }
         return List.of();
     }
 
@@ -93,7 +104,7 @@ final class Fixtures {
                     ? (Map<String, Object>) check.get(2)
                     : null;
 
-                Object expected = rc.get("expected");
+                boolean expected = (Boolean) rc.get("expected");
                 String caseName = String.valueOf(rc.get("name"));
 
                 cases.add(new FixtureUtils.TestCase(
@@ -101,7 +112,7 @@ final class Fixtures {
                     action,
                     subject,
                     subjectData,
-                    "allow".equals(expected)
+                    expected
                 ));
             }
 
