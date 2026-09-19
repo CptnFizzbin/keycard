@@ -1,4 +1,4 @@
-# KeyCard Policy Specification — v0.2
+# KeyCard Policy Specification — v0.1
 
 This document is the authoritative definition of the `PolicyDefinition`
 format and its evaluation semantics for the v0 line. `SPEC.md` at the repository
@@ -28,7 +28,7 @@ This document defines:
 - The rule-evaluation algorithm — `can`/`cannot`/`require` (§6.2.2).
 - The condition language and the evaluation semantics of every operator (§5).
 - The optional, embedded test-case format for a policy document, `tests`
-  (§4.4), added in `0.2`.
+  (§4.4).
 
 It does not define the `PolicyBuilder`'s fluent API, wire format (YAML vs.
 JSON), or any language-specific type system — those are implementation concerns
@@ -57,11 +57,23 @@ layered on top of this. One exception applies regardless: builder
   version — it isn't a spec-level change at all, since the corrected behavior
   was already required.
 
+**While `MAJOR` is `0`:** per SemVer's own §4, the entire `0.y.z` line is
+unstable and carries no compatibility promise. This project narrows that in
+practice to a single rule: `MINOR` only advances for an actual breaking
+change (the role `MAJOR` will take on once this reaches `1.0`); a purely
+additive change — a new optional field, a new operator — lands within the
+current `MINOR` instead of bumping it. The spec, and both reference
+implementations, are still pre-alpha, so `0.1` is expected to remain the
+only `MINOR` version this line ever uses; nothing published so far has
+been an actual breaking change.
+
 ### 2.1 What counts as a `MAJOR`, `MINOR`, or `PATCH` change to this spec
 
 This subsection governs how *this specification* is versioned from release to
 release — guidance for spec maintainers, not something an implementation checks
-at runtime.
+at runtime. It describes the general, post-`1.0` mapping; while `MAJOR` is
+`0`, the carve-out above applies instead, and a change that would otherwise
+read as `MINOR` here lands within the current `0.1` without a version bump.
 
 - **`MAJOR`**: any change that could alter the allow/deny outcome for some
   already-valid document under the current `MAJOR` version, or that makes a
@@ -347,8 +359,6 @@ following fields are **OPTIONAL** as well.
   **MAY** carry a condition; see §6.2.2 property 5 for the full rationale.
 
 ### 4.4 Tests
-
-*Added in `0.2` (§2.2).*
 
 `tests` is an **OPTIONAL** top-level field that embeds test cases directly in a
 `PolicyDefinition`, so a policy's expected `can` outcomes travel with the policy
@@ -1045,8 +1055,6 @@ the outcome, implementation documentation **SHOULD** encourage this convention
 explicitly.
 
 #### 6.2.3 Running `tests`
-
-*Added in `1.1.0` (§2.2, §4.4).*
 
 - An implementation that exposes a way to run a `PolicyDefinition`'s embedded
   `tests` (§4.4) — whatever it calls that operation, and whatever shape its
