@@ -29,8 +29,8 @@ specification.
 - **PolicyDefinition** - (PolicyDef) a text based encoding of what
   permissions the user is allowed/denied
 - **Test Suite** - a named group of Test Cases embedded in a
-  `PolicyDefinition`'s optional `tests` field (added in `1.1.0`), used by
-  tooling to assert the policy behaves as documented
+  `PolicyDefinition`'s optional `tests` field, used by tooling to assert
+  the policy behaves as documented
 - **Test Case** - a single expected `can` outcome within a Test Suite: a
   `check` (the `action`, `subject`, and optional `subjectData` to pass to
   `can`) plus the `expected` boolean result
