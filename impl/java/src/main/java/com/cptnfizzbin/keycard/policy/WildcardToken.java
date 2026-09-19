@@ -4,7 +4,7 @@ import com.cptnfizzbin.keycard.errors.PolicyLoadException;
 
 /**
  * Type-state for a declared {@code meta.anyAction}/{@code meta.anySubject}
- * position (SPEC_V0.md §3.2.1, §4, §5) - replaces the previous
+ * position - replaces the previous
  * {@code anyActionDeclared}/{@code anyAction} boolean-pair workaround on
  * {@link PolicyDefinition.Meta} with a proper sum type. "Not declared at
  * all" isn't one of these states; it's represented by a {@code null}
@@ -23,7 +23,7 @@ public sealed interface WildcardToken {
 
     /**
      * Four-way dispatch for a raw, untyped declaration (SPEC_V0.md
-     * §3.2.1): {@code null} or {@code false} disables the wildcard
+     * ): {@code null} or {@code false} disables the wildcard
      * position; a {@link String} names an explicit token; anything else -
      * a number, {@code true}, a list, ... - is invalid and MUST throw
      * immediately rather than being silently coerced or passed through as
@@ -37,13 +37,13 @@ public sealed interface WildcardToken {
             if (Boolean.FALSE.equals(raw)) return DISABLED;
             throw new PolicyLoadException(
                 "meta.anyAction/meta.anySubject: \"true\" is not a valid declaration - use a string token to name"
-                    + " a wildcard, or null/false to disable it (SPEC_V0.md §3.2.1)."
+                    + " a wildcard, or null/false to disable it."
             );
         }
         if (raw instanceof String) return new Named((String) raw);
         throw new PolicyLoadException(
             "meta.anyAction/meta.anySubject: expected a string, null, or false, got "
-                + raw.getClass().getSimpleName() + " (SPEC_V0.md §3.2.1)."
+                + raw.getClass().getSimpleName() + "."
         );
     }
 }

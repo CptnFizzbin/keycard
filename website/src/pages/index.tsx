@@ -6,7 +6,7 @@ import type { ReactNode } from "react"
 
 import HomepageFeatures from "@site/src/components/homepageFeatures"
 import { LanguageSwapper } from "@site/src/components/languageSwapper"
-import { DEFINE_LANGUAGES, ENFORCE_LANGUAGES, SERIALIZE_LANGUAGES } from "@site/src/data/languages"
+import { PROGRAMMING_LANGUAGES, SERIALIZE_LANGUAGES } from "@site/src/data/languages"
 
 import styles from "./index.module.css"
 
@@ -15,15 +15,31 @@ function HomepageHeader() {
   return (
     <header className={styles.heroBanner}>
       <div className={styles.heroInner}>
-        <span className={styles.eyebrow}>Cptn Fizzbin's</span>
-        <Heading as="h1" className={styles.heroTitle}>
-          {siteConfig.title}
-        </Heading>
+        <span className={styles.eyebrow}>From Cptn Fizzbin</span>
+
+        <div className={styles.title}>
+          <img src="/img/logo.svg" alt="KeyCard Logo" className={styles.logo} />
+          <Heading as="h1" className={styles.heroTitle}>
+            {siteConfig.title}
+          </Heading>
+        </div>
+
         <p className={styles.heroSubtitle}>Cross-language Permissions</p>
         <p className={styles.heroFlow}>
-          Define in <LanguageSwapper languages={DEFINE_LANGUAGES} /> -
-          Serialize to <LanguageSwapper languages={SERIALIZE_LANGUAGES} /> -
-          Enforce in <LanguageSwapper languages={ENFORCE_LANGUAGES} />
+          <div>
+            <div>Define in</div>
+            <LanguageSwapper languages={PROGRAMMING_LANGUAGES} />
+          </div>
+
+          <div>
+            <div>Serialize to</div>
+            <LanguageSwapper languages={SERIALIZE_LANGUAGES} />
+          </div>
+
+          <div>
+            <div>Enforce in</div>
+            <LanguageSwapper languages={PROGRAMMING_LANGUAGES} />
+          </div>
         </p>
         <p className={styles.preAlphaNotice}>
           Pre-alpha: the API and policy format may still change without notice.
@@ -32,12 +48,6 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link className="button button--primary button--lg" to="/docs/intro">
             Read the Guide
-          </Link>
-          <Link className="button button--outline button--lg" to="/js/intro">
-            JavaScript
-          </Link>
-          <Link className="button button--outline button--lg" to="/java/intro">
-            Java
           </Link>
         </div>
       </div>

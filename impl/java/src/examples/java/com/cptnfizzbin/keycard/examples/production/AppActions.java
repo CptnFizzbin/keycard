@@ -1,9 +1,8 @@
-package com.cptnfizzbin.examples;
+package com.cptnfizzbin.keycard.examples.production;
 
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionCatalog;
 
-import javax.crypto.spec.DESedeKeySpec;
 import java.util.List;
 
 public class AppActions {

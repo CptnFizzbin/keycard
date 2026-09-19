@@ -3,12 +3,12 @@ package com.cptnfizzbin.keycard.errors;
 import lombok.experimental.StandardException;
 
 /**
- * Thrown by {@code Policy.from(...)} at construction time when a
+ * Thrown by {@code Policy.from(...)} when loading a policy when a
  * PolicyDefinition is structurally invalid per SPEC_V0.md - a
- * malformed rule tuple (§3.3, EC-10), a both-sides-wildcarded rule
- * carrying a Conditions element (§6 property 5, EC-6), or a rule
+ * malformed rule tuple, a both-sides-wildcarded rule
+ * carrying a Conditions element (property 5, EC-6), or a rule
  * referencing an action/subject/custom-operator name outside a declared
- * {@code meta} catalog (§3.2.2, §3.2.3, EC-8, EC-13).
+ * {@code meta} catalog.
  */
 @StandardException
 public class PolicyLoadException extends RuntimeException {

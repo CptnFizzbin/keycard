@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Shared loading helpers for the v1 conformance fixtures under
  * test/fixtures/v1 (see the README there) - the shared, spec-derived
- * fixtures every implementation MUST read, per SPEC_V0.md §6. Not a
+ * fixtures every implementation MUST read, per SPEC_V0.md Not a
  * test class itself - see V1ConformanceFixtureTest.
  * <p>
  * KeyCard itself never reads or writes policy.yaml text; parsing one
@@ -52,7 +52,7 @@ final class Fixtures {
 
     /**
      * Some v1 conformance suites exercise a custom condition operator,
-     * which - per SPEC_V0.md §7.4.12 - only the host application (here,
+     * which - per SPEC_V0.md - only the host application (here,
      * this test suite) can implement; declaring it in meta.operators
      * documents it but doesn't wire up behavior. Keyed by fixture file name.
      */

@@ -3,23 +3,20 @@ package com.cptnfizzbin.keycard.conditions;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
 import com.cptnfizzbin.keycard.subject.SubjectFieldMapper;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
- * Implements SPEC_V0.md §7: the condition language and its evaluation
+ * Implements SPEC_V0.md: the condition language and its evaluation
  * semantics. Built-in and custom {@link Operator}s share one registry and
- * are dispatched identically (§7.4.12) - this class is just the dispatch
+ * are dispatched identically - this class is just the dispatch
  * loop: it looks a `$`-prefixed key up in that registry and delegates, or
  * narrows into a bare field name.
  */
 public final class ConditionResolver {
 
-    /** Every `$`-prefixed name {@link DefaultOperators} supplies natively - the single source of truth for "is this name built-in". */
+    /**
+     * Every `$`-prefixed name {@link DefaultOperators} supplies natively - the single source of truth for "is this name built-in".
+     */
     public static final Set<String> BUILTIN_OPERATORS = names(DefaultOperators.ALL);
 
     private final Map<String, Operator> registry;
@@ -31,22 +28,22 @@ public final class ConditionResolver {
     }
 
     /**
-     * @param operators custom operators to register alongside {@link DefaultOperators} (§7.4.12) -
-     *   built-in and custom operators share this one collection-based
-     *   entry point. Constructing this with a name collision (a custom
-     *   operator sharing a `$name` with a built-in, or with another
-     *   operator in `operators`) MUST throw a {@link PolicyLoadException}
-     *   immediately - never a silent overwrite (SPEC_V0.md §3.2.3, EC-16).
+     * @param operators custom operators to register alongside {@link DefaultOperators} -
+     *                  built-in and custom operators share this one collection-based
+     *                  entry point. Constructing this with a name collision (a custom
+     *                  operator sharing a `$name` with a built-in, or with another
+     *                  operator in `operators`) MUST throw a {@link PolicyLoadException}
+     *                  immediately - never a silent overwrite.
      */
     public ConditionResolver(Collection<Operator> operators) {
         this.registry = buildRegistry(operators);
     }
 
     /**
-     * §3.2.3, EC-15 (promoted): throws if any name in {@code names} isn't
+     * throws if any name in {@code names} isn't
      * registered on this resolver - built-in or custom. Used by {@code
      * Policy} to enforce {@code meta.operators} registration coverage in
-     * full at construction time, regardless of whether any rule actually
+     * full when loading a policy, regardless of whether any rule actually
      * reaches a given operator during evaluation.
      */
     public void assertAllRegistered(Collection<String> names) {
@@ -54,7 +51,7 @@ public final class ConditionResolver {
             if (!registry.containsKey(name)) {
                 throw new PolicyLoadException(
                     "meta.operators declares \"" + name + "\" but no operator with that name is registered"
-                        + " (built-in or custom) (SPEC_V0.md §3.2.3, EC-15)."
+                        + " (built-in or custom)."
                 );
             }
         }
@@ -63,8 +60,7 @@ public final class ConditionResolver {
     /**
      * Recursively collects every non-built-in, {@code $}-prefixed operator
      * name used anywhere in a Conditions tree - used by {@code Policy} to
-     * enforce {@code meta.operators} coverage at construction time (§3.2.3,
-     * EC-13).
+     * enforce {@code meta.operators} coverage when loading a policy.
      */
     public static void collectCustomOperatorNames(Object condition, Set<String> out) {
         if (!(condition instanceof Map)) return;
@@ -92,7 +88,7 @@ public final class ConditionResolver {
     }
 
     /**
-     * §7.1: {@code evaluate} always returns a boolean and SHOULD NOT throw
+     * {@code evaluate} always returns a boolean and SHOULD NOT throw
      * for any well-formed condition, regardless of what the subject is.
      */
     public boolean evaluate(Object subject, Object condition) {
@@ -106,7 +102,7 @@ public final class ConditionResolver {
      * still the object in scope (bare-key/{@code $field} access at the top
      * level, and inside {@code $and}/{@code $or}/{@code $not}, none of which
      * narrow). Never consulted once a field access has narrowed once - v1
-     * permits only one level of field narrowing (§7.4.10) - so a field the
+     * permits only one level of field narrowing - so a field the
      * mapper doesn't define, or any nested access, falls back to reflection.
      */
     public boolean evaluate(Object subject, Object condition, SubjectFieldMapper<?> fieldMapper) {
@@ -114,7 +110,7 @@ public final class ConditionResolver {
     }
 
     /**
-     * §7.4.10: {@code canNarrowField} tracks whether a field condition
+     * {@code canNarrowField} tracks whether a field condition
      * (bare-key or {@code $field}) is still allowed to narrow at this point
      * in the tree - {@code true} at the root and while only recursing
      * through non-narrowing combinators ($and/$or/$not), {@code false} once
@@ -123,7 +119,7 @@ public final class ConditionResolver {
      */
     private boolean evaluate(Object subject, Object condition, boolean canNarrowField, SubjectFieldMapper<?> fieldMapper) {
         if (condition == null || condition instanceof String || condition instanceof Number || condition instanceof Boolean) {
-            // §7.2: bare-value shorthand for $eq (including explicit null - §7.3, not a wildcard).
+            // bare-value shorthand for $eq (including explicit null - not a wildcard).
             return StringConditions.eq(subject, condition);
         }
 
@@ -132,7 +128,7 @@ public final class ConditionResolver {
         }
 
         Map<?, ?> condMap = (Map<?, ?>) condition;
-        // §7.5: every key MUST be evaluated and ANDed together - no key may
+        // every key MUST be evaluated and ANDed together - no key may
         // "consume" the whole object or cause sibling keys to be ignored.
         for (Map.Entry<?, ?> entry : condMap.entrySet()) {
             if (!evaluateKey(subject, String.valueOf(entry.getKey()), entry.getValue(), canNarrowField, fieldMapper)) {
@@ -143,7 +139,7 @@ public final class ConditionResolver {
     }
 
     /**
-     * §7.4.12, §7.5: any key starting with "$" is an operator lookup, never
+     * any key starting with "$" is an operator lookup, never
      * a field name - built-in and custom operators are both resolved the
      * same way, by name, against the same registry.
      */
@@ -156,12 +152,12 @@ public final class ConditionResolver {
 
         Operator operator = registry.get(key);
         if (operator == null) {
-            // §7.4.12, EC-13: an operator with no checker registered (built-in
+            // an operator with no checker registered (built-in
             // or custom) MUST evaluate to false - never a no-op true, and
-            // never treated as a field name. Not itself a required §7.1
+            // never treated as a field name. Not itself a required 
             // diagnostic - and, unlike before, a cataloged-but-unregistered
             // name (EC-15) can no longer even reach this branch: `Policy`
-            // now enforces meta.operators registration at construction time,
+            // now enforces meta.operators registration when loading a policy,
             // so any name still unregistered here was never cataloged.
             return false;
         }
@@ -227,7 +223,7 @@ public final class ConditionResolver {
                 if (map.containsKey(op.name())) {
                     throw new PolicyLoadException(
                         "Duplicate operator \"" + op.name() + "\": an operator with this name is already registered"
-                            + " (built-in or custom) - operator names MUST be unique (SPEC_V0.md §3.2.3, EC-16)."
+                            + " (built-in or custom) - operator names MUST be unique."
                     );
                 }
                 map.put(op.name(), op);

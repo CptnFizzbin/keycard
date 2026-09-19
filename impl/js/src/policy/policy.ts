@@ -18,7 +18,7 @@ import { KEYCARD_POLICY_SUPPORTED_VERSIONS } from "../version.ts"
 /**
  * Recursively collects every non-built-in, `$`-prefixed operator name used
  * anywhere in a Conditions tree - used to enforce `meta.operators`
- * coverage at construction time (§3.2.3, EC-13).
+ * coverage when loading a policy.
  */
 function collectCustomOperators(condition: AnyCondition | undefined, out: Set<string>): void {
   if (condition === undefined || condition === null || typeof condition !== "object") return
@@ -58,7 +58,7 @@ export class Policy<
 
   /**
    * @param config shared, optional config also accepted by `PolicyBuilder`
-   *   (SPEC_V0.md §4.2.2/§7.4.12 and the SubjectFieldMapper feature):
+   *   (SPEC_V0.md and the SubjectFieldMapper feature):
    *   `actions`/`subjects` widen the `meta.actions`/`meta.subjects`
    *   catalogs beyond what `definition.meta` itself declares; a keyed
    *   (`Record<string, Action|Subject>`) `actions`/`subjects` is also a
@@ -106,7 +106,7 @@ export class Policy<
   }
 
   private static validateVersion(version: string): void {
-    // §2.1: PATCH (and MINOR) may be omitted - "1"/"1.0" are valid
+    // PATCH (and MINOR) may be omitted - "1"/"1.0" are valid
     // shorthand for "1.0.0" - so coerce before comparing rather than
     // requiring a strict three-component string.
     const coerced = semver.coerce(version)
@@ -118,9 +118,9 @@ export class Policy<
   }
 
   /**
-   * §3.2.3, EC-15 (promoted): when `meta.operators` is declared, every
+   * when `meta.operators` is declared, every
    * name it lists MUST already be registered on this Policy - built-in or
-   * custom - checked once here at construction time, regardless of
+   * custom - checked once here when loading a policy, regardless of
    * whether any rule actually reaches that operator during evaluation.
    * This replaces the previous behavior of deferring an unregistered-but-
    * cataloged name to a runtime-only diagnostic.
@@ -132,7 +132,7 @@ export class Policy<
     resolver.assertAllRegistered(declared)
   }
 
-  /** @param configActionNames/@param configSubjectNames resolved catalog names (see `lib/catalog.ts`) that, when given, widen the `meta.actions`/`meta.subjects` catalogs below (§4.2.2) beyond what `definition.meta` declares. */
+  /** @param configActionNames/@param configSubjectNames resolved catalog names (see `lib/catalog.ts`) that, when given, widen the `meta.actions`/`meta.subjects` catalogs below beyond what `definition.meta` declares. */
   private static validateRules(definition: PolicyDefinition, configActionNames: string[], configSubjectNames: string[]): void {
     const meta = definition.meta
     const anyAction = effectiveAnyAction(meta)
@@ -149,7 +149,7 @@ export class Policy<
     for (const rule of definition.rules as RuleTuple[]) {
       if (!Array.isArray(rule) || rule.length < 3) {
         throw new PolicyLoadException(
-          `Malformed rule tuple (fewer than 3 elements): ${JSON.stringify(rule)} (SPEC_V0.md §3.3, EC-10).`,
+          `Malformed rule tuple (fewer than 3 elements): ${JSON.stringify(rule)}.`,
         )
       }
 
@@ -157,17 +157,17 @@ export class Policy<
 
       if (effect !== "allow" && effect !== "deny") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: effect must be "allow" or "deny", got ${JSON.stringify(effect)} (SPEC_V0.md §3.3, EC-10).`,
+          `Malformed rule tuple: effect must be "allow" or "deny", got ${JSON.stringify(effect)}.`,
         )
       }
       if (typeof action !== "string") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: action must be a string, got ${JSON.stringify(action)} (SPEC_V0.md §3.3, EC-10).`,
+          `Malformed rule tuple: action must be a string, got ${JSON.stringify(action)}.`,
         )
       }
       if (typeof subjectName !== "string") {
         throw new PolicyLoadException(
-          `Malformed rule tuple: subject must be a string, got ${JSON.stringify(subjectName)} (SPEC_V0.md §3.3, EC-10).`,
+          `Malformed rule tuple: subject must be a string, got ${JSON.stringify(subjectName)}.`,
         )
       }
 
@@ -176,18 +176,18 @@ export class Policy<
 
       if (isWildcardAction && isWildcardSubject && conditions) {
         throw new PolicyLoadException(
-          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md §6 property 5, EC-6).`,
+          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md property 5, EC-6).`,
         )
       }
 
       if (actionsCatalog && !isWildcardAction && !actionsCatalog.has(action)) {
         throw new PolicyLoadException(
-          `Rule action "${action}" is not covered by meta.actions (SPEC_V0.md §3.2.2, EC-8).`,
+          `Rule action "${action}" is not covered by meta.actions.`,
         )
       }
       if (subjectsCatalog && !isWildcardSubject && !subjectsCatalog.has(subjectName)) {
         throw new PolicyLoadException(
-          `Rule subject "${subjectName}" is not covered by meta.subjects (SPEC_V0.md §3.2.2, EC-8).`,
+          `Rule subject "${subjectName}" is not covered by meta.subjects.`,
         )
       }
 
@@ -197,7 +197,7 @@ export class Policy<
         for (const op of used) {
           if (!operatorsCatalog.has(op)) {
             throw new PolicyLoadException(
-              `Rule uses custom operator "${op}" not covered by meta.operators (SPEC_V0.md §3.2.3, EC-13).`,
+              `Rule uses custom operator "${op}" not covered by meta.operators.`,
             )
           }
         }
@@ -226,7 +226,7 @@ export class Policy<
   }
 
   /**
-   * SPEC_V0.md §6: reverse scan over `rules`, returning the effect of
+   * SPEC_V0.md: reverse scan over `rules`, returning the effect of
    * the first (i.e. most-recently-declared) rule whose action, subject,
    * and (if present) conditions all match. There is no independent
    * "allow AND NOT deny" veto and no combination of multiple matching

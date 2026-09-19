@@ -67,7 +67,7 @@ public class SubjectFieldMapperTest {
     @Test
     public void aFieldConditionCannotNarrowTwiceEvenWithAMapperInPlay() {
         // v1 permits only one level of field narrowing (SPEC_V0.md
-        // §7.4.10) - a fieldMapper on Post doesn't change that: `author` is
+        // ) - a fieldMapper on Post doesn't change that: `author` is
         // a field of Post, but `author`'s own Condition can't itself be
         // another field condition (`name`), mapped or not.
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());

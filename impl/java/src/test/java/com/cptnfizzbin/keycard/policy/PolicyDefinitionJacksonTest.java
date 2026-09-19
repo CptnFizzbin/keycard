@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  * annotations. The actual fixture-driven suites under {@code
  * integration/} cover evaluation outcomes; this one covers the
  * databinding itself, including the {@code anyAction}/{@code anySubject}
- * "not declared" vs. "declared null" distinction (SPEC_V0.md §3.2.1) that
+ * "not declared" vs. "declared null" distinction that
  * {@link WildcardTokenDeserializer}/{@link WildcardTokenSerializer} exist
  * to preserve.
  */

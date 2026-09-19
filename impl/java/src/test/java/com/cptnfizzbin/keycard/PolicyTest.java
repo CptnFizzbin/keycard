@@ -3,7 +3,7 @@ package com.cptnfizzbin.keycard;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
-import com.cptnfizzbin.keycard.conditions.Conditions;
+import com.cptnfizzbin.keycard.conditions.Condition;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyException;
 import com.cptnfizzbin.keycard.policy.Policy;
@@ -46,7 +46,7 @@ public class PolicyTest {
 
         Article data = new Article(1, 42, "published");
         Policy policy = new PolicyBuilder()
-            .allow(update, article, Conditions.eq(Article::getOwnerId, 42))
+            .allow(update, article, Condition.eq(Article::getOwnerId, 42))
             .build();
 
         assertTrue(policy.can(update, article.wrap(data)));
@@ -110,7 +110,7 @@ public class PolicyTest {
 
         Policy policy = new PolicyBuilder()
             .allow(delete, article)
-            .deny(delete, article, Conditions.field(Article::getStatus, "archived"))
+            .deny(delete, article, Condition.field(Article::getStatus, "archived"))
             .build();
 
         assertFalse(policy.can(delete, article.wrap(new Article(1, 1, "archived"))));
@@ -144,7 +144,7 @@ public class PolicyTest {
 
         Policy policy = new PolicyBuilder()
             .allow(read, article)
-            .allow(update, article, Conditions.eq(Article::getOwnerId, 42))
+            .allow(update, article, Condition.eq(Article::getOwnerId, 42))
             .build();
 
         assertTrue(policy.can(read, article));
@@ -173,7 +173,7 @@ public class PolicyTest {
             Operator.of("$hasRole", (subject, value, ctx) -> "admin".equals(value))
         ))
             .deny(delete, article)
-            .allow(delete, article, Conditions.op("$hasRole", "admin"))
+            .allow(delete, article, Condition.op("$hasRole", "admin"))
             .build();
 
         assertTrue(policy.can(delete, article.wrap(new Article(1, 1, "published"))));

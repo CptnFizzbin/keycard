@@ -86,7 +86,6 @@ h1,
 h2,
 h3 {
     letter-spacing: 0.04em;
-    text-transform: uppercase;
 }
 
 h2 {
@@ -116,6 +115,7 @@ code {
 /* ---------- Navbar ---------- */
 
 .navbar {
+    color: var(--deco-ivory);
     border-bottom: 1px solid var(--deco-gold);
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
 }
@@ -136,7 +136,7 @@ code {
     font-size: 0.92rem;
 }
 
-html[data-theme='dark'] .navbar__link {
+.navbar__link {
     color: var(--deco-ivory);
 }
 

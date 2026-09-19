@@ -3,7 +3,7 @@ package com.cptnfizzbin.keycard;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
-import com.cptnfizzbin.keycard.conditions.Conditions;
+import com.cptnfizzbin.keycard.conditions.Condition;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
@@ -58,7 +58,7 @@ public class PolicyValidationTest {
         assertThrows(PolicyLoadException.class, () ->
             Policy.from(new PolicyDefinition()
                 .rules(List.of(
-                    new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Conditions.op("owner_id", 1))
+                    new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Condition.op("owner_id", 1))
                 ))
             ));
     }
@@ -84,12 +84,12 @@ public class PolicyValidationTest {
             Policy.from(new PolicyDefinition()
                 .meta(meta)
                 .rules(List.of(
-                    new PolicyDefinition.Rule("allow", "Read", "Article", Conditions.op("$isAdmin", true))
+                    new PolicyDefinition.Rule("allow", "Read", "Article", Condition.op("$isAdmin", true))
                 ))
             ));
     }
 
-    // --- Issue 3: operator registry collisions (SPEC_V0.md §3.2.3, EC-16) ---
+    // --- Issue 3: operator registry collisions ---
 
     @Test
     public void throwsPolicyLoadExceptionWhenACustomOperatorCollidesWithABuiltin() {
@@ -115,7 +115,7 @@ public class PolicyValidationTest {
 
         // Unlike EC-13 above, this throws even though no rule references
         // $hasRole at all - meta.operators' registration requirement is
-        // checked in full at construction time, not merely for names rules
+        // checked in full when loading a policy, not merely for names rules
         // actually use.
         assertThrows(PolicyLoadException.class, () ->
             Policy.from(new PolicyDefinition().meta(meta)));
@@ -138,7 +138,7 @@ public class PolicyValidationTest {
         ); // should not throw
     }
 
-    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch (SPEC_V0.md §3.2.1) ---
+    // --- Issue 5: meta.anyAction/meta.anySubject four-way dispatch ---
 
     @Test
     public void falseDisablesTheActionWildcardJustLikeNull() {
@@ -166,7 +166,7 @@ public class PolicyValidationTest {
 
         PolicyDefinition def = new PolicyBuilder(List.of(hasRole))
             .allow(read, article)
-            .allow(update, user, Conditions.op("$hasRole", "admin"))
+            .allow(update, user, Condition.op("$hasRole", "admin"))
             .buildDef();
 
         assertEquals(List.of("Read", "Update"), def.meta().actions());
@@ -209,7 +209,7 @@ public class PolicyValidationTest {
     public void wildcardOnlyConstructorStillCatchesEc6AtAddRuleTime() {
         assertThrows(PolicyArgumentException.class, () ->
             new PolicyBuilder("*", "*")
-                .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Conditions.op("owner_id", 1)));
+                .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Condition.op("owner_id", 1)));
     }
 
     // --- KeycardConfig, accepted by both PolicyBuilder and Policy ---

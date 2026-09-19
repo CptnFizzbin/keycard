@@ -10,7 +10,7 @@ import java.io.IOException;
  * Binds a raw {@code anyAction}/{@code anySubject} value - a string,
  * {@code null}, {@code false}, or anything else - to a {@link
  * WildcardToken} via {@link WildcardToken#of}, applying SPEC_V0.md
- * §3.2.1's four-way dispatch. {@link #getNullValue} is what Jackson
+ * four-way dispatch. {@link #getNullValue} is what Jackson
  * calls for an *explicit* null the property declares; Jackson never
  * calls either method when the property is absent altogether, which is
  * what lets {@link PolicyDefinition.Meta#anyAction()}/{@code

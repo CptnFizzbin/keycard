@@ -1,8 +1,8 @@
-package com.cptnfizzbin.examples;
+package com.cptnfizzbin.keycard.examples.production;
 
-import com.cptnfizzbin.examples.model.Article;
-import com.cptnfizzbin.examples.model.Comment;
-import com.cptnfizzbin.examples.model.User;
+import com.cptnfizzbin.keycard.examples.production.model.Article;
+import com.cptnfizzbin.keycard.examples.production.model.Comment;
+import com.cptnfizzbin.keycard.examples.production.model.User;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectCatalog;
 

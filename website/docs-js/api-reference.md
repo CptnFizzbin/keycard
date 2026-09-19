@@ -10,10 +10,11 @@ slug: /api-reference
 
 Create a typed action.
 
-## `createSubject<TSubject>(name: string, fieldMapper?: SubjectFieldMapper<TSubject>)`
+##
+`createSubject<TSubject>(name: string, fieldMapper?: SubjectFieldMapper<TSubject>)`
 
-Create a typed subject definition. `fieldMapper`, when given, is carried
-through every `.wrap()` call unchanged — see `SubjectFieldMapper` below.
+Create a typed subject definition. `fieldMapper`, when given, is carried through
+every `.wrap()` call unchanged — see `SubjectFieldMapper` below.
 
 ## `InferActions<T>` / `InferSubjects<T>`
 
@@ -27,8 +28,8 @@ Derive the `Action` / `Subject` union types that `PolicyBuilder` and
 `new PolicyBuilder(options?, config?)` — `config` is an optional
 `KeycardConfig` (see below), shared with `Policy`.
 
-- `allow(action, subject, conditions?)` — allow action
-- `deny(action, subject, conditions?)` — deny action
+- `allow(action, subject, condition?)` — allow action
+- `deny(action, subject, condition?)` — deny action
 - `buildDef()` — create a `PolicyDefinition`
 - `build()` — create a `Policy` instance directly
 
@@ -41,8 +42,7 @@ instance — `instance` is `undefined` until `.wrap()` is called.
   mapper, unchanged), with `instance` set
 - `name` — subject name
 - `instance` — the wrapped object, if any
-- `fieldMapper` — the `SubjectFieldMapper` attached via `createSubject`,
-  if any
+- `fieldMapper` — the `SubjectFieldMapper` attached via `createSubject`, if any
 
 ## `Policy<TActions, TSubjects, TOperators>`
 
@@ -58,8 +58,8 @@ instance — `instance` is `undefined` until `.wrap()` is called.
 ## Condition operators
 
 `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$has`, `$substr`,
-`$or`, `$and`, `$not`, `$field`, and plain field conditions are all supported — see the
-language-agnostic [Condition Operators](/docs/condition-operators)
+`$or`, `$and`, `$not`, `$field`, and plain field condition are all supported —
+see the language-agnostic [Condition Operators](/docs/condition-operators)
 reference for the full semantics.
 
 ## `KeycardConfig<TOperators>`
@@ -86,22 +86,22 @@ const policy = new Policy(policyDef, {}, config);
 
 - `actions` / `subjects` — declared vocabulary, **additive** to whatever
   `PolicyBuilder.allow`/`.deny` actually used, or to `meta.actions`/
-  `meta.subjects` already on a `PolicyDefinition` a `Policy` is
-  constructed from (see [Policy Definition](/docs/policy-definition) for
-  the catalog-enforcement behavior this widens).
-- `operators` — custom operators, used instead of `options.operators` if
-  both are given.
-- `mapper` — a `SubjectFieldMapperCatalog`, consulted as a fallback for
-  any subject that doesn't carry its own field mapper.
+  `meta.subjects` already on a `PolicyDefinition` a `Policy` is constructed from
+  (see [Policy Definition](/docs/policy-definition) for the catalog-enforcement
+  behavior this widens).
+- `operators` — custom operators, used instead of `options.operators` if both
+  are given.
+- `mapper` — a `SubjectFieldMapperCatalog`, consulted as a fallback for any
+  subject that doesn't carry its own field mapper.
 
 ## `SubjectFieldMapper<TData>` / `SubjectFieldMapperCatalog`
 
-Per-field getters for a subject's wrapped instance — the explicit
-counterpart to KeyCard's default property access (`instance[fieldName]`).
-Lets a condition reference a field whose name doesn't match the instance's
-own shape (a rename, a computed/derived value), or an instance that isn't
-a plain object. A field the mapper doesn't define still falls back to
-ordinary property access — and the one-level-deep restriction (see
+Per-field getters for a subject's wrapped instance — the explicit counterpart to
+KeyCard's default property access (`instance[fieldName]`). Lets a condition
+reference a field whose name doesn't match the instance's own shape (a rename, a
+computed/derived value), or an instance that isn't a plain object. A field the
+mapper doesn't define still falls back to ordinary property access — and the
+one-level-deep restriction (see
 [Condition Operators](/docs/condition-operators#v1-supports-only-top-level-field-access))
 still applies to the resolved value.
 
@@ -124,14 +124,14 @@ policy.can(read, post.wrap({ status: "draft", author: { name: "Alice" } })); // 
 Note the rule above is a plain object, not built via `PolicyBuilder.allow()`:
 a mapped-only field like `authorName` has no static type (`Condition<TSubject>`
 only knows about `TSubject`'s real properties), so `.allow()`'s typed
-`conditions` parameter can't reference one — build that rule as a plain
-object instead, as above.
+`condition` parameter can't reference one — build that rule as a plain object
+instead, as above.
 
-Attach a mapper directly via `createSubject`'s second parameter (carried
-through every `.wrap()` unchanged), or register several centrally via a
+Attach a mapper directly via `createSubject`'s second parameter (carried through
+every `.wrap()` unchanged), or register several centrally via a
 `SubjectFieldMapperCatalog` and hand it to `Policy`/`PolicyBuilder`
-through `KeycardConfig.mapper` — a subject's own mapper, if it has one,
-always takes precedence over the catalog:
+through `KeycardConfig.mapper` — a subject's own mapper, if it has one, always
+takes precedence over the catalog:
 
 ```typescript
 const catalog = new SubjectFieldMapperCatalog({

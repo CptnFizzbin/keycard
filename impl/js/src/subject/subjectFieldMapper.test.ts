@@ -42,7 +42,7 @@ describe("SubjectFieldMapper: attached via createSubject", () => {
   })
 
   test("a field condition cannot narrow twice even with a mapper in play", () => {
-    // v1 permits only one level of field narrowing (SPEC_V0.md §7.4.10) -
+    // v1 permits only one level of field narrowing -
     // a fieldMapper on Post doesn't change that: `author` is a field of
     // Post, but `author`'s own Condition can't itself be another field
     // condition (`name`), mapped or not.

@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * format-specific loader only has to own parsing its own document's
  * outer shape into that common {@link TestCase}, not the
  * discovery/resolution/filtering mechanics around it. Parsing a
- * document's `rules`/`meta` shape (SPEC_V0.md §3) isn't this class's job
+ * document's `rules`/`meta` shape isn't this class's job
  * any more either - {@code PolicyDefinition}/{@code Rule}/{@code Meta}
  * are Jackson-annotated and bind straight from a document themselves.
  * <p>
@@ -107,7 +107,7 @@ final class FixtureUtils {
     /**
      * True when a fixture declaring {@code fixtureVersion} is compatible
      * with an implementation targeting {@code maxSupportedVersion}, per
-     * SPEC_V0.md §2: the same MAJOR, and a MINOR no higher than what's
+     * SPEC_V0.md: the same MAJOR, and a MINOR no higher than what's
      * supported. PATCH never affects compatibility. Parsing/comparison is
      * delegated to semver4j - the same library {@link
      * com.cptnfizzbin.keycard.version.KeyCardVersion} uses - rather than

@@ -23,7 +23,7 @@ function makeSubject<TData>(
 /**
  * Creates a bare Subject for `name` - no wrapped instance until `.wrap(obj)`
  * is called. `fieldMapper`, when given, is carried through every `.wrap()`
- * call unchanged (SPEC_V1-0-0.md §7.4.10/§7.4.11's field access).
+ * call unchanged (SPEC_V1-0-0.md field access).
  *
  * Called with no `name`, generates a random id in its place and marks the
  * Subject `__dynamic` - see {@link Subject.__dynamic} - so it must be

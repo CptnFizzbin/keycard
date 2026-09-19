@@ -1,7 +1,7 @@
 package com.cptnfizzbin.keycard.conditions;
 
 /**
- * §7.1: "Type issues are diagnosed, not silenced." Shared by every
+ * "Type issues are diagnosed, not silenced." Shared by every
  * built-in operator's implementation ({@link DefaultOperators}) and {@link
  * ConditionResolver}'s field-access path - a human-readable, error-level
  * diagnostic identifying the operator and what went wrong. Used only for

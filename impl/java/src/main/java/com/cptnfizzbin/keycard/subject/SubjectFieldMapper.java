@@ -9,7 +9,7 @@ import java.util.function.Function;
 /**
  * Per-field getters for a Subject's wrapped instance - the explicit
  * counterpart to {@code FieldAccess}'s reflection-based lookup
- * (SPEC_V1-0-0.md §7.4.10/§7.4.11), which reads a declared field directly.
+ *, which reads a declared field directly.
  * Lets a condition reference a field whose name doesn't match the
  * instance's own field names (a rename, a computed/derived value), or an
  * instance whose fields reflection can't reach (getters only, no visible

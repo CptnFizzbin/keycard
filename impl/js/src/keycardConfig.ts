@@ -19,16 +19,16 @@ import type { Subject, SubjectFieldMapperCatalog } from "./subject/index.ts"
 export interface KeycardConfig<TOperators extends AnyOperator = never> {
   /**
    * Declared action vocabulary, additive to `meta.actions` (SPEC_V0.md
-   * §4.2.2). A plain array declares vocabulary only - each entry's own
+   * ). A plain array declares vocabulary only - each entry's own
    * `.name` is used as-is. A keyed object (`Record<string, Action>`) is
    * also a *catalog*: its key becomes the serialized name for that entry,
    * which is how a `createAction()` call with no name (see {@link
    * Action.__dynamic}) gets a real, stable name.
    */
   actions?: Action[] | Record<string, Action>
-  /** Declared subject vocabulary, additive to `meta.subjects` (SPEC_V0.md §4.2.2) - see `actions` for the keyed-catalog form. */
+  /** Declared subject vocabulary, additive to `meta.subjects` - see `actions` for the keyed-catalog form. */
   subjects?: Subject[] | Record<string, Subject>
-  /** Custom operators to register alongside the built-ins (SPEC_V0.md §7.4.12). */
+  /** Custom operators to register alongside the built-ins. */
   operators?: TOperators[]
   /** SubjectFieldMappers registered by subject name - consulted when the Subject in hand doesn't carry its own `fieldMapper`. */
   mapper?: SubjectFieldMapperCatalog

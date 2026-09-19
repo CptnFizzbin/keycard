@@ -1,4 +1,4 @@
-package com.cptnfizzbin.examples.model;
+package com.cptnfizzbin.keycard.examples.production.model;
 
 import lombok.Data;
 

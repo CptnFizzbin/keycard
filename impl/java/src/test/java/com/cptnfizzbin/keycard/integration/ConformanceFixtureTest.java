@@ -28,7 +28,7 @@ import static org.junit.Assume.assumeTrue;
  * <p>
  * A fixture whose declared `version` isn't covered by
  * {@link #COMPLIANT_VERSION} - this suite's own baked-in ceiling, per
- * SPEC_V0.md §2's compatibility rule - is skipped (not failed) via
+ * SPEC_V0.md compatibility rule - is skipped (not failed) via
  * {@link org.junit.Assume}; see {@link FixtureUtils#isIncluded} for
  * the mechanics and {@link FixtureUtils#MAX_VERSION_PROPERTY} for the
  * knob that overrides it for a single run.

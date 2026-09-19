@@ -4,7 +4,7 @@ public final class StringConditions {
     private StringConditions() {}
 
     /**
-     * §7.4.1: value equality for primitives - not reference/identity
+     * value equality for primitives - not reference/identity
      * equality. Implementations SHOULD ensure NaN never equals itself
      * under $eq/$ne, even where the host language's default equality
      * would say otherwise - {@code Double.equals} treats NaN as equal to

@@ -5,10 +5,10 @@ import java.util.function.BiPredicate;
 
 /**
  * Every operator {@link ConditionResolver} understands natively
- * (SPEC_V0.md §7.4.1-§7.4.11), as {@link Operator} instances - the
+ * (SPEC_V0.md), as {@link Operator} instances - the
  * same type a custom, host-application-supplied operator uses, so built-in
  * and custom operators are constructed, registered, and dispatched
- * identically (§7.4.12).
+ * identically.
  */
 final class DefaultOperators {
     private DefaultOperators() {}
@@ -29,7 +29,7 @@ final class DefaultOperators {
         Operator.of("$field", (s, v, ctx) -> fieldOpCheck(ctx, s, v))
     );
 
-    /** §7.4.3: $gt/$gte/$lt/$lte - numeric-only, IEEE-754 double semantics. */
+    /** $gt/$gte/$lt/$lte - numeric-only, IEEE-754 double semantics. */
     private static boolean numericCompare(String op, Object subject, Object operand, BiPredicate<Double, Double> cmp) {
         if (!(subject instanceof Number) || !(operand instanceof Number)) {
             Diagnostics.logTypeIssue(op, "expected the subject and operand to both be numbers, got "
@@ -41,7 +41,7 @@ final class DefaultOperators {
         return cmp.test(a, b);
     }
 
-    /** §7.4.4: $in - operand must be a collection; containment uses $eq semantics per element. */
+    /** $in - operand must be a collection; containment uses $eq semantics per element. */
     private static boolean inCheck(Object subject, Object operand) {
         if (!(operand instanceof List)) {
             Diagnostics.logTypeIssue("$in", "expected an array operand, got " + Diagnostics.typeName(operand));
@@ -50,7 +50,7 @@ final class DefaultOperators {
         return GroupConditions.in(subject, (List<?>) operand);
     }
 
-    /** §7.4.5: $has - subject must be a collection. */
+    /** $has - subject must be a collection. */
     private static boolean hasCheck(Object subject, Object value) {
         if (!(subject instanceof List)) {
             Diagnostics.logTypeIssue("$has", "expected an array subject, got " + Diagnostics.typeName(subject));
@@ -59,7 +59,7 @@ final class DefaultOperators {
         return GroupConditions.has((List<?>) subject, value);
     }
 
-    /** §7.4.6: $substr - a null subject is an ordinary non-match, not a type issue; an invalid pattern always is. */
+    /** $substr - a null subject is an ordinary non-match, not a type issue; an invalid pattern always is. */
     private static boolean substrCheck(Object subject, Object pattern) {
         if (!(pattern instanceof String)) {
             Diagnostics.logTypeIssue("$substr", "expected a string pattern, got " + Diagnostics.typeName(pattern));
@@ -76,7 +76,7 @@ final class DefaultOperators {
         return parsed.matches(String.valueOf(subject));
     }
 
-    /** §7.4.7: $or - operand must be an array; {@code $or: []} is vacuously false. */
+    /** $or - operand must be an array; {@code $or: []} is vacuously false. */
     private static boolean orCheck(OperatorContext ctx, Object subject, Object operand) {
         if (!(operand instanceof List)) {
             Diagnostics.logTypeIssue("$or", "expected an array operand, got " + Diagnostics.typeName(operand));
@@ -90,7 +90,7 @@ final class DefaultOperators {
         return LogicConditions.or(ctx, subject, list);
     }
 
-    /** §7.4.8: $and - operand must be an array; {@code $and: []} is vacuously true. */
+    /** $and - operand must be an array; {@code $and: []} is vacuously true. */
     private static boolean andCheck(OperatorContext ctx, Object subject, Object operand) {
         if (!(operand instanceof List)) {
             Diagnostics.logTypeIssue("$and", "expected an array operand, got " + Diagnostics.typeName(operand));
@@ -104,7 +104,7 @@ final class DefaultOperators {
         return LogicConditions.and(ctx, subject, list);
     }
 
-    /** §7.4.11: $field - explicit field access, for a field whose name itself starts with "$". */
+    /** $field - explicit field access, for a field whose name itself starts with "$". */
     private static boolean fieldOpCheck(OperatorContext ctx, Object subject, Object operand) {
         if (!(operand instanceof List) || ((List<?>) operand).size() != 2 || !(((List<?>) operand).get(0) instanceof String)) {
             Diagnostics.logTypeIssue("$field", "expected a [name, Condition] tuple, got " + operand);
