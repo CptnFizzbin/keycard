@@ -1,0 +1,45 @@
+version: "0.1"
+name: "exact action/subject matching"
+description: >
+  §6.2.2: action and subject-name matching is an exact string comparison.
+  No rule uses a wildcard here.
+
+rules:
+  - [ allow, Read, Article ]
+
+tests:
+  - name: "matching action and subject is allowed"
+    check: [ Read, Article ]
+    expected: true
+
+  - name: "unrelated subject is denied: no rule matches"
+    check: [ Read, Comment ]
+    expected: false
+
+  - name: "unrelated action is denied: no rule matches"
+    check: [ Update, Article ]
+    expected: false
+
+  - name: "action matching is case-sensitive"
+    check: [ read, Article ]
+    expected: false
+
+  - name: "subject matching is case-sensitive"
+    check: [ Read, article ]
+    expected: false
+
+---
+version: "0.1"
+name: "empty rule list"
+description: "rules: [] denies everything; there is nothing to match."
+
+rules: [ ]
+
+tests:
+  - name: "any action/subject is denied"
+    check: [ Read, Article ]
+    expected: false
+
+  - name: "still denied with an instance attached"
+    check: [ Delete, Article, { id: 1, owner_id: 1 } ]
+    expected: false

@@ -44,7 +44,7 @@ For a terser, source-of-truth overview see [`SPEC.md`](SPEC.md) and
 [`GLOSSARY.md`](GLOSSARY.md). The normative v1 specification —  exact
 rule-evaluation semantics, the full condition-operator table, and required
 edge-case behavior every implementation is validated against — lives at
-[`docs/spec/SPEC_V1-0.md`](docs/spec/SPEC_V1-0.md).
+[`docs/spec/SPEC_V0.md`](docs/spec/SPEC_V0.md).
 
 ## Implementations
 
@@ -63,7 +63,7 @@ add a new language implementation.
 
 ```
 impl/       Language implementations (one package per language)
-docs/       Normative specification (docs/spec/SPEC_V1-0.md)
+docs/       Normative specification (docs/spec/SPEC_V0.md)
 website/    Docusaurus source for keycard.cptnfizzbin.dev
 test/       Cross-language conformance fixtures
 ```

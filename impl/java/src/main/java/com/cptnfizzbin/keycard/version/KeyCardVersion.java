@@ -1,7 +1,14 @@
 package com.cptnfizzbin.keycard.version;
 
+import lombok.NonNull;
+import org.semver4j.Semver;
+import org.semver4j.range.RangeList;
+import org.semver4j.range.RangeListFactory;
+
+import java.util.Objects;
+
 /**
- * The v1 SemVer this implementation speaks (SPEC_V1-0.md §2) - the
+ * The v1 SemVer this implementation speaks (SPEC_V0.md §2) - the
  * single source of truth {@link com.cptnfizzbin.keycard.policy.Policy}'s
  * {@code SUPPORTED_VERSION}, {@link
  * com.cptnfizzbin.keycard.builder.PolicyBuilder}'s {@code
@@ -9,7 +16,11 @@ package com.cptnfizzbin.keycard.version;
  * compliant version all read from, so the three can never drift apart.
  */
 public final class KeyCardVersion {
-    private KeyCardVersion() {}
+    private KeyCardVersion() {
+    }
 
-    public static final String KEYCARD_POLICY_VERSION = "1.0";
+    @NonNull
+    public static final Semver KEYCARD_POLICY_VERSION = Objects.requireNonNull(Semver.coerce("0.1"));
+    @NonNull
+    public static final RangeList KEYCARD_POLICY_SUPPORTED_VERSIONS = RangeListFactory.create("<=0.1.*");
 }

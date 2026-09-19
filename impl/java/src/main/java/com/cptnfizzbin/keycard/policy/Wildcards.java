@@ -2,10 +2,11 @@ package com.cptnfizzbin.keycard.policy;
 
 /**
  * Shared wildcard-token resolution for {@link Policy} and {@code
- * PolicyBuilder} - SPEC_V1-0.md §3.2.1, §4, §5, §6.
+ * PolicyBuilder} - SPEC_V0.md §3.2.1, §4, §5, §6.
  */
 public final class Wildcards {
-    private Wildcards() {}
+    private Wildcards() {
+    }
 
     private static final WildcardToken.Named DEFAULT_WILDCARD = new WildcardToken.Named("_ANY_");
 
@@ -26,15 +27,19 @@ public final class Wildcards {
      * was declared ({@link WildcardToken.Disabled} or {@link WildcardToken.Named}).
      */
     public static WildcardToken effectiveAnyAction(PolicyDefinition.Meta meta) {
-        return orDefault(meta != null ? meta.getAnyAction() : null);
+        return orDefault(meta != null ? meta.anyAction() : null);
     }
 
-    /** meta.anySubject: symmetric with {@link #effectiveAnyAction} in every respect. */
+    /**
+     * meta.anySubject: symmetric with {@link #effectiveAnyAction} in every respect.
+     */
     public static WildcardToken effectiveAnySubject(PolicyDefinition.Meta meta) {
-        return orDefault(meta != null ? meta.getAnySubject() : null);
+        return orDefault(meta != null ? meta.anySubject() : null);
     }
 
-    /** True when `value` matches `ruleValue` exactly, or `ruleValue` is the (non-disabled) wildcard token. */
+    /**
+     * True when `value` matches `ruleValue` exactly, or `ruleValue` is the (non-disabled) wildcard token.
+     */
     public static boolean matches(String value, String ruleValue, WildcardToken any) {
         if (value.equals(ruleValue)) return true;
         return any instanceof WildcardToken.Named named && ruleValue.equals(named.token());

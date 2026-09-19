@@ -68,7 +68,7 @@ final class FieldAccess {
     }
 
     /**
-     * SPEC_V1-0.md §7.3's `$ne`-on-a-missing-field carve-out is narrow: it
+     * SPEC_V0.md §7.3's `$ne`-on-a-missing-field carve-out is narrow: it
      * only fires when `$ne` is itself the sole nested condition being
      * evaluated at the missing field, not when it's one key among several
      * in a multi-key condition object (§7.5) or nested deeper -

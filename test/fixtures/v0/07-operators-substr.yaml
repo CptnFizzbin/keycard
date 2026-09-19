@@ -1,0 +1,366 @@
+version: "0.1"
+name: "$substr: unanchored literal (§7.4.6)"
+rules:
+  - [ allow, Read, Article, { title: { $substr: Rust } } ]
+
+tests:
+  - name: "substring present: allowed"
+    check: [ Read, Article, { title: "Getting Started with Rust" } ]
+    expected: true
+
+  - name: "substring absent: denied"
+    check: [ Read, Article, { title: "Java Basics" } ]
+    expected: false
+
+  - name: "subject is coerced via String(subject); no match here, but not a type issue"
+    check: [ Read, Article, { title: 12345 } ]
+    expected: false
+
+  - name: "missing field: denied"
+    check: [ Read, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: literal matching - substring in middle"
+rules:
+  - [ allow, Read, Article, { title: { $substr: oob } } ]
+
+tests:
+  - name: "substring in middle: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+  - name: "substring absent: denied"
+    check: [ Read, Article, { title: "fizzbuzz" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: start anchor (§7.4.6)"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "^Getting" } } ]
+
+tests:
+  - name: "literal segment touches the start: allowed"
+    check: [ Read, Article, { title: "Getting Started" } ]
+    expected: true
+
+  - name: "literal segment doesn't touch the start: denied"
+    check: [ Read, Article, { title: "Not Getting Started" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: end anchor (§7.4.6)"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "Guide$" } } ]
+
+tests:
+  - name: "literal segment touches the end: allowed"
+    check: [ Read, Article, { title: "Rust Guide" } ]
+    expected: true
+
+  - name: "literal segment doesn't touch the end: denied"
+    check: [ Read, Article, { title: "Guide to Rust" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: both anchors (exact match) (§7.4.6)"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "^Rust$" } } ]
+
+tests:
+  - name: "exact match: allowed"
+    check: [ Read, Article, { title: Rust } ]
+    expected: true
+
+  - name: "extra trailing text: denied"
+    check: [ Read, Article, { title: "Rust Guide" } ]
+    expected: false
+
+  - name: "extra leading text: denied"
+    check: [ Read, Article, { title: "About Rust" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: wildcard (*) matches zero or more characters (§7.4.6)"
+description: >
+  In the simplified spec, * matches zero or more characters, not one or more.
+rules:
+  - [ allow, Read, Article, { title: { $substr: "foo*bar" } } ]
+
+tests:
+  - name: "zero characters between foo and bar: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+  - name: "one character between foo and bar: allowed"
+    check: [ Read, Article, { title: "fooybar" } ]
+    expected: true
+
+  - name: "multiple characters between foo and bar: allowed"
+    check: [ Read, Article, { title: "foo123bar" } ]
+    expected: true
+
+  - name: "pattern mismatch: denied"
+    check: [ Read, Article, { title: "foobr" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: wildcard at start"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "*bar" } } ]
+
+tests:
+  - name: "wildcard at start matches any prefix: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+  - name: "zero characters before literal: allowed"
+    check: [ Read, Article, { title: "bar" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: wildcard at end"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "foo*" } } ]
+
+tests:
+  - name: "wildcard at end matches any suffix: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+  - name: "zero characters after literal: allowed"
+    check: [ Read, Article, { title: "foo" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: single wildcard character"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "*" } } ]
+
+tests:
+  - name: "wildcard alone matches empty string: allowed"
+    check: [ Read, Article, { title: "" } ]
+    expected: true
+
+  - name: "wildcard alone matches any non-empty string: allowed"
+    check: [ Read, Article, { title: "anything" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: multiple wildcards"
+description: >
+  Multiple wildcards in sequence work as expected with zero-or-more matching.
+rules:
+  - [ allow, Read, Article, { title: { $substr: "a*b*c" } } ]
+
+tests:
+  - name: "multiple wildcards with zero and one character: allowed"
+    check: [ Read, Article, { title: "aXbYc" } ]
+    expected: true
+
+  - name: "multiple wildcards with zero characters each: allowed"
+    check: [ Read, Article, { title: "abc" } ]
+    expected: true
+
+  - name: "multiple wildcards with content at end: allowed"
+    check: [ Read, Article, { title: "aXbYcZ" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: anchored wildcard at start"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "^foo*" } } ]
+
+tests:
+  - name: "start anchor with wildcard: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+  - name: "doesn't start with pattern: denied"
+    check: [ Read, Article, { title: "barfoo" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: anchored wildcard at end"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "*bar$" } } ]
+
+tests:
+  - name: "end anchor with wildcard: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+  - name: "doesn't end with pattern: denied"
+    check: [ Read, Article, { title: "barfoo" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: both anchors with wildcard"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "^foo*bar$" } } ]
+
+tests:
+  - name: "exact match with wildcard in middle: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+  - name: "exact match with characters in wildcard: allowed"
+    check: [ Read, Article, { title: "foodybar" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: empty pattern"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "" } } ]
+
+tests:
+  - name: "empty pattern matches empty string: allowed"
+    check: [ Read, Article, { title: "" } ]
+    expected: true
+
+  - name: "empty pattern matches any non-empty string: allowed"
+    check: [ Read, Article, { title: "anything" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: empty string with both anchors"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "^$" } } ]
+
+tests:
+  - name: "^$ matches empty string: allowed"
+    check: [ Read, Article, { title: "" } ]
+    expected: true
+
+  - name: "^$ doesn't match non-empty string: denied"
+    check: [ Read, Article, { title: "anything" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: escaped special characters are literal (§7.4.6)"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "\\^literal" } } ]
+
+tests:
+  - name: "the escaped caret is matched as a literal character, not an anchor, so it can appear mid-string"
+    check: [ Read, Article, { title: "a ^literal caret" } ]
+    expected: true
+
+  - name: "still an ordinary, unanchored substring match"
+    check: [ Read, Article, { title: "^literal at the start" } ]
+    expected: true
+
+  - name: "the literal text isn't present at all: denied"
+    check: [ Read, Article, { title: "no match here" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: escaped asterisk is literal"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "foo\\*bar" } } ]
+
+tests:
+  - name: "escaped asterisk matches literal asterisk: allowed"
+    check: [ Read, Article, { title: "foo*bar" } ]
+    expected: true
+
+  - name: "escaped asterisk doesn't act as wildcard: denied"
+    check: [ Read, Article, { title: "fooXbar" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: escaped dollar sign is literal"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "end\\$" } } ]
+
+tests:
+  - name: "escaped dollar sign matches literal dollar: allowed"
+    check: [ Read, Article, { title: "end$" } ]
+    expected: true
+
+  - name: "escaped dollar doesn't act as anchor: allowed"
+    check: [ Read, Article, { title: "end$suffix" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: escaped backslash is literal"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "\\\\backslash" } } ]
+
+tests:
+  - name: "escaped backslash matches literal backslash: allowed"
+    check: [ Read, Article, { title: "\\backslash" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: trailing backslash is ignored (§7.4.6)"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "foo\\" } } ]
+
+tests:
+  - name: "trailing backslash ignored: allowed"
+    check: [ Read, Article, { title: "foobar" } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$substr: an invalid pattern is a type issue, always false (§7.4.6)"
+description: >
+  An unescaped ^ anywhere but the first character, or an unescaped $
+  anywhere but the last, is a structurally invalid pattern.
+rules:
+  - [ allow, Read, Article, { title: { $substr: "mid^dle" } } ]
+
+tests:
+  - name: "invalid pattern never matches, regardless of subject content"
+    check: [ Read, Article, { title: "mid^dle exactly" } ]
+    expected: false
+
+  - name: "invalid pattern never matches unrelated content either"
+    check: [ Read, Article, { title: "anything" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: invalid pattern with $ in middle"
+rules:
+  - [ allow, Read, Article, { title: { $substr: "mid$dle" } } ]
+
+tests:
+  - name: "invalid pattern with $ in middle never matches"
+    check: [ Read, Article, { title: "mid$dle" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$substr: a null or missing subject is an ordinary non-match, not a type issue (§7.4.6)"
+rules:
+  - [ allow, Read, Article, { title: { $substr: x } } ]
+
+tests:
+  - name: "explicit null subject value: denied"
+    check: [ Read, Article, { title: null } ]
+    expected: false
+
+  - name: "missing field: denied"
+    check: [ Read, Article ]
+    expected: false

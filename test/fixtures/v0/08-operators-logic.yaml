@@ -1,0 +1,122 @@
+version: "0.1"
+name: "$or (§7.4.7)"
+rules:
+  - [ allow, Read, Article, { $or: [ { status: published }, { status: featured } ] } ]
+
+tests:
+  - name: "first alternative satisfied: allowed"
+    check: [ Read, Article, { status: published } ]
+    expected: true
+
+  - name: "second alternative satisfied: allowed"
+    check: [ Read, Article, { status: featured } ]
+    expected: true
+
+  - name: "no alternative satisfied: denied"
+    check: [ Read, Article, { status: draft } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$or with a non-array operand is a type issue, always false (§7.4.7)"
+rules:
+  - [ allow, Read, Article, { $or: { status: published } } ]
+
+tests:
+  - name: "operand is not an array: never matches"
+    check: [ Read, Article, { status: published } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$or: [] is vacuously false (§7.4.7)"
+rules:
+  - [ allow, Read, Article, { $or: [ ] } ]
+
+tests:
+  - name: "no alternative can ever be satisfied: always denied"
+    check: [ Read, Article, { status: published } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$and (§7.4.8)"
+rules:
+  - [ allow, Read, Article, { $and: [ { status: published }, { view_count: { $gt: 100 } } ] } ]
+
+tests:
+  - name: "every conjunct satisfied: allowed"
+    check: [ Read, Article, { status: published, view_count: 200 } ]
+    expected: true
+
+  - name: "one conjunct unsatisfied: denied"
+    check: [ Read, Article, { status: published, view_count: 50 } ]
+    expected: false
+
+  - name: "the other conjunct unsatisfied: denied"
+    check: [ Read, Article, { status: draft, view_count: 200 } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$and with a non-array operand is a type issue, always false (§7.4.8)"
+rules:
+  - [ allow, Read, Article, { $and: { status: published } } ]
+
+tests:
+  - name: "operand is not an array: never matches"
+    check: [ Read, Article, { status: published } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$and: [] is vacuously true (§7.4.8)"
+rules:
+  - [ allow, Read, Article, { $and: [ ] } ]
+
+tests:
+  - name: "there is no unsatisfied conjunct: always allowed"
+    check: [ Read, Article, { } ]
+    expected: true
+
+  - name: "still always allowed regardless of the instance's other fields"
+    check: [ Read, Article, { anything: 1 } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$not (§7.4.9)"
+rules:
+  - [ allow, Read, Article, { $not: { status: archived } } ]
+
+tests:
+  - name: "inner condition is false: $not makes it true, so allowed"
+    check: [ Read, Article, { status: published } ]
+    expected: true
+
+  - name: "inner condition is true: $not makes it false, so denied"
+    check: [ Read, Article, { status: archived } ]
+    expected: false
+
+  - name: "$not is the exact negation of evaluating its inner condition against the same subject"
+    check: [ Read, Article, { } ]
+    expected: true
+
+---
+version: "0.1"
+name: "multiple keys in one condition object are implicitly ANDed (§7.5)"
+description: >
+  An operator key MUST NOT consume the whole object or cause sibling keys
+  to be ignored - mirrors the spec's own { $ne: null, status: open }
+  example directly.
+rules:
+  - [ allow, Update, Article, { $ne: null, status: open } ]
+
+tests:
+  - name: "both the operator key and the field key are satisfied: allowed"
+    check: [ Update, Article, { status: open } ]
+    expected: true
+
+  - name: "the field key fails: denied, even though $ne null passes"
+    check: [ Update, Article, { status: closed } ]
+    expected: false

@@ -11,7 +11,7 @@ slug: /api-reference
 Create type-safe actions:
 
 ```java
-Action<String> create = ActionFactory.create("Create");
+Action create = ActionFactory.create("Create");
 ```
 
 ## `SubjectFactory`
@@ -32,15 +32,15 @@ instance — `getInstance()` is empty until `.wrap()` is called.
 
 - `getName()` — get subject name
 - `getInstance()` — get the wrapped object, if any, as an `Optional<T>`
-- `getFieldMapper()` — get the `SubjectFieldMapper<T>` attached at creation,
-  if any, as an `Optional`
-- `wrap(T obj)` — returns a new `Subject<T>` of the same name (and field
-  mapper, unchanged), with its instance
-  set
+- `getFieldMapper()` — get the `SubjectFieldMapper<T>` attached at creation, if
+  any, as an `Optional`
+- `wrap(T obj)` — returns a new `Subject<T>` of the same name (and field mapper,
+  unchanged), with its instance set
 
 ## `PolicyBuilder`
 
-Build policies with a fluent API. Constructors: no-arg; `(Collection<Operator>)`;
+Build policies with a fluent API. Constructors: no-arg;
+`(Collection<Operator>)`;
 `(Object anyAction, Object anySubject)`; `(Object anyAction, Object anySubject,
 Collection<Operator>)`; and `(KeycardConfig)` (see below).
 
@@ -54,7 +54,8 @@ Collection<Operator>)`; and `(KeycardConfig)` (see below).
 ## `Policy`
 
 Check permissions. Constructors/factories: `(PolicyDefinition)`;
-`(PolicyDefinition, Collection<Operator>)`; `(PolicyDefinition, ConditionResolver)`;
+`(PolicyDefinition, Collection<Operator>)`;
+`(PolicyDefinition, ConditionResolver)`;
 `(PolicyDefinition, KeycardConfig)`; and the equivalent static
 `from(...)`/`fromDto(...)` overloads.
 
@@ -72,7 +73,7 @@ Evaluates conditions:
 ## `PolicyDefinition`
 
 Serializable policy, per
-[SPEC_V1-0.md §3](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V1-0.md#3-terminology):
+[SPEC_V0.md §3](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V0.md#3-terminology):
 
 - `getVersion()` — get the SemVer spec version, e.g. `"1.0"`
 - `getMeta()` — get the optional `meta` object (wildcard tokens, catalogues,
@@ -93,13 +94,13 @@ reference for the full semantics.
 
 ## `Conditions`
 
-A type-safe condition builder for Java's `Map<String, Object>` condition
-shape, using method references instead of hand-written `Map.of(...)`
-literals. Each helper extracts the field name from the getter reference
-(e.g. `Article::getOwnerId` → `"ownerId"`) — this relies on the reference
-being a plain, serializable method reference to a real `getXxx()`/`isXxx()`
-method (a lambda expression won't work), so the subject class needs an
-actual getter for every field referenced this way — e.g. via Lombok's
+A type-safe condition builder for Java's `Map<String, Object>` condition shape,
+using method references instead of hand-written `Map.of(...)`
+literals. Each helper extracts the field name from the getter reference (e.g.
+`Article::getOwnerId` → `"ownerId"`) — this relies on the reference being a
+plain, serializable method reference to a real `getXxx()`/`isXxx()`
+method (a lambda expression won't work), so the subject class needs an actual
+getter for every field referenced this way — e.g. via Lombok's
 `@Getter`, or hand-written. A field resolved only through a
 `SubjectFieldMapper` (no real getter backing it) can't be referenced with
 `Conditions`; build that one as a plain `Map` instead (see
@@ -117,8 +118,8 @@ Conditions.and(
 - `eq` / `ne` / `gt` / `gte` / `lt` / `lte` / `in` / `has` / `substr` —
   `Conditions.op(getter, value)` for the matching built-in operator
 - `field(getter, value)` — bare-value field condition (shorthand for `$eq`)
-- `field(String fieldName, Object condition)` — the `$field` long form, for
-  a field name that itself starts with `$`
+- `field(String fieldName, Object condition)` — the `$field` long form, for a
+  field name that itself starts with `$`
 - `op(String operatorName, Object value)` — escape hatch for any registered
   operator with no dedicated helper (built-in or custom)
 - `and(Map<String, Object>...)` / `or(Map<String, Object>...)` /
@@ -128,9 +129,9 @@ Conditions.and(
 
 Optional, shared config accepted by both `PolicyBuilder` and `Policy`
 (alongside their existing constructors) — one object bundling the wildcard
-tokens, action/subject vocabulary, custom operators, and field mappers a
-policy needs, built once instead of kept in sync by hand across both. Built
-with Lombok's generated builder; every field is independently optional.
+tokens, action/subject vocabulary, custom operators, and field mappers a policy
+needs, built once instead of kept in sync by hand across both. Built with
+Lombok's generated builder; every field is independently optional.
 
 ```java
 KeycardConfig config = KeycardConfig.builder()
@@ -148,13 +149,14 @@ Policy policy = new PolicyBuilder(config)
 ```
 
 - `anyAction` / `anySubject` — the wildcard tokens (§4.2.1). Unlike the
-  `(Object, Object)` constructors, leaving these unset here means "not
-  declared" (`"_ANY_"` applies) rather than passing `null` through; use
+  `(Object, Object)` constructors, leaving these unset here means "not declared"
+  (`"_ANY_"` applies) rather than passing `null` through; use
   `Boolean.FALSE` to disable a wildcard explicitly.
 - `actions` / `subjects` — declared vocabulary, **additive** to whatever
   `PolicyBuilder.allow`/`.deny` actually used, or to `meta.actions`/
-  `meta.subjects` already on a `PolicyDefinition` a `Policy` is constructed
-  from (§4.2.2's catalog enforcement — see [Policy Definition](/docs/policy-definition)).
+  `meta.subjects` already on a `PolicyDefinition` a `Policy` is constructed from
+  (§4.2.2's catalog enforcement —
+  see [Policy Definition](/docs/policy-definition)).
 - `operators` — custom operators, used instead of any separately-passed
   `Collection<Operator>`.
 - `mapper` — a `SubjectFieldMapperCatalog`, consulted as a fallback for any
@@ -162,12 +164,12 @@ Policy policy = new PolicyBuilder(config)
 
 ## `SubjectFieldMapper<T>` / `SubjectFieldMapperCatalog`
 
-Per-field getters for a subject's wrapped instance — the explicit
-counterpart to KeyCard's default reflection-based field access. Lets a
-condition reference a field whose name doesn't match the instance's own
-field names (a rename, a computed/derived value), or an instance whose
-fields reflection can't reach. A field the mapper doesn't define still
-falls back to ordinary reflection — and the one-level-deep restriction
+Per-field getters for a subject's wrapped instance — the explicit counterpart to
+KeyCard's default reflection-based field access. Lets a condition reference a
+field whose name doesn't match the instance's own field names (a rename, a
+computed/derived value), or an instance whose fields reflection can't reach. A
+field the mapper doesn't define still falls back to ordinary reflection — and
+the one-level-deep restriction
 (see [Condition Operators](/docs/condition-operators#v1-supports-only-top-level-field-access))
 still applies to the resolved value.
 
@@ -179,11 +181,10 @@ SubjectFieldMapper<Post> mapper = SubjectFieldMapper.<Post>builder()
 Subject<Post> post = SubjectFactory.create("Post", mapper);
 ```
 
-Attach a mapper directly (`SubjectFactory.create(name, mapper)`, carried
-through every `.wrap()` unchanged), or register several centrally via a
-catalog and hand it to `Policy`/`PolicyBuilder` through `KeycardConfig.mapper` —
-a subject's own mapper, if it has one, always takes precedence over the
-catalog:
+Attach a mapper directly (`SubjectFactory.create(name, mapper)`, carried through
+every `.wrap()` unchanged), or register several centrally via a catalog and hand
+it to `Policy`/`PolicyBuilder` through `KeycardConfig.mapper` — a subject's own
+mapper, if it has one, always takes precedence over the catalog:
 
 ```java
 SubjectFieldMapperCatalog catalog = SubjectFieldMapperCatalog.builder()
@@ -198,8 +199,8 @@ Policy policy = Policy.from(policyDef, config);
   mapper; `getter` is a `Function<T, Object>`
 - `SubjectFieldMapperCatalog.builder().register(subjectName, mapper).build()` —
   build a catalog
-- `SubjectFieldMapperCatalog#get(String subjectName)` — look up a
-  registered mapper, as an `Optional`
+- `SubjectFieldMapperCatalog#get(String subjectName)` — look up a registered
+  mapper, as an `Optional`
 
 ## See also
 

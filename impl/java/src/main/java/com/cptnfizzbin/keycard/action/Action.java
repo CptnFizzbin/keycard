@@ -1,17 +1,18 @@
 package com.cptnfizzbin.keycard.action;
 
-import java.util.UUID;
-
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.UUID;
+
 @Getter
 @EqualsAndHashCode
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class Action<T extends String> {
-    private final T name;
+public final class Action {
+    private final String name;
+
     /**
      * Set only by {@link #create()} (no-arg) - {@code name} then holds a
      * randomly-generated id rather than a developer-chosen name, and this
@@ -24,14 +25,15 @@ public final class Action<T extends String> {
     @EqualsAndHashCode.Exclude
     private final boolean dynamic;
 
-    public static <T extends String> Action<T> create(T name) {
-        return new Action<>(name, false);
+    public static Action create(String name) {
+        return new Action(name, false);
     }
 
-    /** Generates a random id in place of a name and marks this Action dynamic - see {@link #isDynamic()}. */
-    @SuppressWarnings("unchecked")
-    public static <T extends String> Action<T> create() {
-        return new Action<>((T) UUID.randomUUID().toString(), true);
+    /**
+     * Generates a random id in place of a name and marks this Action dynamic - see {@link #isDynamic()}.
+     */
+    public static Action create() {
+        return new Action(UUID.randomUUID().toString(), true);
     }
 
     public String getNameStr() {

@@ -1,22 +1,22 @@
 package com.cptnfizzbin.keycard;
 
+import com.cptnfizzbin.keycard.action.Action;
+import com.cptnfizzbin.keycard.action.ActionFactory;
+import com.cptnfizzbin.keycard.builder.PolicyBuilder;
+import com.cptnfizzbin.keycard.conditions.Conditions;
+import com.cptnfizzbin.keycard.conditions.Operator;
+import com.cptnfizzbin.keycard.policy.Policy;
+import com.cptnfizzbin.keycard.subject.Subject;
+import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.junit.Test;
 
-import com.cptnfizzbin.keycard.policy.Policy;
-import com.cptnfizzbin.keycard.builder.PolicyBuilder;
-import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.action.ActionFactory;
-import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFactory;
-import com.cptnfizzbin.keycard.conditions.Conditions;
-import com.cptnfizzbin.keycard.conditions.Operator;
-
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ConditionsHelperTest {
     @Getter
@@ -32,7 +32,7 @@ public class ConditionsHelperTest {
     @Test
     public void testFieldEquality() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> update = ActionFactory.create("Update");
+        Action update = ActionFactory.create("Update");
 
         Policy policy = new PolicyBuilder()
             .allow(update, article, Conditions.eq(Article::getOwnerId, 42))
@@ -48,7 +48,7 @@ public class ConditionsHelperTest {
     @Test
     public void testFieldNotEqual() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> update = ActionFactory.create("Update");
+        Action update = ActionFactory.create("Update");
 
         Policy policy = new PolicyBuilder()
             .allow(update, article, Conditions.ne(Article::getStatus, "archived"))
@@ -64,7 +64,7 @@ public class ConditionsHelperTest {
     @Test
     public void testNumberComparison() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> delete = ActionFactory.create("Delete");
+        Action delete = ActionFactory.create("Delete");
 
         Policy policy = new PolicyBuilder()
             .allow(delete, article, Conditions.lt(Article::getViewCount, 1000))
@@ -80,7 +80,7 @@ public class ConditionsHelperTest {
     @Test
     public void testAndCondition() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> update = ActionFactory.create("Update");
+        Action update = ActionFactory.create("Update");
 
         Map<String, Object> conditions = Conditions.and(
             Conditions.eq(Article::getOwnerId, 1),
@@ -104,7 +104,7 @@ public class ConditionsHelperTest {
     @Test
     public void testOrCondition() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> publish = ActionFactory.create("Publish");
+        Action publish = ActionFactory.create("Publish");
 
         Map<String, Object> conditions = Conditions.or(
             Conditions.eq(Article::getOwnerId, 1),
@@ -128,7 +128,7 @@ public class ConditionsHelperTest {
     @Test
     public void testAndCondition2() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> update = ActionFactory.create("Update");
+        Action update = ActionFactory.create("Update");
 
         Map<String, Object> conditions = Conditions.and(
             Conditions.eq(Article::getOwnerId, 1),
@@ -146,7 +146,7 @@ public class ConditionsHelperTest {
     @Test
     public void testHasCondition() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> update = ActionFactory.create("Update");
+        Action update = ActionFactory.create("Update");
 
         Policy policy = new PolicyBuilder()
             .allow(update, article, Conditions.has(Article::getTags, "featured"))
@@ -162,7 +162,7 @@ public class ConditionsHelperTest {
     @Test
     public void testExplicitFieldCondition() {
         Subject<Map<String, Object>> record = SubjectFactory.create("Record");
-        Action<String> update = ActionFactory.create("Update");
+        Action update = ActionFactory.create("Update");
 
         Policy policy = new PolicyBuilder()
             .allow(update, record, Conditions.field("$type", Map.of("$eq", "invoice")))
@@ -175,7 +175,7 @@ public class ConditionsHelperTest {
     @Test
     public void testCustomOperatorHelper() {
         Subject<Article> article = SubjectFactory.create("Article");
-        Action<String> delete = ActionFactory.create("Delete");
+        Action delete = ActionFactory.create("Delete");
         Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> "admin".equals(v));
 
         Policy policy = new PolicyBuilder(List.of(hasRole))

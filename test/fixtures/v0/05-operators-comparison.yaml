@@ -1,0 +1,111 @@
+version: "0.1"
+name: "$eq / $ne (§7.4.1, §7.4.2)"
+rules:
+  - [ allow, Read, Article, { status: { $eq: published } } ]
+  - [ allow, Update, Article ]
+  - [ deny, Update, Article, { status: { $ne: published } } ]
+
+tests:
+  - name: "$eq matches equal value"
+    check: [ Read, Article, { status: published } ]
+    expected: true
+
+  - name: "$eq does not match a different value"
+    check: [ Read, Article, { status: draft } ]
+    expected: false
+
+  - name: "$eq is never a type-mismatch: comparing to a different type is simply unequal"
+    check: [ Read, Article, { status: 1 } ]
+    expected: false
+
+  - name: "$ne is the exact negation of $eq: unpublished is denied by the more specific rule"
+    check: [ Update, Article, { status: draft } ]
+    expected: false
+
+  - name: "$ne is the exact negation of $eq: published falls through to the blanket allow"
+    check: [ Update, Article, { status: published } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$gt (§7.4.3)"
+rules:
+  - [ allow, Read, Article, { view_count: { $gt: 100 } } ]
+
+tests:
+  - name: "strictly greater: allowed"
+    check: [ Read, Article, { view_count: 150 } ]
+    expected: true
+
+  - name: "equal to the boundary: denied ($gt is strict)"
+    check: [ Read, Article, { view_count: 100 } ]
+    expected: false
+
+  - name: "less than the boundary: denied"
+    check: [ Read, Article, { view_count: 50 } ]
+    expected: false
+
+  - name: "a numeric-looking string is never coerced: type issue, denied"
+    check: [ Read, Article, { view_count: "150" } ]
+    expected: false
+
+  - name: "missing field: denied"
+    check: [ Read, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "$gte (§7.4.3)"
+rules:
+  - [ allow, Read, Article, { view_count: { $gte: 100 } } ]
+
+tests:
+  - name: "strictly greater: allowed"
+    check: [ Read, Article, { view_count: 150 } ]
+    expected: true
+
+  - name: "equal to the boundary: allowed ($gte is inclusive)"
+    check: [ Read, Article, { view_count: 100 } ]
+    expected: true
+
+  - name: "less than the boundary: denied"
+    check: [ Read, Article, { view_count: 99 } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$lt (§7.4.3)"
+rules:
+  - [ allow, Read, Article, { view_count: { $lt: 100 } } ]
+
+tests:
+  - name: "strictly less: allowed"
+    check: [ Read, Article, { view_count: 50 } ]
+    expected: true
+
+  - name: "equal to the boundary: denied ($lt is strict)"
+    check: [ Read, Article, { view_count: 100 } ]
+    expected: false
+
+  - name: "greater than the boundary: denied"
+    check: [ Read, Article, { view_count: 150 } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$lte (§7.4.3)"
+rules:
+  - [ allow, Read, Article, { view_count: { $lte: 100 } } ]
+
+tests:
+  - name: "strictly less: allowed"
+    check: [ Read, Article, { view_count: 50, } ]
+    expected: true
+
+  - name: "equal to the boundary: allowed ($lte is inclusive)"
+    check: [ Read, Article, { view_count: 100, } ]
+    expected: true
+
+  - name: "greater than the boundary: denied"
+    check: [ Read, Article, { view_count: 150, } ]
+    expected: false

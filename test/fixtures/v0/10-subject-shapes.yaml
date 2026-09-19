@@ -1,0 +1,30 @@
+version: "0.1"
+name: "bare type vs. wrapped instance"
+description: >
+  A conditional rule can never be satisfied by a bare-type/no-instance
+  check: there's no instance data for the condition to inspect against, so
+  it counts as "does not match," not an error or an automatic pass.
+rules:
+  - [ allow, Read, Article ]
+  - [ allow, Update, Article, { owner_id: 1 } ]
+
+tests:
+  - name: "an unconditional rule matches regardless of whether an instance is attached"
+    check: [ Read, Article ]
+    expected: true
+
+  - name: "still allowed with an instance attached"
+    check: [ Read, Article, { id: 1, owner_id: 2 } ]
+    expected: true
+
+  - name: "a conditional rule cannot match a bare type with no instance data"
+    check: [ Update, Article ]
+    expected: false
+
+  - name: "the same conditional rule matches once real instance data satisfies it"
+    check: [ Update, Article, { owner_id: 1 } ]
+    expected: true
+
+  - name: "instance data that doesn't satisfy the condition is still denied"
+    check: [ Update, Article, { owner_id: 2 } ]
+    expected: false

@@ -1,9 +1,5 @@
 package com.cptnfizzbin.keycard;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import org.junit.Test;
-
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
@@ -13,14 +9,14 @@ import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import com.cptnfizzbin.keycard.subject.SubjectFieldMapper;
 import com.cptnfizzbin.keycard.subject.SubjectFieldMapperCatalog;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SubjectFieldMapperTest {
     @Getter
@@ -45,9 +41,9 @@ public class SubjectFieldMapperTest {
     @Test
     public void mappedFieldIsResolvedThroughItsGetterInsteadOfReflection() {
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
-        Action<String> read = ActionFactory.create("Read");
+        Action read = ActionFactory.create("Read");
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("authorName", "Alice"))
         )));
 
@@ -58,9 +54,9 @@ public class SubjectFieldMapperTest {
     @Test
     public void aFieldTheMapperDoesntDefineFallsBackToReflection() {
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
-        Action<String> read = ActionFactory.create("Read");
+        Action read = ActionFactory.create("Read");
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("status", "draft"))
         )));
 
@@ -70,14 +66,14 @@ public class SubjectFieldMapperTest {
 
     @Test
     public void aFieldConditionCannotNarrowTwiceEvenWithAMapperInPlay() {
-        // v1 permits only one level of field narrowing (SPEC_V1-0.md
+        // v1 permits only one level of field narrowing (SPEC_V0.md
         // §7.4.10) - a fieldMapper on Post doesn't change that: `author` is
         // a field of Post, but `author`'s own Condition can't itself be
         // another field condition (`name`), mapped or not.
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
-        Action<String> read = ActionFactory.create("Read");
+        Action read = ActionFactory.create("Read");
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("author", Map.of("name", "Alice")))
         )));
 
@@ -91,9 +87,9 @@ public class SubjectFieldMapperTest {
         // operator - narrowing is what's restricted to one level, not
         // operator use in general.
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
-        Action<String> read = ActionFactory.create("Read");
+        Action read = ActionFactory.create("Read");
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("authorName", Map.of("$substr", "Ali")))
         )));
 
@@ -104,9 +100,9 @@ public class SubjectFieldMapperTest {
     @Test
     public void stillAppliesInsideAndOrNotWhichEvaluateAgainstTheSameTopLevelSubject() {
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
-        Action<String> read = ActionFactory.create("Read");
+        Action read = ActionFactory.create("Read");
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of(
                 "$and", List.of(
                     Map.of("authorName", "Alice"),
@@ -130,14 +126,14 @@ public class SubjectFieldMapperTest {
     @Test
     public void catalogMapperIsConsultedWhenTheSubjectInHandCarriesNoneOfItsOwn() {
         Subject<Post> post = SubjectFactory.create("Post");
-        Action<String> read = ActionFactory.create("Read");
+        Action read = ActionFactory.create("Read");
 
         SubjectFieldMapperCatalog catalog = SubjectFieldMapperCatalog.builder()
             .register("Post", authorNameMapper())
             .build();
         KeycardConfig config = KeycardConfig.builder().mapper(catalog).build();
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("authorName", "Alice"))
         )), config);
 
@@ -148,7 +144,7 @@ public class SubjectFieldMapperTest {
     @Test
     public void aFieldMapperOnTheSubjectItselfTakesPrecedenceOverTheCatalog() {
         Subject<Post> post = SubjectFactory.create("Post", authorNameMapper());
-        Action<String> read = ActionFactory.create("Read");
+        Action read = ActionFactory.create("Read");
 
         // Deliberately mismatched, so the test can tell which one won.
         SubjectFieldMapperCatalog catalog = SubjectFieldMapperCatalog.builder()
@@ -156,7 +152,7 @@ public class SubjectFieldMapperTest {
             .build();
         KeycardConfig config = KeycardConfig.builder().mapper(catalog).build();
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", Map.of("authorName", "Alice"))
         )), config);
 
@@ -170,7 +166,7 @@ public class SubjectFieldMapperTest {
             .addSubject("Post", post)
             .build();
 
-        Policy policy = Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy policy = Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", null)
         )), config);
 
@@ -186,11 +182,11 @@ public class SubjectFieldMapperTest {
             .build();
 
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition("1.0.0", List.of(
+            Policy.from(new PolicyDefinition().rules(List.of(
                 new PolicyDefinition.Rule("allow", "Write", "Post", null)
             )), config));
 
-        Policy.from(new PolicyDefinition("1.0.0", List.of(
+        Policy.from(new PolicyDefinition().rules(List.of(
             new PolicyDefinition.Rule("allow", "Read", "Post", null)
         )), config); // should not throw
     }

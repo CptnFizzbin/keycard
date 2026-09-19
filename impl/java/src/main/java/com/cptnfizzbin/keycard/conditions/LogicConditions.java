@@ -3,7 +3,7 @@ package com.cptnfizzbin.keycard.conditions;
 import java.util.List;
 
 /**
- * Pure combining logic for $or/$and/$not (SPEC_V1-0.md §7.4.7-§7.4.9) -
+ * Pure combining logic for $or/$and/$not (SPEC_V0.md §7.4.7-§7.4.9) -
  * type-checking the operand and the required §7.1 diagnostic on failure
  * (including the vacuous-empty-array case) is the caller's job
  * (ConditionResolver), so {@link #or}/{@link #and} assume an

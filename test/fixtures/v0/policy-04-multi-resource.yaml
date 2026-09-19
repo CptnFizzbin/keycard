@@ -1,0 +1,65 @@
+version: "0.1"
+name: "Multi-Resource Policy"
+description: "Different permissions for articles, comments, and users"
+
+rules:
+  - [ allow, Read, Article ]
+  - [ allow, Create, Article ]
+  - [ allow, Update, Article, { owner_id: 1 } ]
+  - [ allow, Delete, Article, { owner_id: 1 } ]
+  - [ allow, Read, Comment ]
+  - [ allow, Create, Comment ]
+  - [ allow, Update, Comment, { author_id: 1 } ]
+  - [ allow, Delete, Comment, { author_id: 1 } ]
+  - [ allow, Read, User ]
+  - [ allow, Update, User, { id: 1 } ]
+  - [ deny, Delete, User ]
+
+tests:
+  - name: "allows Read on the Article type"
+    check: [ Read, Article ]
+    expected: true
+
+  - name: "allows Read on the Comment type"
+    check: [ Read, Comment ]
+    expected: true
+
+  - name: "allows Read on the User type"
+    check: [ Read, User ]
+    expected: true
+
+  - name: "allows Delete on Article for the owner"
+    check: [ Delete, Article, { id: 1, owner_id: 1 } ]
+    expected: true
+
+  - name: "denies Delete on Article for a non-owner"
+    check: [ Delete, Article, { id: 3, owner_id: 2 } ]
+    expected: false
+
+  - name: "allows Update Comment for its author"
+    check: [ Update, Comment, { id: 1, author_id: 1 } ]
+    expected: true
+
+  - name: "denies Update Comment for a non-author"
+    check: [ Update, Comment, { id: 4, author_id: 3 } ]
+    expected: false
+
+  - name: "denies Delete Comment for a non-author"
+    check: [ Delete, Comment, { id: 4, author_id: 3 } ]
+    expected: false
+
+  - name: "allows Update User for the matching id"
+    check: [ Update, User, { id: 1 } ]
+    expected: true
+
+  - name: "denies Update User for a different id"
+    check: [ Update, User, { id: 3 } ]
+    expected: false
+
+  - name: "denies Delete User for any user (deny rule, no allow rule either)"
+    check: [ Delete, User, { id: 1 } ]
+    expected: false
+
+  - name: "denies Delete User even for an admin (deny rule)"
+    check: [ Delete, User, { id: 3, role: admin } ]
+    expected: false

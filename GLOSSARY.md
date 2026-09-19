@@ -1,7 +1,7 @@
 # Glossary
 
 Term definitions for KeyCard. See [`SPEC.md`](SPEC.md) for the informal
-overview and [`SPEC_V1-0.md`](docs/spec/SPEC_V1-0.md) for the normative v1
+overview and [`SPEC_V0.md`](docs/spec/SPEC_V0.md) for the normative v1
 specification.
 
 - **Claims** - an object of values used either for building a policy
@@ -28,6 +28,12 @@ specification.
   conditions
 - **PolicyDefinition** - (PolicyDef) a text based encoding of what
   permissions the user is allowed/denied
+- **Test Suite** - a named group of Test Cases embedded in a
+  `PolicyDefinition`'s optional `tests` field (added in `1.1.0`), used by
+  tooling to assert the policy behaves as documented
+- **Test Case** - a single expected `can` outcome within a Test Suite: a
+  `check` (the `action`, `subject`, and optional `subjectData` to pass to
+  `can`) plus the `expected` boolean result
 - **Policy** - an object that can be used to perform checks against/with
 - **Building a Policy** - using a `PolicyBuilder` to create a
   `PolicyDefinition`

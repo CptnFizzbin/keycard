@@ -5,7 +5,7 @@ import type { Meta } from "./policyDefinition.ts"
  * explicitly disables that wildcard position (`meta.anyAction`/
  * `meta.anySubject: null`). No ordinary string can ever equal this
  * sentinel, so the wildcard branch of `matchesAction`/`matchesSubject`
- * never succeeds for that position (SPEC_V1-0.md §3.2.1, §4, §5, §6).
+ * never succeeds for that position (SPEC_V0.md §3.2.1, §4, §5, §6).
  */
 export const DISABLED: unique symbol = Symbol("keycard:wildcard-disabled")
 

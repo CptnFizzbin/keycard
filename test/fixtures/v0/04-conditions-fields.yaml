@@ -1,0 +1,165 @@
+version: "0.1"
+name: "bare-value shorthand (§7.2)"
+description: "{ status: archived } is shorthand for { status: { $eq: archived } }."
+rules:
+  - [ allow, Read, Article, { status: published } ]
+
+tests:
+  - name: "matching value is allowed"
+    check: [ Read, Article, { status: published } ]
+    expected: true
+
+  - name: "non-matching value is denied"
+    check: [ Read, Article, { status: draft } ]
+    expected: false
+
+  - name: "missing field is denied"
+    check: [ Read, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "$ne is the exact negation of $eq, including on a missing field (§7.3, §7.4.2)"
+description: >
+  { status: { $ne: archived } } matches whenever status isn't "archived" -
+  including when status is missing entirely, since $ne MUST be the exact
+  negation of $eq (§7.4.2) and $eq on a missing field is false. This is the
+  one exception to §7.3's blanket missing-field-is-false rule.
+rules:
+  - [ allow, Read, Article, { status: { $ne: archived } } ]
+
+tests:
+  - name: "present and different: allowed"
+    check: [ Read, Article, { status: published } ]
+    expected: true
+
+  - name: "present and equal: denied"
+    check: [ Read, Article, { status: archived } ]
+    expected: false
+
+  - name: "field missing: allowed - $ne's exact-negation-of-$eq contract applies to absence too"
+    check: [ Read, Article, { } ]
+    expected: true
+
+  - name: "explicit null is a real value, and null !== archived, so this is allowed"
+    check: [ Read, Article, { status: null } ]
+    expected: true
+
+---
+version: "0.1"
+name: "bare-value shorthand against an explicit null (§7.3)"
+rules:
+  - [ allow, Read, Article, { status: null } ]
+
+tests:
+  - name: "explicit null matches"
+    check: [ Read, Article, { status: null } ]
+    expected: true
+
+  - name: "a missing key does not match null - null is not a wildcard"
+    check: [ Read, Article ]
+    expected: false
+
+  - name: "a non-null value does not match"
+    check: [ Read, Article, { status: draft } ]
+    expected: false
+
+---
+version: "0.1"
+name: "field conditions are top-level only in v1 - nesting not yet supported (§7.4.10)"
+description: >
+  v1 restricts field conditions to a subject's own top-level fields;
+  { name: "Alice" } here would be a second level of field narrowing
+  (author -> name), which v1 doesn't support, so the whole condition always
+  evaluates to false - regardless of what subject.author actually contains.
+rules:
+  - [ allow, Read, Article, { author: { name: "Alice" } } ]
+
+tests:
+  - name: "denied even though the nested data would have matched"
+    check: [ Read, Article, { author: { name: "Alice" } } ]
+    expected: false
+
+  - name: "denied when the nested data would not have matched either"
+    check: [ Read, Article, { author: { name: "Bob" } } ]
+    expected: false
+
+  - name: "denied when the outer field is missing"
+    check: [ Read, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "logical and comparison operators still nest inside a top-level field condition (§7.4.10)"
+description: >
+  The top-level-only restriction is about further FIELD narrowing, not about
+  using $and/$or/$not/comparison operators against the field's own value -
+  { author: { $ne: null } } stays a valid, ordinary top-level field
+  condition.
+rules:
+  - [ allow, Read, Article, { author: { $ne: null } } ]
+
+tests:
+  - name: "field present and non-null: allowed"
+    check: [ Read, Article, { author: { name: "Alice" } } ]
+    expected: true
+
+  - name: "field missing: allowed ($ne's exact-negation-of-$eq exception applies here too, since $ne is the sole key)"
+    check: [ Read, Article, { } ]
+    expected: true
+
+---
+version: "0.1"
+name: "$field used to reach a second level of nesting not yet supported the same way (§7.4.11)"
+rules:
+  - [ allow, Read, Article, { author: { $field: [ "name", "Alice" ] } } ]
+
+tests:
+  - name: "denied even though the nested data would have matched"
+    check: [ Read, Article, { author: { name: "Alice" } } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$field: explicit field access for a $-prefixed field name (§7.4.11)"
+description: >
+  A subject field literally named "$type" can't be reached with the bare-key
+  form (`{ $type: ... }` would mean the $type operator), so this uses the
+  { $field: [name, Condition] } long form instead.
+rules:
+  - [ allow, Read, Article, { $field: [ "$type", { $eq: news } ] } ]
+
+tests:
+  - name: "matching value via $field"
+    check: [ Read, Article, { "$type": news } ]
+    expected: true
+
+  - name: "non-matching value via $field"
+    check: [ Read, Article, { "$type": blog } ]
+    expected: false
+
+  - name: "missing field via $field"
+    check: [ Read, Article ]
+    expected: false
+
+---
+version: "0.1"
+name: "$field with a malformed operand is a type issue, always false (§7.4.11)"
+rules:
+  - [ allow, Read, Article, { $field: "not-a-tuple" } ]
+
+tests:
+  - name: "malformed $field operand never matches"
+    check: [ Read, Article, { name: "x" } ]
+    expected: false
+
+---
+version: "0.1"
+name: "$field with the wrong tuple length is a type issue, always false (§7.4.11)"
+rules:
+  - [ allow, Read, Article, { $field: [ "name" ] } ]
+
+tests:
+  - name: "malformed $field operand (missing Condition element) never matches"
+    check: [ Read, Article, { name: "x" } ]
+    expected: false

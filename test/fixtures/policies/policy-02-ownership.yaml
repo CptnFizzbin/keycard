@@ -1,9 +1,0 @@
-version: "1.0.0"
-name: "Article Ownership Policy"
-description: "Users can only modify their own articles"
-
-rules:
-  - [allow, Read, Article]
-  - [allow, Create, Article]
-  - [allow, Update, Article, { owner_id: 1 }]
-  - [allow, Delete, Article, { owner_id: 1 }]

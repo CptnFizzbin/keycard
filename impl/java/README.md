@@ -52,9 +52,9 @@ class Article {
 public class Main {
     public static void main(String[] args) {
         // Define your actions
-        Action<String> create = ActionFactory.create("create");
-        Action<String> update = ActionFactory.create("update");
-        Action<String> delete = ActionFactory.create("delete");
+        Action create = ActionFactory.create("create");
+        Action update = ActionFactory.create("update");
+        Action delete = ActionFactory.create("delete");
 
         // Define your subjects
         Subject<Article> article = SubjectFactory.create("article");
@@ -102,11 +102,11 @@ public class Main {
 Java's generic type system ensures compile-time verification:
 
 ```java
-Action<String> create = ActionFactory.create("create");
+Action create = ActionFactory.create("create");
 Subject<Article> article = SubjectFactory.create("article");
 
 policy.can(create, article);        // ✓ OK
-policy.can("create", article);      // ✗ Compiler error - action must be an Action<?>
+policy.can("create", article);      // ✗ Compiler error - action must be an Action
 policy.can(create, "article");      // ✗ Compiler error - subject must be a Subject<?>
 ```
 
@@ -120,7 +120,7 @@ policy.can(create, "article");      // ✗ Compiler error - subject must be a Su
 - `$in` - Value in collection
 - `$has` - Collection contains value
 - `$substr` - Substring pattern match (a small, non-regex pattern language - see
-  SPEC_V1-0.md §7.4.6)
+  SPEC_V0.md §7.4.6)
 - `$or` - Logical OR
 - `$and` - Logical AND
 - `$not` - Logical NOT
@@ -135,7 +135,7 @@ policy.can(create, "article");      // ✗ Compiler error - subject must be a Su
 Create type-safe actions:
 
 ```java
-Action<String> create = ActionFactory.create("create");
+Action create = ActionFactory.create("create");
 ```
 
 ### SubjectFactory
@@ -184,7 +184,7 @@ Evaluates conditions:
 
 ### PolicyDefinition
 
-Serializable policy, per SPEC_V1-0.md §3:
+Serializable policy, per SPEC_V0.md §3:
 
 - `getVersion()` - Get the SemVer spec version, e.g. `"1.0"`
 - `getMeta()` - Get the optional `meta` object (wildcard tokens, catalogs,

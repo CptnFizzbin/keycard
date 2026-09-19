@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Implements SPEC_V1-0.md §7: the condition language and its evaluation
+ * Implements SPEC_V0.md §7: the condition language and its evaluation
  * semantics. Built-in and custom {@link Operator}s share one registry and
  * are dispatched identically (§7.4.12) - this class is just the dispatch
  * loop: it looks a `$`-prefixed key up in that registry and delegates, or
@@ -36,7 +36,7 @@ public final class ConditionResolver {
      *   entry point. Constructing this with a name collision (a custom
      *   operator sharing a `$name` with a built-in, or with another
      *   operator in `operators`) MUST throw a {@link PolicyLoadException}
-     *   immediately - never a silent overwrite (SPEC_V1-0.md §3.2.3, EC-16).
+     *   immediately - never a silent overwrite (SPEC_V0.md §3.2.3, EC-16).
      */
     public ConditionResolver(Collection<Operator> operators) {
         this.registry = buildRegistry(operators);
@@ -54,7 +54,7 @@ public final class ConditionResolver {
             if (!registry.containsKey(name)) {
                 throw new PolicyLoadException(
                     "meta.operators declares \"" + name + "\" but no operator with that name is registered"
-                        + " (built-in or custom) (SPEC_V1-0.md §3.2.3, EC-15)."
+                        + " (built-in or custom) (SPEC_V0.md §3.2.3, EC-15)."
                 );
             }
         }
@@ -227,7 +227,7 @@ public final class ConditionResolver {
                 if (map.containsKey(op.name())) {
                     throw new PolicyLoadException(
                         "Duplicate operator \"" + op.name() + "\": an operator with this name is already registered"
-                            + " (built-in or custom) - operator names MUST be unique (SPEC_V1-0.md §3.2.3, EC-16)."
+                            + " (built-in or custom) - operator names MUST be unique (SPEC_V0.md §3.2.3, EC-16)."
                     );
                 }
                 map.put(op.name(), op);
