@@ -7,6 +7,7 @@ import com.cptnfizzbin.keycard.policy.PolicyDefinition;
 import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
+import org.semver4j.Semver;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -150,35 +152,18 @@ final class FixtureUtils {
     }
 
     /**
-     * A parsed MAJOR.MINOR.PATCH SemVer string, per SPEC_V0.md §2.
-     */
-    record SemVer(int major, int minor, int patch) implements Comparable<SemVer> {
-        static SemVer parse(String raw) {
-            String[] parts = raw.split("\\.");
-            int major = Integer.parseInt(parts[0]);
-            int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
-            int patch = parts.length > 2 ? Integer.parseInt(parts[2]) : 0;
-            return new SemVer(major, minor, patch);
-        }
-
-        @Override
-        public int compareTo(SemVer other) {
-            if (major != other.major) return Integer.compare(major, other.major);
-            if (minor != other.minor) return Integer.compare(minor, other.minor);
-            return Integer.compare(patch, other.patch);
-        }
-    }
-
-    /**
      * True when a fixture declaring {@code fixtureVersion} is compatible
      * with an implementation targeting {@code maxSupportedVersion}, per
      * SPEC_V0.md §2: the same MAJOR, and a MINOR no higher than what's
-     * supported. PATCH never affects compatibility.
+     * supported. PATCH never affects compatibility. Parsing/comparison is
+     * delegated to semver4j - the same library {@link
+     * com.cptnfizzbin.keycard.version.KeyCardVersion} uses - rather than
+     * hand-rolled MAJOR.MINOR.PATCH parsing.
      */
     static boolean isCompatible(String fixtureVersion, String maxSupportedVersion) {
-        SemVer fixture = SemVer.parse(fixtureVersion);
-        SemVer max = SemVer.parse(maxSupportedVersion);
-        return fixture.major() == max.major() && fixture.minor() <= max.minor();
+        Semver fixture = Objects.requireNonNull(Semver.coerce(fixtureVersion));
+        Semver max = Objects.requireNonNull(Semver.coerce(maxSupportedVersion));
+        return fixture.getMajor() == max.getMajor() && fixture.getMinor() <= max.getMinor();
     }
 
     /**
