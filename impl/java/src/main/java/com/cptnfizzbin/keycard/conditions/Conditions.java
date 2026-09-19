@@ -3,36 +3,57 @@ package com.cptnfizzbin.keycard.conditions;
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
-public final class Conditions {
-    private Conditions() {}
+public class Conditions<S> {
+    private final Map<String, Object> condition;
+
+    private Conditions(String field, String operator, Object value) {
+        this.condition = Map.of(field, Map.of(operator, value));
+    }
+
+    private Conditions(String operator, Conditions<S> conditions) {
+        this.condition = Map.of(operator, conditions.toMap());
+    }
+
+    private Conditions(String operator, String value) {
+        this.condition = Map.of(operator, value);
+    }
+
+    private Conditions(String operator, Boolean value) {
+        this.condition = Map.of(operator, value);
+    }
+
+    private Conditions(String operator, Number value) {
+        this.condition = Map.of(operator, value);
+    }
+
+    private Conditions(String operator, List<Conditions<S>> conditions) {
+        this.condition = Map.of(
+            operator,
+            conditions.stream().map(Conditions::toMap).toList()
+        );
+    }
+
+    public Map<String, Object> toMap() {
+        return this.condition;
+    }
 
     @FunctionalInterface
     public interface FieldGetter<T, R> extends Serializable {
         R get(T obj);
     }
 
-    public static <T, R> Map<String, Object> field(FieldGetter<T, R> getter, R value) {
-        String fieldName = extractFieldName(getter);
-        Map<String, Object> condition = new HashMap<>();
-        condition.put(fieldName, value);
-        return condition;
+    public static <T, R> Conditions<T> eq(FieldGetter<T, R> getter, R value) {
+        return new Conditions<>(extractFieldName(getter), "$eq", value);
     }
 
-    public static <T, R> Map<String, Object> eq(FieldGetter<T, R> getter, R value) {
-        String fieldName = extractFieldName(getter);
-        Map<String, Object> condition = new HashMap<>();
-        condition.put(fieldName, Map.of("$eq", value));
-        return condition;
-    }
-
-    public static <T, R> Map<String, Object> ne(FieldGetter<T, R> getter, R value) {
-        String fieldName = extractFieldName(getter);
-        Map<String, Object> condition = new HashMap<>();
-        condition.put(fieldName, Map.of("$ne", value));
-        return condition;
+    public static <T, R> Conditions<T> ne(FieldGetter<T, R> getter, R value) {
+        return new Conditions<>(extractFieldName(getter), "$ne", value);
     }
 
     public static <T> Map<String, Object> gt(FieldGetter<T, ? extends Number> getter, Number value) {
@@ -70,7 +91,9 @@ public final class Conditions {
         return condition;
     }
 
-    /** §7.4.5: $has - the field itself is the array; matches when it contains value. */
+    /**
+     * §7.4.5: $has - the field itself is the array; matches when it contains value.
+     */
     public static <T, R> Map<String, Object> has(FieldGetter<T, R> getter, Object value) {
         String fieldName = extractFieldName(getter);
         Map<String, Object> condition = new HashMap<>();
@@ -78,7 +101,9 @@ public final class Conditions {
         return condition;
     }
 
-    /** §7.4.6: $substr - a small, non-regex substring pattern language. */
+    /**
+     * §7.4.6: $substr - a small, non-regex substring pattern language.
+     */
     public static <T, R> Map<String, Object> substr(FieldGetter<T, R> getter, String pattern) {
         String fieldName = extractFieldName(getter);
         Map<String, Object> condition = new HashMap<>();
@@ -92,39 +117,22 @@ public final class Conditions {
      * starting with "$" is always parsed as an operator (§7.5). Use this
      * instead of {@link #field} only for such dollar-prefixed field names.
      */
-    public static Map<String, Object> field(String fieldName, Object condition) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("$field", java.util.List.of(fieldName, condition));
-        return result;
+    public static <S> Conditions<S> field(String fieldName, Conditions<S> condition) {
+        return new Conditions<>(fieldName, condition);
     }
 
-    /**
-     * §7.4.12: a single-key condition for any registered operator, built-in
-     * or custom (e.g. {@code Conditions.op("$hasRole", "admin")}) - the
-     * escape hatch for operators with no dedicated helper above.
-     */
-    public static Map<String, Object> op(String operatorName, Object value) {
-        Map<String, Object> condition = new HashMap<>();
-        condition.put(operatorName, value);
-        return condition;
+    @SafeVarargs
+    public static <S> Conditions<S> and(Conditions<S>... conditions) {
+        return new Conditions<>("$and", Arrays.stream(conditions).toList());
     }
 
-    public static Map<String, Object> and(Map<String, Object>... conditions) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("$and", java.util.Arrays.asList(conditions));
-        return result;
+    @SafeVarargs
+    public static <S> Conditions<S> or(Conditions<S>... conditions) {
+        return new Conditions<>("$or", Arrays.stream(conditions).toList());
     }
 
-    public static Map<String, Object> or(Map<String, Object>... conditions) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("$or", java.util.Arrays.asList(conditions));
-        return result;
-    }
-
-    public static Map<String, Object> not(Map<String, Object> condition) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("$not", condition);
-        return result;
+    public static <S> Conditions<S> not(Conditions<S> condition) {
+        return new Conditions<>("$not", condition);
     }
 
     private static String extractFieldName(FieldGetter<?, ?> getter) {
@@ -133,7 +141,7 @@ public final class Conditions {
             writeReplaceMethod.setAccessible(true);
             SerializedLambda lambda = (SerializedLambda) writeReplaceMethod.invoke(getter);
             String methodName = lambda.getImplMethodName();
-            
+
             // Convert getter method name to field name
             // e.g., "getOwnerId" -> "ownerId"
             String fieldName;
@@ -146,7 +154,7 @@ public final class Conditions {
             } else {
                 fieldName = methodName;
             }
-            
+
             return fieldName;
         } catch (Exception e) {
             throw new RuntimeException("Could not extract field name from method reference", e);

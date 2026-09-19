@@ -36,7 +36,7 @@ public class DynamicCatalogTest {
         Action action = ActionFactory.create("Read");
 
         assertEquals("Read", action.getNameStr());
-        assertFalse(action.isDynamic());
+        assertFalse(action.dynamic());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class DynamicCatalogTest {
         Action action = ActionFactory.create();
 
         assertTrue(action.getNameStr().length() > 0);
-        assertTrue(action.isDynamic());
+        assertTrue(action.dynamic());
     }
 
     @Test
