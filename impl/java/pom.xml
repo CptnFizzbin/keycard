@@ -65,11 +65,14 @@
         </dependency>
 
         <!-- YAML is only ever parsed by tests (fixture loaders) - KeyCard
-             itself never reads or writes policy.yaml text. -->
+             itself never reads or writes policy.yaml text. jackson-dataformat-yaml
+             reads a fixture's YAML and binds it directly to typed Java
+             records, rather than a raw Map/List tree that then has to be
+             walked and cast by hand. -->
         <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>2.0</version>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.17.2</version>
             <scope>test</scope>
         </dependency>
 

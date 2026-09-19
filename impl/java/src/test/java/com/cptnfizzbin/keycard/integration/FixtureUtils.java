@@ -7,8 +7,10 @@ import com.cptnfizzbin.keycard.policy.PolicyDefinition;
 import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectFactory;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.semver4j.Semver;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,17 +39,36 @@ import java.util.stream.Collectors;
  * discovery/resolution/filtering mechanics around it.
  * <p>
  * KeyCard itself never reads or writes policy.yaml text; parsing it into a
- * plain PolicyDefinition (via SnakeYaml, a test-only dependency) is this
- * test suite's job, mirroring what an application would do.
+ * plain PolicyDefinition (via jackson-dataformat-yaml, a test-only
+ * dependency) is this test suite's job, mirroring what an application
+ * would do.
  */
 final class FixtureUtils {
     private FixtureUtils() {
     }
 
     /**
-     * Shared SnakeYaml instance for every fixture loader - construction isn't free, and it's stateless/reusable.
+     * Shared Jackson YAML mapper for every fixture loader - reads a
+     * fixture's YAML and binds it directly to the typed record shapes
+     * below (e.g. {@link RuleDoc}), rather than a raw Map/List tree that
+     * then has to be walked and cast by hand. Construction isn't free,
+     * and it's stateless/reusable. Unknown fields (e.g. an informational
+     * `description:`) are tolerated, since a fixture isn't required to
+     * stick to only the fields a loader happens to model.
      */
-    static final Yaml YAML = new Yaml();
+    static final YAMLMapper YAML = YAMLMapper.builder()
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .build();
+
+    /**
+     * `[effect, action, subject, conditions?]` - SPEC_V0.md §3.3 - as
+     * Jackson binds it straight from a YAML flow sequence: {@code
+     * @JsonFormat(shape = ARRAY)} maps each element to a field
+     * positionally, leaving a missing trailing `conditions` {@code null}.
+     */
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    record RuleDoc(String effect, String action, String subject, Map<String, Object> conditions) {
+    }
 
     /**
      * One `{ action, subject, subjectData?, expected }` case, common to
@@ -72,18 +93,21 @@ final class FixtureUtils {
     }
 
     /**
-     * Parses a raw `rules:` list of `[effect, action, subject, conditions?]` tuples into `Rule`s (SPEC_V0.md §3.3).
+     * Every `---`-separated YAML document in {@code yamlFile}, bound directly to {@code type}.
      */
-    @SuppressWarnings("unchecked")
-    static List<PolicyDefinition.Rule> toRules(List<?> rawRules) {
+    static <T> List<T> loadYamlDocuments(Path yamlFile, Class<T> type) throws IOException {
+        try (var parser = YAML.createParser(yamlFile.toFile())) {
+            return YAML.readValues(parser, type).readAll();
+        }
+    }
+
+    /**
+     * Converts a `rules:` list of parsed {@link RuleDoc} tuples into `Rule`s (SPEC_V0.md §3.3).
+     */
+    static List<PolicyDefinition.Rule> toRules(List<RuleDoc> rawRules) {
         List<PolicyDefinition.Rule> rules = new ArrayList<>();
-        for (Object o : rawRules) {
-            List<?> tuple = (List<?>) o;
-            String effect = String.valueOf(tuple.get(0));
-            String action = String.valueOf(tuple.get(1));
-            String subjectName = String.valueOf(tuple.get(2));
-            Map<String, Object> conditions = tuple.size() > 3 ? (Map<String, Object>) tuple.get(3) : null;
-            rules.add(new PolicyDefinition.Rule(effect, action, subjectName, conditions));
+        for (RuleDoc rule : rawRules) {
+            rules.add(new PolicyDefinition.Rule(rule.effect(), rule.action(), rule.subject(), rule.conditions()));
         }
         return rules;
     }
@@ -92,8 +116,8 @@ final class FixtureUtils {
      * Parses a raw `meta:` map into a {@link PolicyDefinition.Meta},
      * preserving the "not declared" vs. "explicitly declared" distinction
      * for anyAction/anySubject (SPEC_V0.md §3.2.1) via {@code
-     * containsKey}, since a SnakeYaml-parsed map can tell the two apart
-     * where a plain nullable field can't. Whatever raw value SnakeYaml
+     * containsKey}, since a Jackson-parsed map can tell the two apart
+     * where a plain nullable field can't. Whatever raw value Jackson
      * parsed for `anyAction`/`anySubject` (a string, {@code null}, {@code
      * false}, or anything else) is passed straight through to {@code
      * Meta.Builder}, which applies §3.2.1's four-way dispatch itself (see

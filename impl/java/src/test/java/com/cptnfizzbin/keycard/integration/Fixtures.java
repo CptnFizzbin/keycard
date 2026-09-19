@@ -2,9 +2,9 @@ package com.cptnfizzbin.keycard.integration;
 
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -18,8 +18,9 @@ import java.util.Map;
  * test class itself - see V1ConformanceFixtureTest.
  * <p>
  * KeyCard itself never reads or writes policy.yaml text; parsing it into a
- * plain PolicyDefinition (via SnakeYaml, a test-only dependency) is this
- * test suite's job, mirroring what an application would do.
+ * plain PolicyDefinition (via jackson-dataformat-yaml, a test-only
+ * dependency) is this test suite's job, mirroring what an application
+ * would do.
  * <p>
  * impl/java now natively implements the v1 rules/meta schema (see {@link
  * PolicyDefinition}), so each parsed suite's `rules`/`meta` are handed
@@ -77,46 +78,48 @@ final class Fixtures {
     record Suite(String version, String name, PolicyDefinition definition, List<FixtureUtils.TestCase> cases) {
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * `[action, subject, subjectData?]` - the `check:` tuple each `tests:`
+     * entry declares, bound positionally the same way {@link
+     * FixtureUtils.RuleDoc} binds a rule tuple.
+     */
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    record CheckDoc(String action, String subject, Map<String, Object> subjectData) {
+    }
+
+    record TestDoc(String name, CheckDoc check, Boolean expected) {
+    }
+
+    /**
+     * One `---`-separated `{ version, name, meta?, rules, tests }` document, as Jackson binds it directly.
+     */
+    record SuiteDoc(
+        String version, String name, Map<String, Object> meta, List<FixtureUtils.RuleDoc> rules, List<TestDoc> tests
+    ) {
+    }
+
     static List<Suite> loadSuites(Path yamlFile) throws IOException {
-        String content = Files.readString(yamlFile);
         List<Suite> suites = new ArrayList<>();
 
-        for (Object rawDoc : FixtureUtils.YAML.loadAll(content)) {
-            Map<String, Object> raw = (Map<String, Object>) rawDoc;
-            String version = String.valueOf(raw.get("version"));
-            String name = (String) raw.get("name");
-
-            PolicyDefinition.Meta meta = FixtureUtils.toMeta((Map<String, Object>) raw.get("meta"));
-            List<PolicyDefinition.Rule> rules = FixtureUtils.toRules((List<?>) raw.get("rules"));
+        for (SuiteDoc raw : FixtureUtils.loadYamlDocuments(yamlFile, SuiteDoc.class)) {
             PolicyDefinition definition = new PolicyDefinition()
-                .version(version)
-                .name(name)
-                .meta(meta)
-                .rules(rules);
+                .version(raw.version())
+                .name(raw.name())
+                .meta(FixtureUtils.toMeta(raw.meta()))
+                .rules(FixtureUtils.toRules(raw.rules()));
 
             List<FixtureUtils.TestCase> cases = new ArrayList<>();
-            for (Map<String, Object> rc : (List<Map<String, Object>>) raw.get("tests")) {
-                List<?> check = (List<?>) rc.get("check");
-                String action = String.valueOf(check.get(0));
-                String subject = String.valueOf(check.get(1));
-                Map<String, Object> subjectData = check.size() == 3
-                    ? (Map<String, Object>) check.get(2)
-                    : null;
-
-                boolean expected = (Boolean) rc.get("expected");
-                String caseName = String.valueOf(rc.get("name"));
-
+            for (TestDoc test : raw.tests()) {
                 cases.add(new FixtureUtils.TestCase(
-                    caseName,
-                    action,
-                    subject,
-                    subjectData,
-                    expected
+                    test.name(),
+                    test.check().action(),
+                    test.check().subject(),
+                    test.check().subjectData(),
+                    test.expected()
                 ));
             }
 
-            suites.add(new Suite(version, name, definition, cases));
+            suites.add(new Suite(raw.version(), raw.name(), definition, cases));
         }
 
         return suites;
