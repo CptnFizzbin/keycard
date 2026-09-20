@@ -23,8 +23,9 @@ import static org.junit.Assert.*;
  * Covers the API additions made to align the Java implementation with
  * website/docs-java/vision-quickstart.md and vision-real-backend.md:
  * {@code ActionCatalog}/{@code SubjectCatalog#set}, the self-bounded
- * {@code Subject<T, TSelf>} subclassing hook, {@code Condition.field}/
- * {@code where}, {@link ConditionOperator}, and {@code KeycardConfig#emitMeta}.
+ * {@code Subject<T, TSelf>} subclassing hook, {@code Condition.where}/the
+ * getter-scoped {@code Condition.op}, {@link ConditionOperator}, and
+ * {@code KeycardConfig#emitMeta}.
  */
 public class VisionApiTest {
     // --- ActionCatalog.set / SubjectCatalog.set ---
@@ -108,7 +109,7 @@ public class VisionApiTest {
         assertEquals("owner-1", wrapped.claims().orElseThrow());
     }
 
-    // --- Condition.field/where ---
+    // --- Condition.where / the getter-scoped Condition.op ---
 
     @Getter
     @AllArgsConstructor
@@ -119,35 +120,22 @@ public class VisionApiTest {
     }
 
     @Test
-    public void conditionFieldIsEquivalentToTheStaticHelperItWraps() {
-        Subject<Article, ?> subject = new Subject<>("Article");
-        Action update = new Action("Update");
-
-        Policy policy = new PolicyBuilder()
-            .allow(update, subject, Condition.<Article, Integer>field(Article::getOwnerId).eq(1))
-            .build();
-
-        assertTrue(policy.can(update, subject.wrap(new Article(1, List.of(), "draft"))));
-        assertFalse(policy.can(update, subject.wrap(new Article(2, List.of(), "draft"))));
-    }
-
-    @Test
     public void conditionWhereIsAnIdentityPassthrough() {
         Condition<Article> condition = Condition.eq(Article::getOwnerId, 1);
         assertSame(condition, Condition.where(condition));
     }
 
     @Test
-    public void conditionFieldHasSupportsCollectionFields() {
+    public void conditionOpScopesACustomOperatorToAField() {
         Subject<Article, ?> subject = new Subject<>("Article");
-        Action update = new Action("Update");
+        Action read = new Action("Read");
 
         Policy policy = new PolicyBuilder()
-            .allow(update, subject, Condition.<Article, List<String>>field(Article::getTags).has("featured"))
+            .allow(read, subject, Condition.op(Article::getStatus, "$eq", "draft"))
             .build();
 
-        assertTrue(policy.can(update, subject.wrap(new Article(1, List.of("featured"), "draft"))));
-        assertFalse(policy.can(update, subject.wrap(new Article(1, List.of("news"), "draft"))));
+        assertTrue(policy.can(read, subject.wrap(new Article(1, List.of(), "draft"))));
+        assertFalse(policy.can(read, subject.wrap(new Article(1, List.of(), "published"))));
     }
 
     // --- OperatorCatalog.set / ConditionOperator ---
@@ -166,7 +154,7 @@ public class VisionApiTest {
 
         KeycardConfig config = new KeycardConfig().operators(catalog);
         Policy policy = new PolicyBuilder(config)
-            .allow(read, subject, Condition.<Article, String>field(Article::getStatus).op("$startsWith", "dra"))
+            .allow(read, subject, Condition.op(Article::getStatus, "$startsWith", "dra"))
             .build();
 
         assertTrue(policy.can(read, subject.wrap(new Article(1, List.of(), "draft"))));

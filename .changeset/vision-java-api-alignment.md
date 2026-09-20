@@ -17,11 +17,15 @@ docs:
   dynamic Action/Subject can be declared and registered in one line (e.g.
   `static ProjectSubject Project = catalog.set("project", new ProjectSubject());`).
   `#add` is unchanged.
-- `Condition.field(getter)`: a fluent, field-scoped condition builder
-  (`Condition.field(Claims::ownerId).eq(value)`) equivalent to the existing
-  `Condition.eq(getter, value)` static helpers, just read field-first.
-  `Condition.where(condition)` is an identity passthrough for readability at
-  the top of an `allow`/`deny` call.
+- `Condition.where(condition)`: an identity passthrough for readability at the
+  top of an `allow`/`deny` call. `Condition.op(getter, operator, value)`: a
+  getter-scoped counterpart to the existing top-level `Condition.op(operator, value)`,
+  for a custom operator with no dedicated helper (e.g. `Condition.op(Claims::createdAt, "$withinDays", 30)`).
+  (A fluent `Condition.field(getter).eq(value)` builder was tried and dropped -
+  splitting a getter's type inference across two chained generic calls fails
+  in javac when the getter is a Lombok-generated method compiled in the same
+  round; the existing single-call `Condition.eq(getter, value)`-style statics
+  don't have this problem.)
 - `ConditionOperator`: a flat `(subjectValue, value) -> boolean` custom
   operator shape, registered via the new `OperatorCatalog#set(name, operator)`
   - a convenience adapter to `Operator` for a custom operator that doesn't

@@ -33,16 +33,12 @@ public class AppPolicyBuilder {
 
     public static Policy buildFor(PolicyClaims claims) {
         PolicyBuilder builder = new PolicyBuilder(CONFIG)
-            .allow(AppActions.Read, AppSubjects.Project,
-                Condition.<ProjectSubject.Claims, String>field(ProjectSubject.Claims::orgId).eq(claims.orgId()))
-            .allow(AppActions.Read, AppSubjects.Task,
-                Condition.<TaskSubject.Claims, String>field(TaskSubject.Claims::orgId).eq(claims.orgId()));
+            .allow(AppActions.Read, AppSubjects.Project, Condition.eq(ProjectSubject.Claims::orgId, claims.orgId()))
+            .allow(AppActions.Read, AppSubjects.Task, Condition.eq(TaskSubject.Claims::orgId, claims.orgId()));
 
         if (claims.role() == Role.OWNER || claims.role() == Role.ADMIN) {
-            Condition<ProjectSubject.Claims> inOrg =
-                Condition.<ProjectSubject.Claims, String>field(ProjectSubject.Claims::orgId).eq(claims.orgId());
-            Condition<ProjectSubject.Claims> isArchived =
-                Condition.<ProjectSubject.Claims, Boolean>field(ProjectSubject.Claims::archived).eq(true);
+            Condition<ProjectSubject.Claims> inOrg = Condition.eq(ProjectSubject.Claims::orgId, claims.orgId());
+            Condition<ProjectSubject.Claims> isArchived = Condition.eq(ProjectSubject.Claims::archived, true);
 
             builder
                 .allow(AppActions.Create, AppSubjects.Project, inOrg)
@@ -53,12 +49,9 @@ public class AppPolicyBuilder {
                 ));
         } else {
             // members can only touch tasks assigned to them, and only recent ones
-            Condition<TaskSubject.Claims> inOrg =
-                Condition.<TaskSubject.Claims, String>field(TaskSubject.Claims::orgId).eq(claims.orgId());
-            Condition<TaskSubject.Claims> isAssignee =
-                Condition.<TaskSubject.Claims, String>field(TaskSubject.Claims::assigneeId).eq(claims.userId());
-            Condition<TaskSubject.Claims> isRecent =
-                Condition.<TaskSubject.Claims, java.time.Instant>field(TaskSubject.Claims::createdAt).op("$withinDays", 30);
+            Condition<TaskSubject.Claims> inOrg = Condition.eq(TaskSubject.Claims::orgId, claims.orgId());
+            Condition<TaskSubject.Claims> isAssignee = Condition.eq(TaskSubject.Claims::assigneeId, claims.userId());
+            Condition<TaskSubject.Claims> isRecent = Condition.op(TaskSubject.Claims::createdAt, "$withinDays", 30);
 
             builder.allow(AppActions.Update, AppSubjects.Task, Condition.where(
                 Condition.and(inOrg, isAssignee, isRecent)

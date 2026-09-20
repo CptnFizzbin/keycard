@@ -103,69 +103,20 @@ public class Condition<S> {
     }
 
     /**
+     * A custom (or built-in) operator scoped to a field, for an operator
+     * with no dedicated helper above - e.g. {@code Condition.op(Claims::createdAt, "$withinDays", 30)}.
+     */
+    public static <T, R> Condition<T> op(FieldGetter<T, R> getter, String operator, Object value) {
+        return new Condition<>(extractFieldName(getter), operator, value);
+    }
+
+    /**
      * Identity - returns {@code condition} unchanged. Purely for
      * readability at the top of an {@code allow}/{@code deny} call, so a
      * composite condition tree reads as "allow ... where &lt;condition&gt;".
      */
     public static <S> Condition<S> where(Condition<S> condition) {
         return condition;
-    }
-
-    /**
-     * Starts a fluent, field-scoped condition: {@code Condition.field(getter).eq(value)}
-     * is exactly {@link #eq(FieldGetter, Object)}, just read left-to-right
-     * as "this field, this check" instead of "this check, on this field".
-     */
-    public static <T, R> FieldCondition<T, R> field(FieldGetter<T, R> getter) {
-        return new FieldCondition<>(getter);
-    }
-
-    public static final class FieldCondition<T, R> {
-        private final FieldGetter<T, R> getter;
-
-        private FieldCondition(FieldGetter<T, R> getter) {
-            this.getter = getter;
-        }
-
-        public Condition<T> eq(R value) {
-            return Condition.eq(getter, value);
-        }
-
-        public Condition<T> ne(R value) {
-            return Condition.ne(getter, value);
-        }
-
-        public Condition<T> gt(Number value) {
-            return new Condition<>(extractFieldName(getter), "$gt", value);
-        }
-
-        public Condition<T> gte(Number value) {
-            return new Condition<>(extractFieldName(getter), "$gte", value);
-        }
-
-        public Condition<T> lt(Number value) {
-            return new Condition<>(extractFieldName(getter), "$lt", value);
-        }
-
-        public Condition<T> lte(Number value) {
-            return new Condition<>(extractFieldName(getter), "$lte", value);
-        }
-
-        public Condition<T> in(Object collection) {
-            return Condition.in(getter, collection);
-        }
-
-        public Condition<T> has(Object value) {
-            return new Condition<>(extractFieldName(getter), "$has", value);
-        }
-
-        public Condition<T> substr(String pattern) {
-            return new Condition<>(extractFieldName(getter), "$substr", pattern);
-        }
-
-        public Condition<T> op(String operator, Object value) {
-            return new Condition<>(extractFieldName(getter), operator, value);
-        }
     }
 
     private static String extractFieldName(FieldGetter<?, ?> getter) {
