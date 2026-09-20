@@ -159,7 +159,7 @@ public class DynamicCatalogTest {
 
         KeycardConfig config = new KeycardConfig();
         config.actions().add("submit", create);
-        config.subjects().add("submit", article);
+        config.subjects().add("post", article);
 
         PolicyDefinition def = new PolicyBuilder(config).allow(create, article).buildDef();
 
@@ -175,8 +175,8 @@ public class DynamicCatalogTest {
         Subject<?> article = new Subject<>();
 
         KeycardConfig config = new KeycardConfig();
-        config.actions().add("submit", create);
-        config.subjects().add("submit", article);
+        config.actions().add("create", create);
+        config.subjects().add("article", article);
 
         Policy policy = new Policy(
             new PolicyDefinition()

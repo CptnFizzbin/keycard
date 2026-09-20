@@ -1,5 +1,7 @@
 package com.cptnfizzbin.keycard.integration;
 
+import com.cptnfizzbin.keycard.KeycardConfig;
+import com.cptnfizzbin.keycard.conditions.OperatorCatalog;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
 import org.junit.Test;
@@ -15,7 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import static com.cptnfizzbin.keycard.examples.production.AppPolicyBuilder.config;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -36,12 +37,14 @@ public class ConformanceFixtureTest {
         return params;
     }
 
+    private final String fixtureName;
     private final Fixtures.Suite suite;
     private final FixtureUtils.TestCase testCase;
 
     public ConformanceFixtureTest(
         String fixtureName, String suiteName, String caseName, Fixtures.Suite suite, FixtureUtils.TestCase testCase
     ) {
+        this.fixtureName = fixtureName;
         this.suite = suite;
         this.testCase = testCase;
     }
@@ -52,6 +55,9 @@ public class ConformanceFixtureTest {
             "suite version " + suite.definition().version() + " exceeds this suite's compliant version " + KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS,
             Objects.requireNonNull(Semver.coerce(suite.definition().version())).satisfies(KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS)
         );
+
+        KeycardConfig config = new KeycardConfig()
+            .operators(new OperatorCatalog().addAll(Fixtures.operatorsFor(fixtureName)));
 
         Policy policy = new Policy(suite.definition(), config);
 

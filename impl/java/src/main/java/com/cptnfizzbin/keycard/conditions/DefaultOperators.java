@@ -1,7 +1,9 @@
 package com.cptnfizzbin.keycard.conditions;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 
 /**
  * Every operator {@link ConditionResolver} understands natively
@@ -28,6 +30,9 @@ final class DefaultOperators {
         Operator.of("$not", (s, v, ctx) -> !ctx.resolveSubcondition(s, v)),
         Operator.of("$field", (s, v, ctx) -> fieldOpCheck(ctx, s, v))
     );
+
+    /** Every built-in operator name - the single source of truth for "is this name built-in". */
+    static final Set<String> NAMES = ALL.stream().map(Operator::name).collect(Collectors.toUnmodifiableSet());
 
     /** $gt/$gte/$lt/$lte - numeric-only, IEEE-754 double semantics. */
     private static boolean numericCompare(String op, Object subject, Object operand, BiPredicate<Double, Double> cmp) {

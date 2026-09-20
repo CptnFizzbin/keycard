@@ -2,12 +2,17 @@ package com.cptnfizzbin.keycard.action;
 
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.LinkedHashMap;
 
-public final class ActionCatalog extends HashMap<String, Action> {
-    private final HashMap<String, String> namesById = new HashMap<>();
-
+/**
+ * A plain {@code name -> Action} catalog - both a self-keyed vocabulary
+ * declaration ({@link #add(Action)}, keyed by the Action's own name) and an
+ * explicitly-keyed catalog ({@link #add(String, Action)}, required for a
+ * dynamic Action) share this one map. {@code PolicyBuilder}/{@code Policy}
+ * resolve it into the actual {@code id -> catalog key} reverse lookup once,
+ * at construction, via {@code lib.Catalog}.
+ */
+public final class ActionCatalog extends LinkedHashMap<String, Action> {
     public ActionCatalog add(Action action) {
         if (action.dynamic())
             throw new PolicyArgumentException("Dynamic actions must added to the catalog with a name");
@@ -16,11 +21,6 @@ public final class ActionCatalog extends HashMap<String, Action> {
 
     public ActionCatalog add(String name, Action action) {
         this.put(name, action);
-        this.namesById.put(action.name(), name);
         return this;
-    }
-
-    public Optional<String> resolveName(Action action) {
-        return Optional.ofNullable(this.namesById.get(action.id()));
     }
 }

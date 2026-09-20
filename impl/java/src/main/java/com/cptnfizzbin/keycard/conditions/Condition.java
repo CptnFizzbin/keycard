@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -14,18 +15,18 @@ public class Condition<S> {
 
     private Condition(String field, String operator, Object value) {
         if (field.startsWith("$")) {
-            this.condition = Map.of("$field", List.of(field, Map.of(operator, value)));
+            this.condition = Map.of("$field", List.of(field, Collections.singletonMap(operator, value)));
         } else {
-            this.condition = Map.of(field, Map.of(operator, value));
+            this.condition = Collections.singletonMap(field, Collections.singletonMap(operator, value));
         }
     }
 
     private Condition(String operator, Condition<S> condition) {
-        this.condition = Map.of(operator, condition.toMap());
+        this.condition = Collections.singletonMap(operator, condition.toMap());
     }
 
     private Condition(String operator, Object value) {
-        this.condition = Map.of(operator, value);
+        this.condition = Collections.singletonMap(operator, value);
     }
 
     private Condition(String operator, List<Condition<S>> conditions) {

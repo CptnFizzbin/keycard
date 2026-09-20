@@ -3,9 +3,12 @@ package com.cptnfizzbin.keycard.builder;
 import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.conditions.Condition;
-import com.cptnfizzbin.keycard.errors.PolicyException;
+import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
+import com.cptnfizzbin.keycard.lib.Catalog;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
+import com.cptnfizzbin.keycard.policy.Wildcards;
+import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
 import lombok.NonNull;
 import lombok.val;
@@ -14,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -31,9 +35,14 @@ import java.util.Set;
  */
 public class PolicyBuilder {
     private final List<PolicyDefinition.Rule> rules = new ArrayList<>();
+    private final Set<String> actionsUsed = new LinkedHashSet<>();
+    private final Set<String> subjectsUsed = new LinkedHashSet<>();
 
     @NotNull
     private final KeycardConfig config;
+
+    private final Catalog.Resolution actionResolution;
+    private final Catalog.Resolution subjectResolution;
 
     public PolicyBuilder() {
         this(new KeycardConfig());
@@ -41,6 +50,8 @@ public class PolicyBuilder {
 
     public PolicyBuilder(@NonNull KeycardConfig config) {
         this.config = config;
+        this.actionResolution = Catalog.build(null, config.actions(), Action::name, "action");
+        this.subjectResolution = Catalog.build(null, config.subjects(), Subject::name, "subject");
     }
 
     public PolicyBuilder allow(Action action, Subject<?> subject) {
@@ -86,18 +97,20 @@ public class PolicyBuilder {
     }
 
     /**
-     * derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config`'s catalogs (list and/or keyed) additionally declare - see the class doc.
+     * derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config`'s catalogs additionally declare - see the class doc.
      */
     private PolicyDefinition.Meta buildMeta() {
-        Set<String> actions = config.actions().keySet();
-        Set<String> subjects = config.actions().keySet();
-        Set<String> operators = config.operators().keySet();
+        Set<String> actions = new LinkedHashSet<>(actionsUsed);
+        actions.addAll(actionResolution.names());
+
+        Set<String> subjects = new LinkedHashSet<>(subjectsUsed);
+        subjects.addAll(subjectResolution.names());
 
         PolicyDefinition.Meta meta = new PolicyDefinition.Meta();
 
         meta.actions(List.copyOf(actions));
         meta.subjects(List.copyOf(subjects));
-        meta.operators(List.copyOf(operators));
+        meta.operators(List.copyOf(config.operators().customNames()));
 
         meta.anyAction(config.anyAction());
         meta.anySubject(config.anySubject());
@@ -106,22 +119,46 @@ public class PolicyBuilder {
     }
 
     private <S> PolicyBuilder addRule(String effect, Action action, Subject<S> subject, @Nullable Condition<S> condition) {
-        val actionName = this.config.actions().resolveName(action).orElseGet(() -> {
-            if (action.dynamic()) throw new PolicyException("Dynamic action not registered in catalog");
-            this.config.actions().add(action);
-            return action.id();
-        });
+        if (action.dynamic() && !actionResolution.reverseMap().containsKey(action.name())) {
+            throw new PolicyArgumentException(
+                "This Action was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+            );
+        }
+        if (subject.dynamic() && !subjectResolution.reverseMap().containsKey(subject.name())) {
+            throw new PolicyArgumentException(
+                "This Subject was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+            );
+        }
 
-        val subjectName = this.config.subjects().resolveName(subject).orElseGet(() -> {
-            if (subject.dynamic()) throw new PolicyException("Dynamic subject not registered in catalog");
-            this.config.subjects().add(subject);
-            return subject.name();
-        });
+        String actionName = Catalog.resolveName(actionResolution.reverseMap(), action.name());
+        String subjectName = Catalog.resolveName(subjectResolution.reverseMap(), subject.name());
+
+        if (condition != null) {
+            // SPEC_V0.md property 5, EC-6: a rule wildcarded on both the
+            // action and the subject MUST NOT carry a Conditions element -
+            // caught here immediately, rather than waiting for eventual
+            // construction (new Policy(...)) to catch it.
+            WildcardToken anyAction = Wildcards.orDefault(config.anyAction());
+            WildcardToken anySubject = Wildcards.orDefault(config.anySubject());
+
+            boolean isWildcardAction = anyAction instanceof WildcardToken.Named named && actionName.equals(named.token());
+            boolean isWildcardSubject = anySubject instanceof WildcardToken.Named named && subjectName.equals(named.token());
+
+            if (isWildcardAction && isWildcardSubject) {
+                throw new PolicyArgumentException(
+                    "A rule wildcarded on both the action (\"" + actionName + "\") and the subject (\"" + subjectName
+                        + "\") MUST NOT carry a Conditions element (SPEC_V0.md property 5, EC-6)."
+                );
+            }
+        }
+
+        actionsUsed.add(actionName);
+        subjectsUsed.add(subjectName);
 
         val conditionMap = condition != null ? condition.toMap() : null;
 
         this.rules.add(new PolicyDefinition.Rule(effect, actionName, subjectName, conditionMap));
-        
+
         return this;
     }
 }

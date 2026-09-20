@@ -276,9 +276,9 @@ public class PolicyValidationTest {
         // action matches any incoming action.
         assertTrue(policy.can(new Action("AnythingGoes"), new Subject<>("Article")));
 
-        // The subject wildcard is disabled (false): a rule's literal "*"
-        // subject only matches an incoming subject also literally named "*".
-        assertFalse(policy.can(new Action("Read"), new Subject<>("AnySubjectName")));
+        // "*" is also now the subject wildcard token: a rule naming it as
+        // its subject matches any incoming subject.
+        assertTrue(policy.can(new Action("Read"), new Subject<>("AnySubjectName")));
         assertTrue(policy.can(new Action("Read"), new Subject<>("*")));
     }
 }

@@ -15,18 +15,33 @@ public final class ConditionResolver {
     private final OperatorContext nestedContext = new Ctx(false);
 
     public ConditionResolver() {
-        this(null);
+        this(new OperatorCatalog());
     }
 
     public ConditionResolver(OperatorCatalog operators) {
-        this.registry = operators;
+        this.registry = operators != null ? operators : new OperatorCatalog();
     }
 
     public boolean evaluate(Object subject, Object condition) {
         return evaluate(subject, condition, true);
     }
 
+    /** Enforces that {@code names} are all registered - built-in or custom - used to check {@code meta.operators} coverage in full at Policy construction time. */
+    public void assertAllRegistered(Iterable<String> names) {
+        for (String name : names) {
+            if (!registry.containsKey(name)) {
+                throw new com.cptnfizzbin.keycard.errors.PolicyLoadException(
+                    "meta.operators declares \"" + name + "\" but no operator with that name is registered."
+                );
+            }
+        }
+    }
+
     private boolean evaluate(Object subject, Object condition, boolean canNarrowField) {
+        if (condition instanceof Condition<?> wrapped) {
+            condition = wrapped.toMap();
+        }
+
         if (condition == null || condition instanceof String || condition instanceof Number || condition instanceof Boolean) {
             // bare-value shorthand for $eq (including explicit null - not a wildcard).
             return StringConditions.eq(subject, condition);

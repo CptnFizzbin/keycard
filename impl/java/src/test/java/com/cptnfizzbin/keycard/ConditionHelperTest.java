@@ -165,7 +165,7 @@ public class ConditionHelperTest {
         KeycardConfig config = new KeycardConfig();
         config.operators().add(hasRole);
 
-        Policy policy = new PolicyBuilder()
+        Policy policy = new PolicyBuilder(config)
             .allow(delete, article, Condition.op("$hasRole", "admin"))
             .build();
 
