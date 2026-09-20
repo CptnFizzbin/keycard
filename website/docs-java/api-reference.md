@@ -11,7 +11,7 @@ slug: /api-reference
 Create type-safe actions:
 
 ```java
-Action create = ActionFactory.create("Create");
+Action create = new Action("Create");
 ```
 
 ## `SubjectFactory`
@@ -19,10 +19,10 @@ Action create = ActionFactory.create("Create");
 Create type-safe subjects:
 
 ```java
-Subject<Article> article = SubjectFactory.create("Article");
+Subject<Article> article = new Subject<>("Article");
 
 // With a field mapper (see SubjectFieldMapper below)
-Subject<Article> mapped = SubjectFactory.create("Article", articleFieldMapper);
+Subject<Article> mapped = new Subject<>("Article", articleFieldMapper);
 ```
 
 ## `Subject<T>`
@@ -108,10 +108,16 @@ getter for every field referenced this way — e.g. via Lombok's
 
 ```java
 Conditions.eq(Article::getOwnerId, 1);                    // { ownerId: { $eq: 1 } }
-Conditions.ne(Article::getStatus, "archived");             // { status: { $ne: "archived" } }
-Conditions.and(
+Conditions.
+
+ne(Article::getStatus, "archived");             // { status: { $ne: "archived" } }
+Conditions.
+
+and(
     Conditions.eq(Article::getOwnerId, 1),
-    Conditions.ne(Article::getStatus, "archived")
+    Conditions.
+
+ne(Article::getStatus, "archived")
 );
 ```
 
@@ -137,8 +143,8 @@ Lombok's generated builder; every field is independently optional.
 KeycardConfig config = KeycardConfig.builder()
     .anyAction("*")                       // like the (Object, Object) constructors' anyAction
     .anySubject(false)                    // Boolean.FALSE disables the subject wildcard
-    .action(ActionFactory.create("Read")) // .action(...)/.actions(List.of(...)) — additive
-    .subject(SubjectFactory.create("Article"))
+    .action(new Action("Read")) // .action(...)/.actions(List.of(...)) — additive
+    .subject(new Subject<>("Article"))
     .operator(hasRoleOperator)
     .mapper(fieldMapperCatalog)
     .build();
@@ -178,12 +184,12 @@ SubjectFieldMapper<Post> mapper = SubjectFieldMapper.<Post>builder()
     .field("authorName", (post) -> post.getAuthor().getName())
     .build();
 
-Subject<Post> post = SubjectFactory.create("Post", mapper);
+Subject<Post> post = new Subject<>("Post", mapper);
 ```
 
-Attach a mapper directly (`SubjectFactory.create(name, mapper)`, carried through
-every `.wrap()` unchanged), or register several centrally via a catalog and hand
-it to `Policy`/`PolicyBuilder` through `KeycardConfig.mapper` — a subject's own
+Attach a mapper directly (`new Subject<>(name, mapper)`, carried through every
+`.wrap()` unchanged), or register several centrally via a catalog and hand it to
+`Policy`/`PolicyBuilder` through `KeycardConfig.mapper` — a subject's own
 mapper, if it has one, always takes precedence over the catalog:
 
 ```java
@@ -192,7 +198,7 @@ SubjectFieldMapperCatalog catalog = SubjectFieldMapperCatalog.builder()
     .build();
 
 KeycardConfig config = KeycardConfig.builder().mapper(catalog).build();
-Policy policy = Policy.from(policyDef, config);
+Policy policy = new Policy(policyDef, config);
 ```
 
 - `SubjectFieldMapper.<T>builder().field(name, getter).build()` — build a

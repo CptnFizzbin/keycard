@@ -1,10 +1,8 @@
 package com.cptnfizzbin.keycard.integration;
 
 import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.semver4j.Semver;
@@ -63,7 +61,8 @@ final class FixtureUtils {
      * every compliance fixture format regardless of how its surrounding
      * document is shaped.
      */
-    record TestCase(String name, String action, String subject, Map<String, Object> subjectData, boolean expected) {
+    public record TestCase(String name, String action, String subject, Map<String, Object> subjectData,
+                           boolean expected) {
     }
 
     /**
@@ -96,8 +95,8 @@ final class FixtureUtils {
      * {@code subjectData} as its instance when there is.
      */
     static boolean resolve(Policy policy, TestCase testCase) {
-        Action action = ActionFactory.create(testCase.action());
-        Subject<Map<String, Object>> subject = SubjectFactory.<Map<String, Object>>create(testCase.subject());
+        Action action = new Action(testCase.action());
+        Subject<Map<String, Object>> subject = new Subject<>(testCase.subject());
         if (testCase.subjectData() != null) {
             subject = subject.wrap(testCase.subjectData());
         }

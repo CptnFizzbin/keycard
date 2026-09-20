@@ -1,19 +1,15 @@
 package com.cptnfizzbin.keycard;
 
 import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
 import com.cptnfizzbin.keycard.conditions.Condition;
 import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.errors.PolicyException;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,8 +25,8 @@ public class PolicyTest {
 
     @Test
     public void testCanCheckByDefinition() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action create = ActionFactory.create("Create");
+        Subject<Article> article = new Subject<>("Article");
+        Action create = new Action("Create");
 
         Policy policy = new PolicyBuilder()
             .allow(create, article)
@@ -41,8 +37,8 @@ public class PolicyTest {
 
     @Test
     public void testCanCheckByReference() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action update = ActionFactory.create("Update");
+        Subject<Article> article = new Subject<>("Article");
+        Action update = new Action("Update");
 
         Article data = new Article(1, 42, "published");
         Policy policy = new PolicyBuilder()
@@ -54,8 +50,8 @@ public class PolicyTest {
 
     @Test
     public void testCannotCheck() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action delete = ActionFactory.create("Delete");
+        Subject<Article> article = new Subject<>("Article");
+        Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
             .deny(delete, article)
@@ -66,8 +62,8 @@ public class PolicyTest {
 
     @Test
     public void testRequireAllowed() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action create = ActionFactory.create("Create");
+        Subject<Article> article = new Subject<>("Article");
+        Action create = new Action("Create");
 
         Policy policy = new PolicyBuilder()
             .allow(create, article)
@@ -79,8 +75,8 @@ public class PolicyTest {
 
     @Test(expected = PolicyException.class)
     public void testRequireDenied() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action delete = ActionFactory.create("Delete");
+        Subject<Article> article = new Subject<>("Article");
+        Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
             .deny(delete, article)
@@ -91,8 +87,8 @@ public class PolicyTest {
 
     @Test
     public void testDenyOverridesAllow() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action delete = ActionFactory.create("Delete");
+        Subject<Article> article = new Subject<>("Article");
+        Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
             .allow(delete, article)
@@ -105,12 +101,12 @@ public class PolicyTest {
 
     @Test
     public void testDenyWithConditionOnlyOverridesWhenItMatches() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action delete = ActionFactory.create("Delete");
+        Subject<Article> article = new Subject<>("Article");
+        Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
             .allow(delete, article)
-            .deny(delete, article, Condition.field(Article::getStatus, "archived"))
+            .deny(delete, article, Condition.eq(Article::getStatus, "archived"))
             .build();
 
         assertFalse(policy.can(delete, article.wrap(new Article(1, 1, "archived"))));
@@ -119,8 +115,8 @@ public class PolicyTest {
 
     @Test
     public void testLastRuleWinsReopensWhatAnEarlierDenyClosed() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action delete = ActionFactory.create("Delete");
+        Subject<Article> article = new Subject<>("Article");
+        Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
             .deny(delete, article)
@@ -138,9 +134,9 @@ public class PolicyTest {
      */
     @Test
     public void alwaysRequiresActionAndSubject() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action read = ActionFactory.create("Read");
-        Action update = ActionFactory.create("Update");
+        Subject<Article> article = new Subject<>("Article");
+        Action read = new Action("Read");
+        Action update = new Action("Update");
 
         Policy policy = new PolicyBuilder()
             .allow(read, article)
@@ -162,16 +158,17 @@ public class PolicyTest {
      * Issue 1: a custom operator supplied to {@code PolicyBuilder} carries
      * through {@code build()} into the constructed {@code Policy} - a
      * builder-produced definition doesn't need its operators re-supplied
-     * separately at {@code Policy.from(...)}.
+     * separately at {@code new Policy(...)}.
      */
     @Test
     public void builderSuppliedOperatorsCarryThroughToTheBuiltPolicy() {
-        Subject<Article> article = SubjectFactory.create("Article");
-        Action delete = ActionFactory.create("Delete");
+        Subject<Article> article = new Subject<>("Article");
+        Action delete = new Action("Delete");
 
-        Policy policy = new PolicyBuilder(List.of(
-            Operator.of("$hasRole", (subject, value, ctx) -> "admin".equals(value))
-        ))
+        KeycardConfig config = new KeycardConfig();
+        config.operators().add(Operator.of("$hasRole", (subject, value, ctx) -> "admin".equals(value)));
+
+        Policy policy = new PolicyBuilder(config)
             .deny(delete, article)
             .allow(delete, article, Condition.op("$hasRole", "admin"))
             .build();

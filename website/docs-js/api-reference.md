@@ -11,6 +11,7 @@ slug: /api-reference
 Create a typed action.
 
 ##
+
 `createSubject<TSubject>(name: string, fieldMapper?: SubjectFieldMapper<TSubject>)`
 
 Create a typed subject definition. `fieldMapper`, when given, is carried through
@@ -47,7 +48,7 @@ instance — `instance` is `undefined` until `.wrap()` is called.
 ## `Policy<TActions, TSubjects, TOperators>`
 
 `new Policy(definition, options?, config?)` — or the static
-`Policy.from(definition, options?, config?)`. `config` is an optional
+`new Policy(definition, options?, config?)`. `config` is an optional
 `KeycardConfig` (see below), shared with `PolicyBuilder`.
 
 - `can(action, subject)` — check if action is allowed
@@ -106,19 +107,22 @@ one-level-deep restriction (see
 still applies to the resolved value.
 
 ```typescript
-interface Post { status: string; author: { name: string } }
+interface Post {
+  status: string;
+  author: { name: string }
+}
 
 const read = createAction("Read");
 const post = createSubject<Post>("Post", {
   authorName: (instance) => instance.author.name,
 });
 
-const policy = Policy.from({
+const policy = new Policy({
   version: "1.0",
-  rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
+  rules: [["allow", "Read", "Post", {authorName: "Alice"}]],
 });
 
-policy.can(read, post.wrap({ status: "draft", author: { name: "Alice" } })); // true
+policy.can(read, post.wrap({status: "draft", author: {name: "Alice"}})); // true
 ```
 
 Note the rule above is a plain object, not built via `PolicyBuilder.allow()`:
@@ -135,10 +139,10 @@ takes precedence over the catalog:
 
 ```typescript
 const catalog = new SubjectFieldMapperCatalog({
-  Post: { authorName: (instance: Post) => instance.author.name },
+  Post: {authorName: (instance: Post) => instance.author.name},
 });
 
-const policy = Policy.from(policyDef, {}, { mapper: catalog });
+const policy = new Policy(policyDef, {}, {mapper: catalog});
 ```
 
 - `SubjectFieldMapper<TData>` — `Record<string, (instance: TData) => unknown>`

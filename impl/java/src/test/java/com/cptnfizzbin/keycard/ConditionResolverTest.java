@@ -1,18 +1,20 @@
 package com.cptnfizzbin.keycard;
 
 import com.cptnfizzbin.keycard.conditions.Condition;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import org.junit.Test;
-
 import com.cptnfizzbin.keycard.conditions.ConditionResolver;
 import com.cptnfizzbin.keycard.conditions.Operator;
+import com.cptnfizzbin.keycard.conditions.OperatorCatalog;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.val;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ConditionResolverTest {
     private final ConditionResolver resolver = new ConditionResolver();
@@ -95,14 +97,15 @@ public class ConditionResolverTest {
      */
     @Test
     public void customOperatorCanRecurseViaOperatorContext() {
-        ConditionResolver withCustom = new ConditionResolver(List.of(
-            Operator.of("$every", (subject, value, ctx) -> {
+        val operators = new OperatorCatalog()
+            .add(Operator.of("$every", (subject, value, ctx) -> {
                 for (Object condition : (List<?>) value) {
                     if (!ctx.resolveSubcondition(subject, condition)) return false;
                 }
                 return true;
-            })
-        ));
+            }));
+
+        ConditionResolver withCustom = new ConditionResolver(operators);
 
         Map<String, Object> article = Map.of("ownerId", 42, "status", "draft");
 

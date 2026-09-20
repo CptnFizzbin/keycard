@@ -636,8 +636,8 @@ The requirements that **MUST** hold for any v0-conformant implementation are:
    implementation, a builder, and a parser all **MUST** preserve declaration
    order end to end.
 4. **Wildcard matching is policy-scoped.** `matchesAction`/`matchesSubject`
-   consult *this policy's own* effective `anyAction`/`anySubject` — there is no wildcard token independent of what a given policy
-   declares or defaults to.
+   consult *this policy's own* effective `anyAction`/`anySubject` — there is no
+   wildcard token independent of what a given policy declares or defaults to.
     - `meta.anyAction`/`meta.anySubject` each default to `"_ANY_"` when not
       declared, so `[allow, _ANY_, _ANY_]` (unconditional) is always a valid
       rule matching every action on every subject name, even in a policy that
@@ -647,18 +647,18 @@ The requirements that **MUST** hold for any v0-conformant implementation are:
       against the policy's effective `anyAction`/`anySubject` — they are not
       regex or glob patterns.
     - Either **MAY** be explicitly disabled by setting `meta.anyAction`/
-      `meta.anySubject` to `null`; in a policy that disables one, no
-      string carries wildcard meaning for that position, including
+      `meta.anySubject` to `null`; in a policy that disables one, no string
+      carries wildcard meaning for that position, including
       `"_ANY_"` itself, and it becomes a legal, ordinary literal name.
 5. **A rule wildcarded on both sides MUST be unconditional.** A rule whose
    `Action` is the policy's effective `anyAction` **and** whose `Subject` is its
    effective `anySubject` **MUST NOT** carry a `Condition` element.
-   `Policy.from(...)` **MUST** throw a `PolicyLoadException` when given a
+   `new Policy(...)` **MUST** throw a `PolicyLoadException` when given a
    definition violating this; a `PolicyBuilder`'s
    `allow()`/`deny()` methods (or equivalent) **MUST** throw an argument-error
-   exception immediately when called this way, rather than waiting for
-   eventual construction to catch it. A rule wildcarded on only *one* side
-   **MAY** carry a condition: `[effect,
+   exception immediately when called this way, rather than waiting for eventual
+   construction to catch it. A rule wildcarded on only *one* side **MAY** carry
+   a condition: `[effect,
    anyAction, Subject, Conditions]` (wildcard action, concrete subject) is
    unrestricted, since `Condition` evaluates against that concretely-known
    subject type's data; `[effect, Action, anySubject,
@@ -666,8 +666,8 @@ The requirements that **MUST** hold for any v0-conformant implementation are:
    be used, since `Condition` may then be evaluated against subjects of many
    unrelated shapes and silently fail to match some of them via the
    missing-field handling, rather than failing loudly. Conditions in KeyCard
-   evaluate against the *target subject's* data, not against claims about
-   the caller — an "admins can do anything" rule still isn't expressible as a
+   evaluate against the *target subject's* data, not against claims about the
+   caller — an "admins can do anything" rule still isn't expressible as a
    doubly-wildcarded rule with a role condition attached; model it as a
    per-action rule with a condition instead (see the worked example at the end
    of this document), or select an entirely different
@@ -682,14 +682,14 @@ explicitly.
 ### 6 Running `tests`
 
 - An implementation that exposes a way to run a `PolicyDefinition`'s embedded
-  `tests` — whatever it calls that operation, and whatever shape its
-  report takes — **MUST**, for each case, call `can`
+  `tests` — whatever it calls that operation, and whatever shape its report
+  takes — **MUST**, for each case, call `can`
   with that case's `check` elements as arguments, and **MUST** report the case
   as passing if and only if the boolean result equals `expected`.
 - Running `tests` **MUST NOT** mutate the `Policy` instance or otherwise affect
   its subsequent `can`/`cannot`/`require` behavior.
 - This spec does not mandate a report format, a CLI surface, or that
-  `Policy.from(...)` reject an otherwise-valid `PolicyDefinition` merely because
+  `new Policy(...)` reject an otherwise-valid `PolicyDefinition` merely because
   a declared test case would fail — whether and how a failing case blocks
   construction, a build, or a CI job is an application/tooling concern outside
   this spec's scope.
@@ -698,15 +698,14 @@ explicitly.
 
 KeyCard's condition language and rule-based `allow`/`deny` model draw on
 [CASL](https://casl.js.org/), a JavaScript authorization library. In particular,
-the last-matching-rule-wins combining behavior mirrors CASL's own
-approach to resolving overlapping rules. KeyCard departs from CASL in scope (a
-declarative, JSON/YAML-serializable `PolicyDefinition`
+the last-matching-rule-wins combining behavior mirrors CASL's own approach to
+resolving overlapping rules. KeyCard departs from CASL in scope (a declarative,
+JSON/YAML-serializable `PolicyDefinition`
 meant to be produced server-side and evaluated in any language, rather than an
 in-process JavaScript ability builder) and in specifics (the condition operator
-set, the `meta` catalogs and wildcard tokens, and the
-validation/exception behavior throughout) — this document defines
-KeyCard's own behavior in full; familiarity with CASL is not assumed anywhere
-above.
+set, the `meta` catalogs and wildcard tokens, and the validation/exception
+behavior throughout) — this document defines KeyCard's own behavior in full;
+familiarity with CASL is not assumed anywhere above.
 
 ## Appendix: worked example
 
@@ -748,7 +747,7 @@ tests:
 ```
 
 The first rule uses this policy's default wildcard-subject token, `_ANY_`
- — no `meta.anySubject` override is declared, so `_ANY_` is what
+— no `meta.anySubject` override is declared, so `_ANY_` is what
 `matchesSubject` checks for; a rule wildcarded on only one side (here, the
 subject) **MAY** carry a condition, but this one doesn't need to, so it's
 unconditional.
@@ -756,18 +755,18 @@ unconditional.
 The last rule is declared last on purpose: because it's an `allow` and its
 condition (`$hasRole: admin`) can still be satisfied for an archived article, an
 admin can delete an archived article even though the `deny`
-rule above would otherwise block it — demonstrating last-rule-wins
-overriding an earlier, more specific-looking rule. `$hasRole` isn't a built-in
-operator — it's a custom one this policy declares in
+rule above would otherwise block it — demonstrating last-rule-wins overriding an
+earlier, more specific-looking rule. `$hasRole` isn't a built-in operator — it's
+a custom one this policy declares in
 `meta.operators` and requires the host application to have registered a checker
 for at `Policy` construction time (e.g. one that checks
-`subject.roles.includes("admin")`); if the application forgot to
-register it, `Policy.from(...)` throws a `PolicyLoadException`
+`subject.roles.includes("admin")`); if the application forgot to register it,
+`new Policy(...)` throws a `PolicyLoadException`
 immediately, rather than silently letting every admin-only check fail closed
 with no clue why once evaluation eventually reached it. Note this rule is
 wildcarded on *neither* side (it names both a concrete action, `Delete`, and a
-concrete subject, `Article`), so it isn't subject to the
-both-sides-wildcarded restriction regardless.
+concrete subject, `Article`), so it isn't subject to the both-sides-wildcarded
+restriction regardless.
 
 The `tests` block documents this policy's own intent as executable cases:
 the "ownership" suite exercises the third and fourth rules directly, and the

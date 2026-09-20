@@ -1,17 +1,18 @@
 package com.cptnfizzbin.keycard;
 
 import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.action.ActionFactory;
+import com.cptnfizzbin.keycard.action.ActionCatalog;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
 import com.cptnfizzbin.keycard.conditions.Condition;
 import com.cptnfizzbin.keycard.conditions.Operator;
+import com.cptnfizzbin.keycard.conditions.OperatorCatalog;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
 import com.cptnfizzbin.keycard.errors.PolicyVersionException;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFactory;
+import com.cptnfizzbin.keycard.subject.SubjectCatalog;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
 import org.junit.Test;
 import org.semver4j.Semver;
@@ -25,42 +26,48 @@ import static org.junit.Assert.*;
  * Construction-time validation required by SPEC_V0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section).
  */
 public class PolicyValidationTest {
+    private static KeycardConfig withOperators(Operator... operators) {
+        return new KeycardConfig().operators(new OperatorCatalog().addAll(List.of(operators)));
+    }
+
     @Test
     public void throwsPolicyVersionExceptionForAnUnsupportedMajorVersion() {
         Semver nextMajor = KeyCardVersion.KEYCARD_POLICY_VERSION.nextMajor();
         assertThrows(PolicyVersionException.class, () ->
-            Policy.from(new PolicyDefinition().version(nextMajor.toString())));
+            new Policy(new PolicyDefinition().version(nextMajor.toString())));
     }
 
     @Test
     public void throwsPolicyVersionExceptionForAMinorNewerThanWhatsSupported() {
         Semver nextMinor = KeyCardVersion.KEYCARD_POLICY_VERSION.nextMinor();
         assertThrows(PolicyVersionException.class, () ->
-            Policy.from(new PolicyDefinition().version(nextMinor.toString())));
+            new Policy(new PolicyDefinition().version(nextMinor.toString())));
     }
 
     @Test
     public void ignoresPatchWhenDecidingCompatibility() {
         Semver nextPatch = KeyCardVersion.KEYCARD_POLICY_VERSION.nextPatch();
-        Policy.from(new PolicyDefinition().version(nextPatch.toString())); // should not throw
+        new Policy(new PolicyDefinition().version(nextPatch.toString())); // should not throw
     }
 
     @Test
     public void throwsPolicyLoadExceptionForAMalformedRuleTuple() {
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition().rules(List.of(
+            new Policy(new PolicyDefinition().rules(List.of(
                 new PolicyDefinition.Rule("maybe", "Read", "Article", null)
             ))));
     }
 
     @Test
     public void throwsPolicyLoadExceptionForARuleWildcardedOnBothSidesCarryingACondition() {
-        assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition()
-                .rules(List.of(
-                    new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Condition.op("owner_id", 1))
-                ))
-            ));
+        assertThrows(PolicyLoadException.class, () -> {
+            PolicyDefinition policyDef = new PolicyDefinition();
+
+            policyDef.rules()
+                .add(new PolicyDefinition.Rule("allow", "_ANY_", "_ANY_", Condition.op("owner_id", 1).toMap()));
+
+            new Policy(policyDef);
+        });
     }
 
     @Test
@@ -68,7 +75,7 @@ public class PolicyValidationTest {
         PolicyDefinition.Meta meta = new PolicyDefinition.Meta().actions(List.of("Read"));
 
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition()
+            new Policy(new PolicyDefinition()
                 .meta(meta)
                 .rules(List.of(
                     new PolicyDefinition.Rule("allow", "Write", "Article", null)
@@ -81,10 +88,10 @@ public class PolicyValidationTest {
         PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$hasRole"));
 
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition()
+            new Policy(new PolicyDefinition()
                 .meta(meta)
                 .rules(List.of(
-                    new PolicyDefinition.Rule("allow", "Read", "Article", Condition.op("$isAdmin", true))
+                    new PolicyDefinition.Rule("allow", "Read", "Article", Condition.op("$isAdmin", true).toMap())
                 ))
             ));
     }
@@ -94,14 +101,14 @@ public class PolicyValidationTest {
     @Test
     public void throwsPolicyLoadExceptionWhenACustomOperatorCollidesWithABuiltin() {
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition(),
-                List.of(Operator.of("$eq", (s, v, ctx) -> true))));
+            new Policy(new PolicyDefinition(),
+                withOperators(Operator.of("$eq", (s, v, ctx) -> true))));
     }
 
     @Test
     public void throwsPolicyLoadExceptionWhenTwoCustomOperatorsCollideWithEachOther() {
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition(), List.of(
+            new Policy(new PolicyDefinition(), withOperators(
                 Operator.of("$hasRole", (s, v, ctx) -> true),
                 Operator.of("$hasRole", (s, v, ctx) -> false)
             )));
@@ -118,23 +125,23 @@ public class PolicyValidationTest {
         // checked in full when loading a policy, not merely for names rules
         // actually use.
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition().meta(meta)));
+            new Policy(new PolicyDefinition().meta(meta)));
     }
 
     @Test
     public void metaOperatorsIsSatisfiedByABuiltinName() {
         PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$eq"));
 
-        Policy.from(new PolicyDefinition().meta(meta)); // should not throw
+        new Policy(new PolicyDefinition().meta(meta)); // should not throw
     }
 
     @Test
     public void metaOperatorsIsSatisfiedByARegisteredCustomOperator() {
         PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$hasRole"));
 
-        Policy.from(
+        new Policy(
             new PolicyDefinition().meta(meta),
-            List.of(Operator.of("$hasRole", (s, v, ctx) -> true))
+            withOperators(Operator.of("$hasRole", (s, v, ctx) -> true))
         ); // should not throw
     }
 
@@ -144,27 +151,27 @@ public class PolicyValidationTest {
     public void falseDisablesTheActionWildcardJustLikeNull() {
         PolicyDefinition.Meta meta = new PolicyDefinition.Meta().anyAction(false);
 
-        Policy policy = Policy.from(new PolicyDefinition().meta(meta).rules(List.of(
+        Policy policy = new Policy(new PolicyDefinition().meta(meta).rules(List.of(
             new PolicyDefinition.Rule("allow", "_ANY_", "Article", null)
         )));
 
         // With the wildcard disabled, "_ANY_" is just an ordinary, literal
         // action name - it does not match "Read".
-        assertTrue(policy.cannot(ActionFactory.create("Read"), SubjectFactory.create("Article")));
-        assertTrue(policy.can(ActionFactory.create("_ANY_"), SubjectFactory.create("Article")));
+        assertTrue(policy.cannot(new Action("Read"), new Subject<>("Article")));
+        assertTrue(policy.can(new Action("_ANY_"), new Subject<>("Article")));
     }
 
     // --- PolicyBuilder derives meta.actions/subjects/operators from usage; only the wildcard tokens are ever declared explicitly ---
 
     @Test
     public void buildDefDerivesActionsSubjectsAndOperatorsFromWhatWasActuallyUsed() {
-        Subject<?> article = SubjectFactory.create("Article");
-        Subject<?> user = SubjectFactory.create("User");
-        Action read = ActionFactory.create("Read");
-        Action update = ActionFactory.create("Update");
+        Subject<?> article = new Subject<>("Article");
+        Subject<?> user = new Subject<>("User");
+        Action read = new Action("Read");
+        Action update = new Action("Update");
         Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> true);
 
-        PolicyDefinition def = new PolicyBuilder(List.of(hasRole))
+        PolicyDefinition def = new PolicyBuilder(withOperators(hasRole))
             .allow(read, article)
             .allow(update, user, Condition.op("$hasRole", "admin"))
             .buildDef();
@@ -177,7 +184,7 @@ public class PolicyValidationTest {
     @Test
     public void buildDefLeavesWildcardTokensUndeclaredByDefault() {
         PolicyDefinition def = new PolicyBuilder()
-            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+            .allow(new Action("Read"), new Subject<>("Article"))
             .buildDef();
 
         // Undeclared -> null on Meta, so Wildcards.effectiveAnyAction/
@@ -190,39 +197,38 @@ public class PolicyValidationTest {
 
     @Test
     public void wildcardOnlyConstructorDeclaresJustTheTokensRequested() {
-        Policy policy = new PolicyBuilder("*", false)
-            .allow(ActionFactory.create("*"), SubjectFactory.create("Article"))
-            .allow(ActionFactory.create("Read"), SubjectFactory.create("*"))
+        Policy policy = new PolicyBuilder(new KeycardConfig().anyAction(new Action("*")).anySubject(null))
+            .allow(new Action("*"), new Subject<>("Article"))
+            .allow(new Action("Read"), new Subject<>("*"))
             .build();
 
         // "*" is now the action wildcard token: a rule naming it as its
         // action matches any incoming action.
-        assertTrue(policy.can(ActionFactory.create("AnythingGoes"), SubjectFactory.create("Article")));
+        assertTrue(policy.can(new Action("AnythingGoes"), new Subject<>("Article")));
 
         // The subject wildcard is disabled (false): a rule's literal "*"
         // subject only matches an incoming subject also literally named "*".
-        assertFalse(policy.can(ActionFactory.create("Read"), SubjectFactory.create("AnySubjectName")));
-        assertTrue(policy.can(ActionFactory.create("Read"), SubjectFactory.create("*")));
+        assertFalse(policy.can(new Action("Read"), new Subject<>("AnySubjectName")));
+        assertTrue(policy.can(new Action("Read"), new Subject<>("*")));
     }
 
     @Test
     public void wildcardOnlyConstructorStillCatchesEc6AtAddRuleTime() {
         assertThrows(PolicyArgumentException.class, () ->
-            new PolicyBuilder("*", "*")
-                .allow(ActionFactory.create("*"), SubjectFactory.create("*"), Condition.op("owner_id", 1)));
+            new PolicyBuilder(new KeycardConfig().anyAction(new Action("*")).anySubject(new Subject<>("*")))
+                .allow(new Action("*"), new Subject<>("*"), Condition.op("owner_id", 1)));
     }
 
     // --- KeycardConfig, accepted by both PolicyBuilder and Policy ---
 
     @Test
     public void keycardConfigActionsAndSubjectsAreFoldedIntoMetaAlongsideWhatUsageDerives() {
-        KeycardConfig config = KeycardConfig.builder()
-            .actions(List.of(ActionFactory.create("Delete")))
-            .subjects(List.of(SubjectFactory.create("Comment")))
-            .build();
+        KeycardConfig config = new KeycardConfig()
+            .actions(new ActionCatalog().add(new Action("Delete")))
+            .subjects(new SubjectCatalog().add(new Subject<>("Comment")));
 
         PolicyDefinition def = new PolicyBuilder(config)
-            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+            .allow(new Action("Read"), new Subject<>("Article"))
             .buildDef();
 
         assertEquals(List.of("Read", "Delete"), def.meta().actions());
@@ -232,42 +238,47 @@ public class PolicyValidationTest {
     @Test
     public void keycardConfigOperatorsIsUsedByPolicyBuilder() {
         Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> true);
-        KeycardConfig config = KeycardConfig.builder().operators(List.of(hasRole)).build();
-        Subject<Object> article = SubjectFactory.create("Article");
+        KeycardConfig config = withOperators(hasRole);
+        Subject<Object> article = new Subject<>("Article");
 
         Policy policy = new PolicyBuilder(config)
-            .allow(ActionFactory.create("Read"), article, Map.of("$hasRole", "admin"))
+            .allow(new Action("Read"), article, Condition.op("$hasRole", "admin"))
             .build();
 
-        assertTrue(policy.can(ActionFactory.create("Read"), article.wrap(new Object())));
+        assertTrue(policy.can(new Action("Read"), article.wrap(new Object())));
     }
 
     @Test
     public void keycardConfigLeavesWildcardTokensUndeclaredByDefault() {
-        PolicyDefinition def = new PolicyBuilder(KeycardConfig.builder().build())
-            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+        PolicyDefinition def = new PolicyBuilder(new KeycardConfig())
+            .allow(new Action("Read"), new Subject<>("Article"))
             .buildDef();
 
-        assertEquals(null, def.meta().anyAction());
-        assertEquals(null, def.meta().anySubject());
+        assertNull(def.meta().anyAction());
+        assertNull(def.meta().anySubject());
     }
 
     @Test
     public void keycardConfigAnyActionAndAnySubjectDeclareTheWildcardTokens() {
-        KeycardConfig config = KeycardConfig.builder().anyAction("*").anySubject(false).build();
+        Action AnyAction = new Action("*");
+        Subject<Object> AnySubject = new Subject<>("*");
+
+        KeycardConfig config = new KeycardConfig()
+            .anyAction(AnyAction)
+            .anySubject(AnySubject);
 
         Policy policy = new PolicyBuilder(config)
-            .allow(ActionFactory.create("*"), SubjectFactory.create("Article"))
-            .allow(ActionFactory.create("Read"), SubjectFactory.create("*"))
+            .allow(AnyAction, new Subject<>("Article"))
+            .allow(new Action("Read"), AnySubject)
             .build();
 
         // "*" is now the action wildcard token: a rule naming it as its
         // action matches any incoming action.
-        assertTrue(policy.can(ActionFactory.create("AnythingGoes"), SubjectFactory.create("Article")));
+        assertTrue(policy.can(new Action("AnythingGoes"), new Subject<>("Article")));
 
         // The subject wildcard is disabled (false): a rule's literal "*"
         // subject only matches an incoming subject also literally named "*".
-        assertFalse(policy.can(ActionFactory.create("Read"), SubjectFactory.create("AnySubjectName")));
-        assertTrue(policy.can(ActionFactory.create("Read"), SubjectFactory.create("*")));
+        assertFalse(policy.can(new Action("Read"), new Subject<>("AnySubjectName")));
+        assertTrue(policy.can(new Action("Read"), new Subject<>("*")));
     }
 }

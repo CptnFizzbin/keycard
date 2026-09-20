@@ -4,15 +4,18 @@ import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.conditions.Condition;
 import com.cptnfizzbin.keycard.errors.PolicyException;
-import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.conditions.Operator;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
-import com.cptnfizzbin.keycard.version.KeyCardVersion;
+import com.cptnfizzbin.keycard.subject.Subject;
+import lombok.NonNull;
 import lombok.val;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Builds a {@link PolicyDefinition} rule by rule. {@code meta.actions}/
@@ -27,20 +30,16 @@ import java.util.*;
  * up front, folded in alongside whatever usage derives.
  */
 public class PolicyBuilder {
-    /**
-     * The v1 SemVer this builder implements - stamped onto every buildDef() output, per SPEC_V1-0.md Single-sourced from {@link KeyCardVersion}, alongside {@link Policy#SUPPORTED_VERSION}, so the two can never drift apart.
-     */
-    public static final String BUILDER_VERSION = KeyCardVersion.KEYCARD_POLICY_VERSION;
-
     private final List<PolicyDefinition.Rule> rules = new ArrayList<>();
 
+    @NotNull
     private final KeycardConfig config;
 
     public PolicyBuilder() {
         this(new KeycardConfig());
     }
 
-    public PolicyBuilder(KeycardConfig config) {
+    public PolicyBuilder(@NonNull KeycardConfig config) {
         this.config = config;
     }
 
@@ -48,17 +47,17 @@ public class PolicyBuilder {
         return allow(action, subject, null);
     }
 
-    public PolicyBuilder allow(Iterable<Action> actions, Subject<?> subject) {
+    public PolicyBuilder allow(Collection<Action> actions, Subject<?> subject) {
         actions.forEach(action -> this.allow(action, subject));
         return this;
     }
 
-    public <S> PolicyBuilder allow(Iterable<Action> actions, Subject<?> subject, @Nullable Condition<S> condition) {
+    public <S> PolicyBuilder allow(Collection<Action> actions, Subject<S> subject, Condition<S> condition) {
         actions.forEach(action -> this.allow(action, subject, condition));
         return this;
     }
 
-    public <S> PolicyBuilder allow(Action action, Subject<S> subject, @Nullable Condition<S> condition) {
+    public <S> PolicyBuilder allow(Action action, Subject<S> subject, Condition<S> condition) {
         return addRule("allow", action, subject, condition);
     }
 
@@ -71,59 +70,58 @@ public class PolicyBuilder {
         return this;
     }
 
-    public PolicyBuilder deny(Action action, Subject<?> subject, Map<String, Object> conditions) {
+    public <S> PolicyBuilder deny(Action action, Subject<S> subject, Condition<S> conditions) {
         this.addRule("deny", action, subject, conditions);
         return this;
     }
 
     public Policy build() {
-        return config != null ? new Policy(buildDef(), config) : new Policy(buildDef(), operators);
+        return new Policy(buildDef(), config);
     }
 
     public PolicyDefinition buildDef() {
-        return new PolicyDefinition(BUILDER_VERSION, null, null, buildMeta(), rules);
+        return new PolicyDefinition()
+            .rules(this.rules)
+            .meta(buildMeta());
     }
 
     /**
      * derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config`'s catalogs (list and/or keyed) additionally declare - see the class doc.
      */
     private PolicyDefinition.Meta buildMeta() {
-        Set<String> actions = new LinkedHashSet<>(actionsUsed);
-        actions.addAll(configActionNames);
-        Set<String> subjects = new LinkedHashSet<>(subjectsUsed);
-        subjects.addAll(configSubjectNames);
+        Set<String> actions = config.actions().keySet();
+        Set<String> subjects = config.actions().keySet();
+        Set<String> operators = config.operators().keySet();
 
-        PolicyDefinition.Meta.Builder builder = PolicyDefinition.Meta.builder()
-            .actions(List.copyOf(actions))
-            .subjects(List.copyOf(subjects));
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta();
 
-        if (anyAction != null) builder.anyAction(anyAction);
-        if (anySubject != null) builder.anySubject(anySubject);
+        meta.actions(List.copyOf(actions));
+        meta.subjects(List.copyOf(subjects));
+        meta.operators(List.copyOf(operators));
 
-        if (operators != null && !operators.isEmpty()) {
-            List<String> names = new ArrayList<>();
-            for (Operator op : operators) names.add(op.name());
-            builder.operators(names);
-        }
+        meta.anyAction(config.anyAction());
+        meta.anySubject(config.anySubject());
 
-        return builder.build();
+        return meta;
     }
 
     private <S> PolicyBuilder addRule(String effect, Action action, Subject<S> subject, @Nullable Condition<S> condition) {
-        val actionName = this.config.actions().getNameById(action.id()).orElseGet(() -> {
+        val actionName = this.config.actions().resolveName(action).orElseGet(() -> {
             if (action.dynamic()) throw new PolicyException("Dynamic action not registered in catalog");
             this.config.actions().add(action);
             return action.id();
         });
 
-        val subjectName = this.config.subjects().getNameById(subject.id()).orElseGet(() -> {
+        val subjectName = this.config.subjects().resolveName(subject).orElseGet(() -> {
             if (subject.dynamic()) throw new PolicyException("Dynamic subject not registered in catalog");
-            this.config.actions().add(subject);
-            return subject.id();
+            this.config.subjects().add(subject);
+            return subject.name();
         });
 
         val conditionMap = condition != null ? condition.toMap() : null;
 
         this.rules.add(new PolicyDefinition.Rule(effect, actionName, subjectName, conditionMap));
+        
+        return this;
     }
 }

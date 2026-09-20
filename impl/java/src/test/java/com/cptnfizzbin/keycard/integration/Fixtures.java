@@ -83,7 +83,7 @@ final class Fixtures {
     /**
      * One `---`-separated `{ version, name, meta?, rules, cases }` document from a fixture file.
      */
-    record Suite(PolicyDefinition definition, List<FixtureUtils.TestCase> cases) {
+    public record Suite(PolicyDefinition definition, List<FixtureUtils.TestCase> cases) {
     }
 
     /**

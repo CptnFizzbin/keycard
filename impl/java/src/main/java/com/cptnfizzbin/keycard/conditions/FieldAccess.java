@@ -10,7 +10,8 @@ import java.util.Set;
  * exact same "look up a named field on the subject, then recurse" behavior.
  */
 final class FieldAccess {
-    private FieldAccess() {}
+    private FieldAccess() {
+    }
 
     /**
      * a missing field (or a non-object subject) makes the
@@ -41,12 +42,6 @@ final class FieldAccess {
             Diagnostics.logTypeIssue(fieldName,
                 "v1 supports only top-level field access - a field condition can't itself narrow into another field");
             return false;
-        }
-
-        if (ctx instanceof ConditionResolver.Ctx mapped
-                && mapped.fieldMapper != null
-                && mapped.fieldMapper.hasField(fieldName)) {
-            return ctx.resolveFieldSubcondition(mapped.fieldMapper.get(subject, fieldName), condition);
         }
 
         if (subject instanceof Map) {

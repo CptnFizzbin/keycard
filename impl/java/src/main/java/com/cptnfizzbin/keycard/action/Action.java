@@ -1,19 +1,24 @@
 package com.cptnfizzbin.keycard.action;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 import java.util.UUID;
 
-import lombok.EqualsAndHashCode;
+@Getter
+@Accessors(fluent = true)
+public class Action {
+    private final String id = UUID.randomUUID().toString();
+    private final String name;
+    private final Boolean dynamic;
 
-public record Action(String id, @EqualsAndHashCode.Exclude boolean dynamic) {
     public Action() {
-        this(UUID.randomUUID().toString(), true);
+        this.name = this.id;
+        this.dynamic = true;
     }
 
     public Action(String name) {
-        this(name, false);
-    }
-
-    public String getName() {
-        return id;
+        this.name = name;
+        this.dynamic = false;
     }
 }

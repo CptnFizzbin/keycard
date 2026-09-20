@@ -1,11 +1,9 @@
 package com.cptnfizzbin.keycard.policy;
 
+import com.cptnfizzbin.keycard.action.Action;
+import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
@@ -68,18 +66,50 @@ public final class PolicyDefinition {
         @JsonDeserialize(using = WildcardTokenDeserializer.class)
         @JsonSerialize(using = WildcardTokenSerializer.class)
         private WildcardToken anyAction = null;
+
         @JsonProperty("anySubject")
         @JsonDeserialize(using = WildcardTokenDeserializer.class)
         @JsonSerialize(using = WildcardTokenSerializer.class)
         private WildcardToken anySubject = null;
+
         @JsonProperty("actions")
         private List<String> actions = null;
+
         @JsonProperty("subjects")
         private List<String> subjects = null;
+
         @JsonProperty("operators")
         private List<String> operators = null;
+
         @JsonProperty("application")
         private Object application = null;
+
+        public Meta anySubject(@Nullable Subject<?> subject) {
+            return subject != null
+                ? anySubject(subject.name())
+                : anySubject(false);
+        }
+
+        public Meta anySubject(String value) {
+            this.anySubject = new WildcardToken.Named(value);
+            return this;
+        }
+
+        public Meta anySubject(boolean enabled) {
+            this.anySubject = enabled ? new WildcardToken.Named("_ANY_") : new WildcardToken.Disabled();
+            return this;
+        }
+
+        public Meta anySubject(@Nullable WildcardToken token) {
+            this.anySubject = token;
+            return this;
+        }
+
+        public Meta anyAction(@Nullable Action action) {
+            return action != null
+                ? anyAction(action.name())
+                : anyAction(false);
+        }
 
         public Meta anyAction(String value) {
             this.anyAction = new WildcardToken.Named(value);

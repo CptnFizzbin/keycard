@@ -23,9 +23,9 @@ const Subjects = {
 } as const;
 ```
 
-...and shares one `KeycardConfig`, built once from that vocabulary and
-handed to both `PolicyBuilder` and `Policy` instead of kept in sync by
-hand — see [`KeycardConfig`](#keycardconfig) further down:
+...and shares one `KeycardConfig`, built once from that vocabulary and handed to
+both `PolicyBuilder` and `Policy` instead of kept in sync by hand — see [
+`KeycardConfig`](#keycardconfig) further down:
 
 ```typescript
 const config: KeycardConfig = {
@@ -46,7 +46,7 @@ policy.can(Actions.create, Subjects.article);
 ### Condition-based check
 
 ```typescript
-const article = Subjects.article.wrap({ id: 1, ownerId: userId });
+const article = Subjects.article.wrap({id: 1, ownerId: userId});
 policy.can(Actions.update, article);
 ```
 
@@ -56,8 +56,8 @@ policy.can(Actions.update, article);
 new PolicyBuilder({}, config)
   .allow(Actions.update, Subjects.article, {
     $and: [
-      { ownerId: userId },
-      { id: { $ne: 1 } },
+      {ownerId: userId},
+      {id: {$ne: 1}},
     ],
   })
   .buildDef();
@@ -65,36 +65,38 @@ new PolicyBuilder({}, config)
 
 ### Field mappers for renamed or computed fields
 
-A `SubjectFieldMapper` resolves a condition field through an explicit
-getter instead of property access — handy when a policy-facing field name
-doesn't match the instance's own shape, like flattening a nested
+A `SubjectFieldMapper` resolves a condition field through an explicit getter
+instead of property access — handy when a policy-facing field name doesn't match
+the instance's own shape, like flattening a nested
 `instance.author.name` into a single top-level `authorName` field (recall
 conditions can only narrow one field deep — see
 [Condition Operators](/docs/condition-operators#v1-supports-only-top-level-field-access)):
 
 ```typescript
-interface Post { status: string; author: { name: string } }
+interface Post {
+  status: string;
+  author: { name: string }
+}
 
 const read = createAction("Read");
 const post = createSubject<Post>("Post", {
   authorName: (instance) => instance.author.name,
 });
 
-const config: KeycardConfig = { actions: [read], subjects: [post] };
+const config: KeycardConfig = {actions: [read], subjects: [post]};
 
-const policy = Policy.from(
-  { version: "1.0", rules: [["allow", "Read", "Post", { authorName: "Alice" }]] },
+const policy = new Policy(
+  {version: "1.0", rules: [["allow", "Read", "Post", {authorName: "Alice"}]]},
   {},
   config,
 );
 
-policy.can(read, post.wrap({ status: "draft", author: { name: "Alice" } })); // true
+policy.can(read, post.wrap({status: "draft", author: {name: "Alice"}})); // true
 ```
 
-A field the mapper doesn't define still falls back to ordinary property
-access, and a mapped field's own value can still use any non-field
-operator (`$substr`, `$in`, ...) — only narrowing is restricted to one
-level, not operator use.
+A field the mapper doesn't define still falls back to ordinary property access,
+and a mapped field's own value can still use any non-field operator (`$substr`,
+`$in`, ...) — only narrowing is restricted to one level, not operator use.
 
 ### `KeycardConfig`
 
@@ -106,27 +108,27 @@ const post = createSubject<Post>("Post");
 const read = createAction("Read");
 
 const mappers = new SubjectFieldMapperCatalog({
-  Post: { authorName: (instance: Post) => instance.author.name },
+  Post: {authorName: (instance: Post) => instance.author.name},
 });
 
-const config = { subjects: [post], mapper: mappers };
+const config = {subjects: [post], mapper: mappers};
 
 // config.subjects widens the meta.subjects catalog, so "Post" is accepted
 // here even though this raw definition declares no meta.subjects of its
 // own (see Policy Definition's `meta` section for catalog enforcement):
-const policy = Policy.from(
-  { version: "1.0", rules: [["allow", "Read", "Post", { authorName: "Alice" }]] },
+const policy = new Policy(
+  {version: "1.0", rules: [["allow", "Read", "Post", {authorName: "Alice"}]]},
   {},
   config,
 );
 ```
 
 :::note
-`PolicyBuilder.allow()`'s `conditions` parameter is typed against the
-subject's real fields (`Condition<Post>` here) — a field that only exists
-through a `SubjectFieldMapper`, like `authorName` above, has no static
-type, so a mapped-only field can't be referenced through `.allow()`'s
-typed API. Build that rule as a plain object instead, as shown above.
+`PolicyBuilder.allow()`'s `conditions` parameter is typed against the subject's
+real fields (`Condition<Post>` here) — a field that only exists through a
+`SubjectFieldMapper`, like `authorName` above, has no static type, so a
+mapped-only field can't be referenced through `.allow()`'s typed API. Build that
+rule as a plain object instead, as shown above.
 :::
 
 ### Custom error handling
@@ -158,5 +160,5 @@ See `src/example.ts` in the
 package for a complete working example.
 
 See [Vision: Quickstart](./vision-quickstart.md) and
-[Vision: A Real Backend](./vision-real-backend.md) for a look at where
-this API is headed — not shipped, not compiling against `impl/js` today.
+[Vision: A Real Backend](./vision-real-backend.md) for a look at where this API
+is headed — not shipped, not compiling against `impl/js` today.

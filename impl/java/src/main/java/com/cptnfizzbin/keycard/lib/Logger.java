@@ -10,10 +10,7 @@ package com.cptnfizzbin.keycard.lib;
 public interface Logger {
     default void warn(String message) {
         this.log(System.Logger.Level.WARNING, message);
-    };
+    }
 
     void log(System.Logger.Level level, String message);
-
-    /** No-op logger - the fallback when neither {@code KeycardConfig} nor its logger is set. */
-    Logger NO_OP = new NoOpLogger();
 }

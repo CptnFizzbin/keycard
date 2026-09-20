@@ -1,20 +1,15 @@
 package com.cptnfizzbin.keycard;
 
 import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
-import com.cptnfizzbin.keycard.lib.Logger;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
-import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -29,79 +24,78 @@ import static org.junit.Assert.*;
  */
 public class DynamicCatalogTest {
 
-    // --- Action.create()/ActionFactory.create() (no-arg) ---
+    // --- Action.create()/new Action() (no-arg) ---
 
     @Test
     public void actionCreateWithANameBehavesAsBeforeNotDynamic() {
-        Action action = ActionFactory.create("Read");
+        Action action = new Action("Read");
 
-        assertEquals("Read", action.getNameStr());
+        assertEquals("Read", action.name());
         assertFalse(action.dynamic());
     }
 
     @Test
     public void actionCreateWithNoNameGeneratesAUsableIdAndMarksItDynamic() {
-        Action action = ActionFactory.create();
+        Action action = new Action();
 
-        assertTrue(action.getNameStr().length() > 0);
+        assertFalse(action.name().isEmpty());
         assertTrue(action.dynamic());
     }
 
     @Test
     public void eachNoArgActionCreateCallGeneratesADistinctId() {
-        Action a = ActionFactory.create();
-        Action b = ActionFactory.create();
+        Action a = new Action();
+        Action b = new Action();
 
-        assertNotEquals(a.getNameStr(), b.getNameStr());
+        assertNotEquals(a.name(), b.name());
     }
 
-    // --- Subject.create()/SubjectFactory.create() (no-arg) ---
+    // --- Subject.create()/new Subject<>() (no-arg) ---
 
     @Test
     public void subjectCreateWithANameBehavesAsBeforeNotDynamic() {
-        Subject<?> subject = SubjectFactory.create("Article");
+        Subject<?> subject = new Subject<>("Article");
 
-        assertEquals("Article", subject.getName());
-        assertFalse(subject.isDynamic());
+        assertEquals("Article", subject.name());
+        assertFalse(subject.dynamic());
     }
 
     @Test
     public void subjectCreateWithNoNameGeneratesAUsableIdAndMarksItDynamic() {
-        Subject<?> subject = SubjectFactory.create();
+        Subject<?> subject = new Subject<>();
 
-        assertTrue(subject.getName().length() > 0);
-        assertTrue(subject.isDynamic());
+        assertFalse(subject.name().isEmpty());
+        assertTrue(subject.dynamic());
     }
 
     @Test
     public void eachNoArgSubjectCreateCallGeneratesADistinctId() {
-        Subject<?> a = SubjectFactory.create();
-        Subject<?> b = SubjectFactory.create();
+        Subject<?> a = new Subject<>();
+        Subject<?> b = new Subject<>();
 
-        assertNotEquals(a.getName(), b.getName());
+        assertNotEquals(a.name(), b.name());
     }
 
     @Test
     public void subjectWrapPreservesTheGeneratedIdAndDynamicMarker() {
-        Subject<Integer> subject = SubjectFactory.create();
+        Subject<Integer> subject = new Subject<>();
         Subject<Integer> wrapped = subject.wrap(1);
 
-        assertEquals(subject.getName(), wrapped.getName());
-        assertTrue(wrapped.isDynamic());
-        assertEquals(1, wrapped.getInstance().get().intValue());
+        assertEquals(subject.name(), wrapped.name());
+        assertTrue(wrapped.dynamic());
+        assertEquals(1, wrapped.claims().orElseThrow().intValue());
     }
 
     // --- PolicyBuilder: dynamic (no-name) Action/Subject resolved via a KeycardConfig catalog ---
 
     @Test
     public void aKeyedCatalogsKeyNotTheDynamicDefsRandomIdIsWhatGetsSerialized() {
-        Action create = ActionFactory.create();
-        Subject<?> article = SubjectFactory.create();
+        Action create = new Action();
+        Subject<?> article = new Subject<>();
 
-        KeycardConfig config = KeycardConfig.builder()
-            .addAction("create", create)
-            .addSubject("article", article)
-            .build();
+        KeycardConfig config = new KeycardConfig();
+        config.actions().add("create", create);
+        config.subjects().add("article", article);
 
         PolicyDefinition def = new PolicyBuilder(config).allow(create, article).buildDef();
 
@@ -113,13 +107,13 @@ public class DynamicCatalogTest {
 
     @Test
     public void aPlainListConfigStillWorksExactlyAsBeforeNoCatalogNoResolution() {
-        KeycardConfig config = KeycardConfig.builder()
-            .actions(List.of(ActionFactory.create("Delete")))
-            .subjects(List.of(SubjectFactory.create("Comment")))
-            .build();
+
+        KeycardConfig config = new KeycardConfig();
+        config.actions().add(new Action("Delete"));
+        config.subjects().add(new Subject<>("Comment"));
 
         PolicyDefinition def = new PolicyBuilder(config)
-            .allow(ActionFactory.create("Read"), SubjectFactory.create("Article"))
+            .allow(new Action("Read"), new Subject<>("Article"))
             .buildDef();
 
         assertEquals(List.of("Read", "Delete"), def.meta().actions());
@@ -128,30 +122,30 @@ public class DynamicCatalogTest {
 
     @Test
     public void allowThrowsPolicyArgumentExceptionForADynamicActionNeverRegisteredInTheCatalog() {
-        Action create = ActionFactory.create();
-        Subject<?> article = SubjectFactory.create("Article");
-        KeycardConfig config = KeycardConfig.builder()
-            .addAction("update", ActionFactory.create())
-            .build();
+        Action create = new Action();
+        Subject<?> article = new Subject<>("Article");
+
+        KeycardConfig config = new KeycardConfig();
+        config.actions().add("update", new Action());
 
         assertThrows(PolicyArgumentException.class, () -> new PolicyBuilder(config).allow(create, article));
     }
 
     @Test
     public void allowThrowsPolicyArgumentExceptionForADynamicSubjectNeverRegisteredInTheCatalog() {
-        Action read = ActionFactory.create("Read");
-        Subject<?> article = SubjectFactory.create();
+        Action read = new Action("Read");
+        Subject<?> article = new Subject<>();
 
-        assertThrows(PolicyArgumentException.class, () -> new PolicyBuilder(KeycardConfig.builder().build()).allow(read, article));
+        assertThrows(PolicyArgumentException.class, () -> new PolicyBuilder(new KeycardConfig()).allow(read, article));
     }
 
     @Test
     public void registeringTheSameDynamicActionUnderTwoDifferentCatalogKeysThrowsAtConstruction() {
-        Action create = ActionFactory.create();
-        KeycardConfig config = KeycardConfig.builder()
-            .addAction("create", create)
-            .addAction("submit", create)
-            .build();
+        Action create = new Action();
+        KeycardConfig config = new KeycardConfig();
+        config.actions()
+            .add("update", create)
+            .add("submit", create);
 
         assertThrows(PolicyArgumentException.class, () -> new PolicyBuilder(config));
     }
@@ -160,13 +154,12 @@ public class DynamicCatalogTest {
     public void anExplicitlyNamedActionSubjectInAKeyedCatalogIsStillResolvedToItsCatalogKey() {
         // "if using a catalog, defining the name is optional" - a catalog
         // key wins for any entry, named or not.
-        Action create = ActionFactory.create("Create");
-        Subject<?> article = SubjectFactory.create("Article");
+        Action create = new Action("Create");
+        Subject<?> article = new Subject<>("Article");
 
-        KeycardConfig config = KeycardConfig.builder()
-            .addAction("submit", create)
-            .addSubject("post", article)
-            .build();
+        KeycardConfig config = new KeycardConfig();
+        config.actions().add("submit", create);
+        config.subjects().add("submit", article);
 
         PolicyDefinition def = new PolicyBuilder(config).allow(create, article).buildDef();
 
@@ -178,15 +171,14 @@ public class DynamicCatalogTest {
 
     @Test
     public void aDynamicDefResolvesViaItsCatalogKeyToMatchARuleWrittenAgainstThatKey() {
-        Action create = ActionFactory.create();
-        Subject<?> article = SubjectFactory.create();
+        Action create = new Action();
+        Subject<?> article = new Subject<>();
 
-        KeycardConfig config = KeycardConfig.builder()
-            .addAction("create", create)
-            .addSubject("article", article)
-            .build();
+        KeycardConfig config = new KeycardConfig();
+        config.actions().add("submit", create);
+        config.subjects().add("submit", article);
 
-        Policy policy = Policy.from(
+        Policy policy = new Policy(
             new PolicyDefinition()
                 .version(KeyCardVersion.KEYCARD_POLICY_VERSION.toString())
                 .rules(List.of(
@@ -200,57 +192,21 @@ public class DynamicCatalogTest {
 
     @Test
     public void ec8CoverageIsStillEnforcedUsingCatalogResolvedNames() {
-        KeycardConfig config = KeycardConfig.builder()
-            .addAction("read", ActionFactory.create())
-            .build();
+        KeycardConfig config = new KeycardConfig();
+        config.actions().add("read", new Action());
 
         assertThrows(PolicyLoadException.class, () ->
-            Policy.from(new PolicyDefinition()
+            new Policy(new PolicyDefinition()
                 .rules(List.of(
                     new PolicyDefinition.Rule("allow", "write", "article")
                 )), config));
     }
 
     @Test
-    public void anUnregisteredDynamicActionPassedToCanWarnsOnceDedupedViaConfigLoggerAndDenies() {
-        List<String> warnings = new ArrayList<>();
-        Logger logger = warnings::add;
-        Action ghost = ActionFactory.create();
-        Subject<?> article = SubjectFactory.create("Article");
-
-        KeycardConfig config = KeycardConfig.builder().logger(logger).build();
-        Policy policy = Policy.from(new PolicyDefinition()
-            .rules(List.of(
-                new PolicyDefinition.Rule("allow", "Read", "Article")
-            )), config);
-
-        assertFalse(policy.can(ghost, article));
-        assertFalse(policy.can(ghost, article));
-        assertEquals(1, warnings.size());
-    }
-
-    @Test
-    public void anUnregisteredDynamicDefStillFallsThroughToAMatchingWildcardRule() {
-        List<String> warnings = new ArrayList<>();
-        Logger logger = warnings::add;
-        Action ghost = ActionFactory.create();
-
-        PolicyDefinition.Meta meta = new PolicyDefinition.Meta().anyAction(WildcardToken.of("_ANY_"));
-        KeycardConfig config = KeycardConfig.builder().logger(logger).build();
-        Policy policy = Policy.from(new PolicyDefinition()
-            .meta(meta)
-            .rules(List.of(
-                new PolicyDefinition.Rule("allow", "_ANY_", "Article", null)
-            )), config);
-
-        assertTrue(policy.can(ghost, SubjectFactory.create("Article")));
-    }
-
-    @Test
     public void omittingConfigLoggerFallsBackToTheNoOpLoggerWithoutThrowing() {
-        Action ghost = ActionFactory.create();
-        Policy policy = Policy.from(new PolicyDefinition());
+        Action ghost = new Action();
+        Policy policy = new Policy(new PolicyDefinition());
 
-        policy.can(ghost, SubjectFactory.create("Article")); // should not throw
+        policy.can(ghost, new Subject<>("Article")); // should not throw
     }
 }

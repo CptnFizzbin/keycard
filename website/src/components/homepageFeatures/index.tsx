@@ -42,7 +42,7 @@ const EXAMPLE_TS_POLICY_USAGE = (`
 // policy.ts  
 const res = await fetch("/api/user/me/policy.yaml")
 const policyDef = await res.json() as PolicyDefinition
-const policy = Policy.from(policyDef);
+const policy = new Policy(policyDef);
 
 // check if user can create an article
 if (policy.can(Actions.Create, Subjects.Article)) {
