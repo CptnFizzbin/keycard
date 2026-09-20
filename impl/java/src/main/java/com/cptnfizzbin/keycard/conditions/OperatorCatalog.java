@@ -35,6 +35,16 @@ public final class OperatorCatalog extends LinkedHashMap<String, Operator> {
         return this;
     }
 
+    /**
+     * Registers a flat {@link ConditionOperator} under {@code name} and
+     * returns it - adapting it into a full {@link Operator} internally, the
+     * same way a duplicate name is rejected for either.
+     */
+    public ConditionOperator set(String name, ConditionOperator operator) {
+        this.add(Operator.of(name, (subject, value, ctx) -> operator.resolve(subject, value)));
+        return operator;
+    }
+
     /** Every registered operator name that isn't one of the built-ins - what {@code meta.operators} derives from usage. */
     public Set<String> customNames() {
         Set<String> names = new LinkedHashSet<>(this.keySet());

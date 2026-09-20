@@ -23,4 +23,25 @@ public final class ActionCatalog extends LinkedHashMap<String, Action> {
         this.put(name, action);
         return this;
     }
+
+    /**
+     * Registers {@code action} under the explicit key {@code name} and
+     * returns {@code action} itself - so a dynamic Action can be declared
+     * and registered in one line: {@code static Action Create = catalog.set("create", new Action());}
+     */
+    public Action set(String name, Action action) {
+        this.put(name, action);
+        return action;
+    }
+
+    /**
+     * Registers {@code action} under its own name and returns {@code
+     * action} itself - the single-arg counterpart of {@link #set(String, Action)}
+     * for a non-dynamic Action that already carries its own name.
+     */
+    public Action set(Action action) {
+        if (action.dynamic())
+            throw new PolicyArgumentException("Dynamic actions must be added to the catalog with a name");
+        return this.set(action.name(), action);
+    }
 }

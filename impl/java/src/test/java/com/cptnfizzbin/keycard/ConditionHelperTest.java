@@ -28,7 +28,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testFieldEquality() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action update = new Action("Update");
 
         Policy policy = new PolicyBuilder()
@@ -44,7 +44,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testFieldNotEqual() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action update = new Action("Update");
 
         Policy policy = new PolicyBuilder()
@@ -60,7 +60,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testNumberComparison() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
@@ -76,7 +76,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testAndCondition() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action update = new Action("Update");
 
         Condition<Article> conditions = Condition.and(
@@ -100,7 +100,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testOrCondition() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action publish = new Action("Publish");
 
         Condition<Article> conditions = Condition.or(
@@ -124,7 +124,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testAndCondition2() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action update = new Action("Update");
 
         Condition<Article> conditions = Condition.and(
@@ -142,7 +142,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testHasCondition() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action update = new Action("Update");
 
         Policy policy = new PolicyBuilder()
@@ -158,7 +158,7 @@ public class ConditionHelperTest {
 
     @Test
     public void testCustomOperatorHelper() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
         Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> "admin".equals(v));
 

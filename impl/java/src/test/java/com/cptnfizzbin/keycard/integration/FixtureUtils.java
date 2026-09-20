@@ -96,7 +96,7 @@ final class FixtureUtils {
      */
     static boolean resolve(Policy policy, TestCase testCase) {
         Action action = new Action(testCase.action());
-        Subject<Map<String, Object>> subject = new Subject<>(testCase.subject());
+        Subject<Map<String, Object>, ?> subject = new Subject<>(testCase.subject());
         if (testCase.subjectData() != null) {
             subject = subject.wrap(testCase.subjectData());
         }

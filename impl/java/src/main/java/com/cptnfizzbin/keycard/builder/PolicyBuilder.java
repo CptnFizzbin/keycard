@@ -54,34 +54,34 @@ public class PolicyBuilder {
         this.subjectResolution = Catalog.build(null, config.subjects(), Subject::name, "subject");
     }
 
-    public PolicyBuilder allow(Action action, Subject<?> subject) {
+    public PolicyBuilder allow(Action action, Subject<?, ?> subject) {
         return allow(action, subject, null);
     }
 
-    public PolicyBuilder allow(Collection<Action> actions, Subject<?> subject) {
+    public PolicyBuilder allow(Collection<Action> actions, Subject<?, ?> subject) {
         actions.forEach(action -> this.allow(action, subject));
         return this;
     }
 
-    public <S> PolicyBuilder allow(Collection<Action> actions, Subject<S> subject, Condition<S> condition) {
+    public <S> PolicyBuilder allow(Collection<Action> actions, Subject<S, ?> subject, Condition<S> condition) {
         actions.forEach(action -> this.allow(action, subject, condition));
         return this;
     }
 
-    public <S> PolicyBuilder allow(Action action, Subject<S> subject, Condition<S> condition) {
+    public <S> PolicyBuilder allow(Action action, Subject<S, ?> subject, Condition<S> condition) {
         return addRule("allow", action, subject, condition);
     }
 
-    public PolicyBuilder deny(Action action, Subject<?> subject) {
+    public PolicyBuilder deny(Action action, Subject<?, ?> subject) {
         return deny(action, subject, null);
     }
 
-    public PolicyBuilder deny(Iterable<Action> actions, Subject<?> subject) {
+    public PolicyBuilder deny(Iterable<Action> actions, Subject<?, ?> subject) {
         actions.forEach(action -> this.deny(action, subject));
         return this;
     }
 
-    public <S> PolicyBuilder deny(Action action, Subject<S> subject, Condition<S> conditions) {
+    public <S> PolicyBuilder deny(Action action, Subject<S, ?> subject, Condition<S> conditions) {
         this.addRule("deny", action, subject, conditions);
         return this;
     }
@@ -93,7 +93,7 @@ public class PolicyBuilder {
     public PolicyDefinition buildDef() {
         return new PolicyDefinition()
             .rules(this.rules)
-            .meta(buildMeta());
+            .meta(config.emitMeta() ? buildMeta() : null);
     }
 
     /**
@@ -118,16 +118,18 @@ public class PolicyBuilder {
         return meta;
     }
 
-    private <S> PolicyBuilder addRule(String effect, Action action, Subject<S> subject, @Nullable Condition<S> condition) {
-        if (action.dynamic() && !actionResolution.reverseMap().containsKey(action.name())) {
-            throw new PolicyArgumentException(
-                "This Action was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
-            );
-        }
-        if (subject.dynamic() && !subjectResolution.reverseMap().containsKey(subject.name())) {
-            throw new PolicyArgumentException(
-                "This Subject was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
-            );
+    private <S> PolicyBuilder addRule(String effect, Action action, Subject<S, ?> subject, @Nullable Condition<S> condition) {
+        if (config.emitMeta()) {
+            if (action.dynamic() && !actionResolution.reverseMap().containsKey(action.name())) {
+                throw new PolicyArgumentException(
+                    "This Action was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+                );
+            }
+            if (subject.dynamic() && !subjectResolution.reverseMap().containsKey(subject.name())) {
+                throw new PolicyArgumentException(
+                    "This Subject was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+                );
+            }
         }
 
         String actionName = Catalog.resolveName(actionResolution.reverseMap(), action.name());
