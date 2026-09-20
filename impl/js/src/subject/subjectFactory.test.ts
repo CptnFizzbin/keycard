@@ -56,7 +56,7 @@ describe("createSubject()", () => {
     expect(wrapped.instance).toEqual({ id: "t1", orgId: "org1", assigneeId: "u1" })
   })
 
-  test("createSubject<TData>({ from }) - TData given explicitly, TArgs left to default - matches vision-real-backend.md's usage", () => {
+  test("createSubject<TData>({ from }) - TData given explicitly, TArgs left to default - matches real-backend.md's usage", () => {
     interface Project { id: string, orgId: string, ownerId: string, archivedAt: string | null }
 
     const ProjectSubject = createSubject<{ id: string, orgId: string, ownerId: string, archived: boolean }>({

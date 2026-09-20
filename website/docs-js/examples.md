@@ -63,6 +63,49 @@ new PolicyBuilder(config)
   .buildDef();
 ```
 
+### Allow, deny, and last-match-wins
+
+`rules` is a single, order-significant list — the *last* rule that matches an
+action/subject/condition wins, so a later `.deny()` can carve an exception out
+of an earlier `.allow()` (or vice versa). This example is self-contained: with
+no dynamic (no-name) Actions/Subjects in play, `PolicyBuilder` doesn't need a
+`KeycardConfig` at all.
+
+```typescript
+import { createAction, createSubject, PolicyBuilder } from "@cptn-fizzbin/keycard";
+
+const Actions = {
+  create: createAction("create"),
+  update: createAction("update"),
+  delete: createAction("delete"),
+} as const;
+
+const Subjects = {
+  article: createSubject<{ id: number; ownerId: number; status: string }>("article"),
+} as const;
+
+function policyForUser(user: { id: number }) {
+  return new PolicyBuilder()
+    .allow(Actions.create, Subjects.article)
+    .allow(Actions.update, Subjects.article, { ownerId: user.id })
+    .allow(Actions.delete, Subjects.article, { ownerId: user.id })
+    .deny(Actions.delete, Subjects.article, { status: "published" }) // last match wins: locked once live
+    .build();
+}
+
+const policy = policyForUser({ id: 42 });
+
+const draft = Subjects.article.wrap({ id: 7, ownerId: 42, status: "draft" });
+const published = Subjects.article.wrap({ id: 8, ownerId: 42, status: "published" });
+
+policy.can(Actions.create, Subjects.article); // true  - no conditions to satisfy
+policy.can(Actions.delete, draft);            // true  - owns it, still a draft
+policy.can(Actions.delete, published);        // false - deny rule matches last
+
+policy.require(Actions.delete, published);
+// throws PolicyError: "delete" is not allowed on this "article"
+```
+
 ### Field mappers for renamed or computed fields
 
 A `SubjectFieldMapper` resolves a condition field through an explicit getter
@@ -157,6 +200,5 @@ See `src/example.ts` in the
 [`impl/js`](https://github.com/CptnFizzbin/keycard/tree/main/impl/js)
 package for a complete working example.
 
-See [Vision: Quickstart](./vision-quickstart.md) and
-[Vision: A Real Backend](./vision-real-backend.md) for a larger, more
-realistic walkthrough of this same API — both now compile against `impl/js`.
+See [A Real Backend](./real-backend.md) for a larger, more realistic
+walkthrough of this same API across a whole app's `policy/` module.
