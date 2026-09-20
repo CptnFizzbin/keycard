@@ -29,8 +29,8 @@ both `PolicyBuilder` and `Policy` instead of kept in sync by hand — see [
 
 ```typescript
 const config: KeycardConfig = {
-  actions: Object.values(Actions),
-  subjects: Object.values(Subjects),
+  actions: Actions,
+  subjects: Subjects,
 };
 ```
 
@@ -53,7 +53,7 @@ policy.can(Actions.update, article);
 ### Multiple conditions
 
 ```typescript
-new PolicyBuilder({}, config)
+new PolicyBuilder(config)
   .allow(Actions.update, Subjects.article, {
     $and: [
       {ownerId: userId},
@@ -83,11 +83,10 @@ const post = createSubject<Post>("Post", {
   authorName: (instance) => instance.author.name,
 });
 
-const config: KeycardConfig = {actions: [read], subjects: [post]};
+const config: KeycardConfig = {actions: {Read: read}, subjects: {Post: post}};
 
 const policy = new Policy(
   {version: "1.0", rules: [["allow", "Read", "Post", {authorName: "Alice"}]]},
-  {},
   config,
 );
 
@@ -111,14 +110,13 @@ const mappers = new SubjectFieldMapperCatalog({
   Post: {authorName: (instance: Post) => instance.author.name},
 });
 
-const config = {subjects: [post], mapper: mappers};
+const config = {subjects: {Post: post}, mapper: mappers};
 
 // config.subjects widens the meta.subjects catalog, so "Post" is accepted
 // here even though this raw definition declares no meta.subjects of its
 // own (see Policy Definition's `meta` section for catalog enforcement):
 const policy = new Policy(
   {version: "1.0", rules: [["allow", "Read", "Post", {authorName: "Alice"}]]},
-  {},
   config,
 );
 ```
@@ -160,5 +158,5 @@ See `src/example.ts` in the
 package for a complete working example.
 
 See [Vision: Quickstart](./vision-quickstart.md) and
-[Vision: A Real Backend](./vision-real-backend.md) for a look at where this API
-is headed — not shipped, not compiling against `impl/js` today.
+[Vision: A Real Backend](./vision-real-backend.md) for a larger, more
+realistic walkthrough of this same API — both now compile against `impl/js`.

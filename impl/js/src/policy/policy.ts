@@ -7,6 +7,7 @@ import type { AnyCondition } from "../conditions/condition.ts"
 import { BUILTIN_OPERATOR_NAMES } from "../conditions/conditionResolver.ts"
 import { ConditionResolver } from "../conditions/index.ts"
 import type { AnyOperator } from "../conditions/operators/operator.ts"
+import { normalizeOperators } from "../conditions/operators/operator.ts"
 import { PolicyError, PolicyLoadException, PolicyVersionException } from "../errors/index.ts"
 import type { KeycardConfig } from "../keycardConfig.ts"
 import { buildCatalog, resolveName } from "../lib/catalog.ts"
@@ -40,10 +41,6 @@ function collectCustomOperators(condition: AnyCondition | undefined, out: Set<st
   }
 }
 
-export interface PolicyOptions<TOperators extends AnyOperator = never> {
-  operators?: TOperators[]
-}
-
 export class Policy<
   TActions extends Action = Action,
   TSubjects extends Subject = Subject,
@@ -58,33 +55,34 @@ export class Policy<
 
   /**
    * @param config shared, optional config also accepted by `PolicyBuilder`
-   *   (SPEC_V0.md and the SubjectFieldMapper feature):
-   *   `actions`/`subjects` widen the `meta.actions`/`meta.subjects`
-   *   catalogs beyond what `definition.meta` itself declares; a keyed
-   *   (`Record<string, Action|Subject>`) `actions`/`subjects` is also a
-   *   catalog resolving a dynamic (no-name) Action/Subject's random name
-   *   to its key, built once here and cached (see `lib/catalog.ts`);
-   *   `operators`, when given, is used instead of `options.operators`;
+   *   (SPEC_V0.md and the SubjectFieldMapper feature): `actions`/`subjects`
+   *   widen the `meta.actions`/`meta.subjects` catalogs beyond what
+   *   `definition.meta` itself declares, and double as a catalog resolving
+   *   a dynamic (no-name) Action/Subject's random name to its key, built
+   *   once here and cached (see `lib/catalog.ts`); `operators` - an
+   *   `AnyOperator[]` or an `OperatorCatalog` - is normalized once here;
    *   `mapper` is consulted for a subject's fields whenever the `Subject`
-   *   passed to {@link can} doesn't carry its own `fieldMapper`.
+   *   passed to {@link can} doesn't carry its own `fieldMapper`; `emitMeta`
+   *   (default `true`) gates the eager catalog/operator validation below -
+   *   see `KeycardConfig`'s doc.
    */
   constructor(
     definition: PolicyDefinition,
-    options: PolicyOptions<TOperators> = {},
     config: KeycardConfig<TOperators> = {},
   ) {
     Policy.validateVersion(definition.version)
 
-    const actions = buildCatalog(config.actions, "action")
-    const subjects = buildCatalog(config.subjects, "subject")
+    const emitMeta = config.emitMeta ?? true
+    const actions = buildCatalog(config.actions, "action", emitMeta)
+    const subjects = buildCatalog(config.subjects, "subject", emitMeta)
 
     this.definition = definition
     this.config = config
     this.actionCatalog = actions.reverseMap
     this.subjectCatalog = subjects.reverseMap
-    this.resolver = new ConditionResolver(config.operators ?? options.operators)
-    Policy.validateOperatorsRegistered(definition, this.resolver)
-    Policy.validateRules(definition, actions.names, subjects.names)
+    this.resolver = new ConditionResolver(normalizeOperators(config.operators))
+    if (emitMeta) Policy.validateOperatorsRegistered(definition, this.resolver)
+    Policy.validateRules(definition, actions.names, subjects.names, emitMeta)
   }
 
   /**
@@ -99,10 +97,9 @@ export class Policy<
     TOperators extends AnyOperator = never,
   >(
     definition: PolicyDefinition,
-    options: PolicyOptions<TOperators> = {},
     config: KeycardConfig<TOperators> = {},
   ): Policy<TActions, TSubjects, TOperators> {
-    return new Policy(definition, options, config)
+    return new Policy(definition, config)
   }
 
   private static validateVersion(version: string): void {
@@ -122,8 +119,7 @@ export class Policy<
    * name it lists MUST already be registered on this Policy - built-in or
    * custom - checked once here when loading a policy, regardless of
    * whether any rule actually reaches that operator during evaluation.
-   * This replaces the previous behavior of deferring an unregistered-but-
-   * cataloged name to a runtime-only diagnostic.
+   * Only run when `emitMeta` is true - see `KeycardConfig.emitMeta`'s doc.
    */
   private static validateOperatorsRegistered(definition: PolicyDefinition, resolver: ConditionResolver): void {
     const declared = definition.meta?.operators
@@ -132,19 +128,31 @@ export class Policy<
     resolver.assertAllRegistered(declared)
   }
 
-  /** @param configActionNames/@param configSubjectNames resolved catalog names (see `lib/catalog.ts`) that, when given, widen the `meta.actions`/`meta.subjects` catalogs below beyond what `definition.meta` declares. */
-  private static validateRules(definition: PolicyDefinition, configActionNames: string[], configSubjectNames: string[]): void {
+  /**
+   * @param configActionNames/@param configSubjectNames resolved catalog names (see `lib/catalog.ts`) that, when given, widen the `meta.actions`/`meta.subjects` catalogs below beyond what `definition.meta` declares.
+   * @param emitMeta when false, skips only the catalog-coverage checks
+   *   below (a rule action/subject/operator not covered by
+   *   `meta.actions`/`meta.subjects`/`meta.operators`) - the structural
+   *   checks (malformed rule tuples, EC-6) always run regardless, since
+   *   those guard evaluation correctness rather than diagnostics.
+   */
+  private static validateRules(
+    definition: PolicyDefinition,
+    configActionNames: string[],
+    configSubjectNames: string[],
+    emitMeta: boolean,
+  ): void {
     const meta = definition.meta
     const anyAction = effectiveAnyAction(meta)
     const anySubject = effectiveAnySubject(meta)
 
-    const actionsCatalog = meta?.actions || configActionNames.length > 0
+    const actionsCatalog = emitMeta && (meta?.actions || configActionNames.length > 0)
       ? new Set([...(meta?.actions ?? []), ...configActionNames])
       : undefined
-    const subjectsCatalog = meta?.subjects || configSubjectNames.length > 0
+    const subjectsCatalog = emitMeta && (meta?.subjects || configSubjectNames.length > 0)
       ? new Set([...(meta?.subjects ?? []), ...configSubjectNames])
       : undefined
-    const operatorsCatalog = meta?.operators ? new Set(meta.operators) : undefined
+    const operatorsCatalog = emitMeta && meta?.operators ? new Set(meta.operators) : undefined
 
     for (const rule of definition.rules as RuleTuple[]) {
       if (!Array.isArray(rule) || rule.length < 3) {
@@ -221,7 +229,7 @@ export class Policy<
     if (!this.can(action, subject)) {
       const actionName = resolveName(this.actionCatalog, action.name)
       const subjectName = resolveName(this.subjectCatalog, subject.name)
-      throw new PolicyError(`Access denied: cannot ${actionName} on ${subjectName}`)
+      throw new PolicyError(`"${actionName}" is not allowed on this "${subjectName}"`)
     }
   }
 

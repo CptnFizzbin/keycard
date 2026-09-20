@@ -6,9 +6,9 @@ slug: /vision-quickstart
 
 # Vision: Quickstart (JavaScript)
 
-:::info[Vision — not yet implemented]
-This page is a design exploration for what version 0.1.0 of KeyCard may look 
-like
+:::info[Implemented]
+This page started as a design exploration for `impl/js`; the API shown below
+is now implemented and covered by `impl/js`'s test suite.
 :::
 
 ```typescript

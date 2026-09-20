@@ -6,10 +6,13 @@ slug: /vision-real-backend
 
 # Vision: A Real Backend (JavaScript)
 
-:::info[Vision — not yet implemented]
-This page is a design exploration for what version 0.1.0 of KeyCard may look 
-like
-:::
+:::info[Implemented]
+This page started as a design exploration for `impl/js`; the KeycardConfig/
+PolicyBuilder/Policy/Subject API shown below (including `createSubject`'s
+`from` mapper, `OperatorCatalog`, and `emitMeta`) is now implemented and
+covered by `impl/js`'s test suite. The surrounding app code (Express routes,
+a database layer, React) is illustrative only - `impl/js` has no dependency
+on any of it.
 :::
 
 ### `policy/catalog.ts`

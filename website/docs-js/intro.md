@@ -64,13 +64,13 @@ type AppSubjects = InferSubjects<typeof Subjects>;
 // Bundle the action/subject vocabulary into one KeycardConfig, built once
 // and shared by every PolicyBuilder/Policy instead of kept in sync by hand
 const config: KeycardConfig = {
-  actions: Object.values(Actions),
-  subjects: Object.values(Subjects),
+  actions: Actions,
+  subjects: Subjects,
 };
 
 // Build a policy scoped to one user
 function createUserPolicy(user: { id: number }): Policy<AppActions, AppSubjects> {
-  return new PolicyBuilder<AppActions, AppSubjects>({}, config)
+  return new PolicyBuilder<AppActions, AppSubjects>(config)
     .allow(Actions.create, Subjects.article)
     .allow(Actions.update, Subjects.article, { ownerId: user.id })
     .build();

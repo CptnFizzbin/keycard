@@ -1,5 +1,6 @@
-export type { Subject } from "./subject.ts"
+export type { Subject, SubjectCatalog } from "./subject.ts"
 export { createSubject } from "./subjectFactory.ts"
+export type { CreateSubjectOptions } from "./subjectFactory.ts"
 export type { InferSubjects } from "./inferSubjects.ts"
 export type { SubjectFieldMapper } from "./subjectFieldMapper.ts"
 export { SubjectFieldMapperCatalog } from "./subjectFieldMapperCatalog.ts"
