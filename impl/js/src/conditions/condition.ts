@@ -31,7 +31,7 @@ export type ObjectCondition<TSubject extends object, TCustom> =
   | { $field: FieldTuple<TSubject, TCustom> }
 
 /**
- * v1 supports only top-level field access (SPEC_V0.md §5.4.10): once a
+ * v1 supports only top-level field access: once a
  * field condition (bare-key or `$field`) has narrowed once, its own
  * `Condition` MUST NOT narrow again. This is the same shape as
  * {@link Condition}, minus {@link ObjectCondition} - comparison,

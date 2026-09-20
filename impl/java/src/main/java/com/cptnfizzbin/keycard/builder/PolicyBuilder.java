@@ -2,18 +2,24 @@ package com.cptnfizzbin.keycard.builder;
 
 import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.conditions.Operator;
+import com.cptnfizzbin.keycard.conditions.Condition;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import com.cptnfizzbin.keycard.lib.Catalog;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.policy.PolicyDefinition;
-import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.policy.Wildcards;
+import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.version.KeyCardVersion;
-import org.semver4j.Semver;
+import lombok.NonNull;
+import lombok.val;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Builds a {@link PolicyDefinition} rule by rule. {@code meta.actions}/
@@ -22,213 +28,137 @@ import java.util.*;
  * from what {@link #allow}/{@link #deny} actually used and what {@code
  * operators} actually registered, so there's no separately hand-maintained
  * catalog to keep in sync by hand. The only meta fields a caller ever needs
- * to declare explicitly are the wildcard tokens themselves (§3.2.1) -
+ * to declare explicitly are the wildcard tokens themselves -
  * nothing about them can be inferred from usage. {@link KeycardConfig}'s
  * {@code actions}/{@code subjects} (optional) declare additional vocabulary
  * up front, folded in alongside whatever usage derives.
  */
-public final class PolicyBuilder {
-    /**
-     * The v1 SemVer this builder implements - stamped onto every buildDef() output, per SPEC_V0.md §2. Single-sourced from {@link KeyCardVersion}, alongside {@link Policy#SUPPORTED_VERSION}, so the two can never drift apart.
-     */
-    public static final Semver BUILDER_VERSION = KeyCardVersion.KEYCARD_POLICY_VERSION;
-
+public class PolicyBuilder {
     private final List<PolicyDefinition.Rule> rules = new ArrayList<>();
     private final Set<String> actionsUsed = new LinkedHashSet<>();
     private final Set<String> subjectsUsed = new LinkedHashSet<>();
-    /**
-     * Null means "not declared" - the §3.2.1 "_ANY_" default applies. Never {@link WildcardToken.of}'s output of a bare no-arg construction.
-     */
-    private final WildcardToken anyAction;
-    private final WildcardToken anySubject;
-    private final Collection<Operator> operators;
+
+    @NotNull
     private final KeycardConfig config;
-    /**
-     * Resolves a dynamic Action/Subject's random name to its catalog key - see {@code lib/Catalog}. Empty (never null) when {@link #config} declares no keyed catalog.
-     */
-    private final Map<String, String> actionReverseMap;
-    private final Map<String, String> subjectReverseMap;
-    private final List<String> configActionNames;
-    private final List<String> configSubjectNames;
+
+    private final Catalog.Resolution actionResolution;
+    private final Catalog.Resolution subjectResolution;
 
     public PolicyBuilder() {
-        this.anyAction = null;
-        this.anySubject = null;
-        this.operators = null;
-        this.config = null;
-        this.actionReverseMap = Map.of();
-        this.subjectReverseMap = Map.of();
-        this.configActionNames = List.of();
-        this.configSubjectNames = List.of();
+        this(new KeycardConfig());
     }
 
-    public PolicyBuilder(Collection<Operator> operators) {
-        this.anyAction = null;
-        this.anySubject = null;
-        this.operators = operators;
-        this.config = null;
-        this.actionReverseMap = Map.of();
-        this.subjectReverseMap = Map.of();
-        this.configActionNames = List.of();
-        this.configSubjectNames = List.of();
-    }
-
-    /**
-     * @param anyAction declares meta.anyAction explicitly - dispatched per
-     *                  {@link WildcardToken#of} (a {@link String} names the token; {@code
-     *                  null}/{@code false} disables it; anything else throws {@code
-     *                  PolicyLoadException} immediately, before a single rule is added).
-     *                  Pass this constructor only to declare something other than the
-     *                  spec default ("_ANY_") - {@code meta.actions}/{@code subjects}/
-     *                  {@code operators} are never set here; see the class doc.
-     */
-    public PolicyBuilder(Object anyAction, Object anySubject) {
-        this(anyAction, anySubject, (Collection<Operator>) null);
-    }
-
-    public PolicyBuilder(Object anyAction, Object anySubject, Collection<Operator> operators) {
-        this.anyAction = WildcardToken.of(anyAction);
-        this.anySubject = WildcardToken.of(anySubject);
-        this.operators = operators;
-        this.config = null;
-        this.actionReverseMap = Map.of();
-        this.subjectReverseMap = Map.of();
-        this.configActionNames = List.of();
-        this.configSubjectNames = List.of();
-    }
-
-    /**
-     * @param config shared, optional config also accepted by {@link
-     *               Policy}: {@code anyAction}/{@code anySubject} are dispatched per
-     *               {@link WildcardToken#of} exactly as the {@code (Object, Object)}
-     *               constructors' are, except that unset (never assigned on {@link
-     *               KeycardConfig#builder()}, so {@code null}) leaves the wildcard "not
-     *               declared" (the "_ANY_" default applies) rather than disabling it -
-     *               pass {@link Boolean#FALSE} there to disable one explicitly. {@code
-     *               actions}/{@code subjects} are folded into {@code
-     *               meta.actions}/{@code meta.subjects} alongside whatever {@link
-     *               #allow}/{@link #deny} actually used; {@code operators} is
-     *               registered the same way the {@link Collection} constructors'
-     *               {@code operators} is; {@code mapper} is carried through to the
-     *               built {@link Policy} unchanged.
-     */
-    public PolicyBuilder(KeycardConfig config) {
-        this.anyAction = config != null && config.getAnyAction() != null ? WildcardToken.of(config.getAnyAction()) : null;
-        this.anySubject = config != null && config.getAnySubject() != null ? WildcardToken.of(config.getAnySubject()) : null;
+    public PolicyBuilder(@NonNull KeycardConfig config) {
         this.config = config;
-        this.operators = config != null ? config.getOperators() : null;
-
-        Catalog.Resolution actionsResolution = Catalog.build(
-            config != null ? config.getActions() : null,
-            config != null && config.getActionCatalog() != null ? config.getActionCatalog().toMap() : null,
-            Action::getNameStr,
-            "action");
-        Catalog.Resolution subjectsResolution = Catalog.build(
-            config != null ? config.getSubjects() : null,
-            config != null && config.getSubjectCatalog() != null ? config.getSubjectCatalog().toMap() : null,
-            Subject::getName,
-            "subject");
-        this.actionReverseMap = actionsResolution.reverseMap();
-        this.subjectReverseMap = subjectsResolution.reverseMap();
-        this.configActionNames = actionsResolution.names();
-        this.configSubjectNames = subjectsResolution.names();
+        this.actionResolution = Catalog.build(null, config.actions(), Action::name, "action");
+        this.subjectResolution = Catalog.build(null, config.subjects(), Subject::name, "subject");
     }
 
     public PolicyBuilder allow(Action action, Subject<?> subject) {
         return allow(action, subject, null);
     }
 
-    public PolicyBuilder allow(Action action, Subject<?> subject, Map<String, Object> conditions) {
-        return addRule("allow", resolveDynamicAction(action), resolveDynamicSubject(subject), conditions);
+    public PolicyBuilder allow(Collection<Action> actions, Subject<?> subject) {
+        actions.forEach(action -> this.allow(action, subject));
+        return this;
+    }
+
+    public <S> PolicyBuilder allow(Collection<Action> actions, Subject<S> subject, Condition<S> condition) {
+        actions.forEach(action -> this.allow(action, subject, condition));
+        return this;
+    }
+
+    public <S> PolicyBuilder allow(Action action, Subject<S> subject, Condition<S> condition) {
+        return addRule("allow", action, subject, condition);
     }
 
     public PolicyBuilder deny(Action action, Subject<?> subject) {
         return deny(action, subject, null);
     }
 
-    public PolicyBuilder deny(Action action, Subject<?> subject, Map<String, Object> conditions) {
-        return addRule("deny", resolveDynamicAction(action), resolveDynamicSubject(subject), conditions);
+    public PolicyBuilder deny(Iterable<Action> actions, Subject<?> subject) {
+        actions.forEach(action -> this.deny(action, subject));
+        return this;
+    }
+
+    public <S> PolicyBuilder deny(Action action, Subject<S> subject, Condition<S> conditions) {
+        this.addRule("deny", action, subject, conditions);
+        return this;
     }
 
     public Policy build() {
-        return config != null ? new Policy(buildDef(), config) : new Policy(buildDef(), operators);
+        return new Policy(buildDef(), config);
     }
 
     public PolicyDefinition buildDef() {
         return new PolicyDefinition()
-            .meta(buildMeta())
-            .rules(rules);
+            .rules(this.rules)
+            .meta(buildMeta());
     }
 
     /**
-     * §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config`'s catalogs (list and/or keyed) additionally declare - see the class doc.
+     * derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config`'s catalogs additionally declare - see the class doc.
      */
     private PolicyDefinition.Meta buildMeta() {
         Set<String> actions = new LinkedHashSet<>(actionsUsed);
-        actions.addAll(configActionNames);
+        actions.addAll(actionResolution.names());
+
         Set<String> subjects = new LinkedHashSet<>(subjectsUsed);
-        subjects.addAll(configSubjectNames);
+        subjects.addAll(subjectResolution.names());
 
-        PolicyDefinition.Meta meta = new PolicyDefinition.Meta()
-            .actions(List.copyOf(actions))
-            .subjects(List.copyOf(subjects));
+        PolicyDefinition.Meta meta = new PolicyDefinition.Meta();
 
-        if (anyAction != null) meta.anyAction(anyAction);
-        if (anySubject != null) meta.anySubject(anySubject);
+        meta.actions(List.copyOf(actions));
+        meta.subjects(List.copyOf(subjects));
+        meta.operators(List.copyOf(config.operators().customNames()));
 
-        if (operators != null && !operators.isEmpty()) {
-            List<String> names = new ArrayList<>();
-            for (Operator op : operators) names.add(op.name());
-            meta.operators(names);
-        }
+        meta.anyAction(config.anyAction());
+        meta.anySubject(config.anySubject());
 
         return meta;
     }
 
-    private PolicyBuilder addRule(String effect, String action, String subjectName, Map<String, Object> conditions) {
-        if (conditions != null) {
-            // SPEC_V0.md §6 property 5, EC-6: a rule wildcarded on both
-            // the action and the subject MUST NOT carry a Conditions element
-            // - the builder MUST catch this immediately, rather than waiting
-            // for eventual construction (Policy.from) to catch it.
-            WildcardToken effAnyAction = Wildcards.orDefault(anyAction);
-            WildcardToken effAnySubject = Wildcards.orDefault(anySubject);
-            boolean actionIsWildcard = effAnyAction instanceof WildcardToken.Named named && action.equals(named.token());
-            boolean subjectIsWildcard = effAnySubject instanceof WildcardToken.Named named && subjectName.equals(named.token());
-            if (actionIsWildcard && subjectIsWildcard) {
-                throw new PolicyArgumentException("rules with any action and any subject cannot be conditional");
+    private <S> PolicyBuilder addRule(String effect, Action action, Subject<S> subject, @Nullable Condition<S> condition) {
+        if (action.dynamic() && !actionResolution.reverseMap().containsKey(action.name())) {
+            throw new PolicyArgumentException(
+                "This Action was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+            );
+        }
+        if (subject.dynamic() && !subjectResolution.reverseMap().containsKey(subject.name())) {
+            throw new PolicyArgumentException(
+                "This Subject was created with no name and must be registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
+            );
+        }
+
+        String actionName = Catalog.resolveName(actionResolution.reverseMap(), action.name());
+        String subjectName = Catalog.resolveName(subjectResolution.reverseMap(), subject.name());
+
+        if (condition != null) {
+            // SPEC_V0.md property 5, EC-6: a rule wildcarded on both the
+            // action and the subject MUST NOT carry a Conditions element -
+            // caught here immediately, rather than waiting for eventual
+            // construction (new Policy(...)) to catch it.
+            WildcardToken anyAction = Wildcards.orDefault(config.anyAction());
+            WildcardToken anySubject = Wildcards.orDefault(config.anySubject());
+
+            boolean isWildcardAction = anyAction instanceof WildcardToken.Named named && actionName.equals(named.token());
+            boolean isWildcardSubject = anySubject instanceof WildcardToken.Named named && subjectName.equals(named.token());
+
+            if (isWildcardAction && isWildcardSubject) {
+                throw new PolicyArgumentException(
+                    "A rule wildcarded on both the action (\"" + actionName + "\") and the subject (\"" + subjectName
+                        + "\") MUST NOT carry a Conditions element (SPEC_V0.md property 5, EC-6)."
+                );
             }
         }
 
-        actionsUsed.add(action);
+        actionsUsed.add(actionName);
         subjectsUsed.add(subjectName);
-        rules.add(new PolicyDefinition.Rule(effect, action, subjectName, conditions));
+
+        val conditionMap = condition != null ? condition.toMap() : null;
+
+        this.rules.add(new PolicyDefinition.Rule(effect, actionName, subjectName, conditionMap));
+
         return this;
-    }
-
-    /**
-     * Resolves {@code action}'s name through the action catalog; throws {@link PolicyArgumentException} if it's dynamic and never registered as a catalog value.
-     */
-    private String resolveDynamicAction(Action action) {
-        if (action.isDynamic() && !actionReverseMap.containsKey(action.getNameStr())) {
-            throw new PolicyArgumentException(
-                "This Action was created via Action.create()/ActionFactory.create() with no name and must be"
-                    + " registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
-            );
-        }
-        return Catalog.resolveName(actionReverseMap, action.getNameStr());
-    }
-
-    /**
-     * Resolves {@code subject}'s name through the subject catalog; throws {@link PolicyArgumentException} if it's dynamic and never registered as a catalog value.
-     */
-    private String resolveDynamicSubject(Subject<?> subject) {
-        if (subject.isDynamic() && !subjectReverseMap.containsKey(subject.getName())) {
-            throw new PolicyArgumentException(
-                "This Subject was created via Subject.create()/SubjectFactory.create() with no name and must be"
-                    + " registered as a catalog value on the KeycardConfig handed to this PolicyBuilder before use."
-            );
-        }
-        return Catalog.resolveName(subjectReverseMap, subject.getName());
     }
 }

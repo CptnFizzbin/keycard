@@ -29,7 +29,7 @@ describe("PolicyBuilder: meta.actions/subjects/operators are derived from usage"
       .allow(createAction("Read"), createSubject("Article"))
       .buildDef()
 
-    // Undeclared -> the §3.2.1 "_ANY_" default applies - an options-less
+    // Undeclared -> the "_ANY_" default applies - an options-less
     // PolicyBuilder MUST NOT come out as "explicitly disabled" (that's
     // what an explicit null does).
     expect(def.meta?.anyAction).toBeUndefined()

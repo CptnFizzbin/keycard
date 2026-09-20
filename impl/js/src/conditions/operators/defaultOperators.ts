@@ -13,7 +13,7 @@ import { LteOperator } from "./numeric/lteOperator.ts"
 import type { AnyOperator } from "./operator.ts"
 import { SubstrOperator } from "./string/substrOperator.ts"
 
-/** Every operator {@link ConditionResolver} understands natively (SPEC_V0.md §7.4.1-§7.4.11). */
+/** Every operator {@link ConditionResolver} understands natively (SPEC_V0.md). */
 export const DefaultOperators: AnyOperator[] = [
   EqOperator,
   NeOperator,

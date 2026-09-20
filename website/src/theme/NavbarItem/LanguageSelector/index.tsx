@@ -74,8 +74,8 @@ export default function LanguageSelectorNavbarItem(): React.ReactElement {
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        <span className={styles.triggerBadge}>{active ? active.badge : "⟡"}</span>
-        <span>{active ? active.label.split(" ")[0] : "Language"}</span>
+        <span className={styles.badge}>{active ? active.badge : "⟡"}</span>
+        <span className={styles.label}>{active ? active.label.split(" ")[0] : "Language"}</span>
         <span className={styles.chevron} aria-hidden="true" />
       </button>
       <ul

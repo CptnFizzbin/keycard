@@ -3,7 +3,7 @@ import { escapeRegExp } from "../../../lib/regex.ts"
 import { createOperator } from "../operator.ts"
 
 /**
- * §7.4.6: `$substr` - a small, deliberately non-regex substring pattern
+ * `$substr` - a small, deliberately non-regex substring pattern
  * language, compiled here to a native `RegExp` (the spec explicitly
  * permits this: implementations MAY implement `$substr` however they
  * like internally, including compiling it to the host language's regex
@@ -40,7 +40,7 @@ export const SubstrOperator = createOperator("$substr", (subject, pattern) => {
         break
       case "^":
         // Only meaningful as the pattern's first character - anywhere
-        // else it's a structurally invalid pattern (§7.4.6).
+        // else it's a structurally invalid pattern.
         if (i !== 0) throw new PolicyTypeMismatchError({
           value: { expected: "'^' only as the first character", received: `'^' at position ${i}` },
         })

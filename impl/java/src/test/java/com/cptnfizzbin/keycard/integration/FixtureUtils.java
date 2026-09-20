@@ -1,10 +1,8 @@
 package com.cptnfizzbin.keycard.integration;
 
 import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.semver4j.Semver;
@@ -32,7 +30,7 @@ import java.util.stream.Collectors;
  * format-specific loader only has to own parsing its own document's
  * outer shape into that common {@link TestCase}, not the
  * discovery/resolution/filtering mechanics around it. Parsing a
- * document's `rules`/`meta` shape (SPEC_V0.md §3) isn't this class's job
+ * document's `rules`/`meta` shape isn't this class's job
  * any more either - {@code PolicyDefinition}/{@code Rule}/{@code Meta}
  * are Jackson-annotated and bind straight from a document themselves.
  * <p>
@@ -63,7 +61,8 @@ final class FixtureUtils {
      * every compliance fixture format regardless of how its surrounding
      * document is shaped.
      */
-    record TestCase(String name, String action, String subject, Map<String, Object> subjectData, boolean expected) {
+    public record TestCase(String name, String action, String subject, Map<String, Object> subjectData,
+                           boolean expected) {
     }
 
     /**
@@ -96,8 +95,8 @@ final class FixtureUtils {
      * {@code subjectData} as its instance when there is.
      */
     static boolean resolve(Policy policy, TestCase testCase) {
-        Action action = ActionFactory.create(testCase.action());
-        Subject<Map<String, Object>> subject = SubjectFactory.<Map<String, Object>>create(testCase.subject());
+        Action action = new Action(testCase.action());
+        Subject<Map<String, Object>> subject = new Subject<>(testCase.subject());
         if (testCase.subjectData() != null) {
             subject = subject.wrap(testCase.subjectData());
         }
@@ -107,7 +106,7 @@ final class FixtureUtils {
     /**
      * True when a fixture declaring {@code fixtureVersion} is compatible
      * with an implementation targeting {@code maxSupportedVersion}, per
-     * SPEC_V0.md §2: the same MAJOR, and a MINOR no higher than what's
+     * SPEC_V0.md: the same MAJOR, and a MINOR no higher than what's
      * supported. PATCH never affects compatibility. Parsing/comparison is
      * delegated to semver4j - the same library {@link
      * com.cptnfizzbin.keycard.version.KeyCardVersion} uses - rather than

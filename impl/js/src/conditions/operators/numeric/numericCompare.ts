@@ -1,7 +1,7 @@
 import { PolicyTypeMismatchError } from "../../../errors/policyTypeMismatchError.ts"
 
 /**
- * §7.4.3: the numeric comparison shared by `$gt`/`$gte`/`$lt`/`$lte` -
+ * the numeric comparison shared by `$gt`/`$gte`/`$lt`/`$lte` -
  * `subject` and the operand MUST both be numbers (never coerced - no
  * numeric-string parsing, no lexicographic comparison) and comparison
  * MUST use IEEE-754 double semantics, so `NaN` never compares true here

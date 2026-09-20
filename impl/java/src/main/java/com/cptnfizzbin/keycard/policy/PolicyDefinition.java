@@ -1,11 +1,9 @@
 package com.cptnfizzbin.keycard.policy;
 
+import com.cptnfizzbin.keycard.action.Action;
+import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
@@ -17,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The PolicyDefinition document shape - SPEC_V0.md §3. Jackson-annotated
+ * The PolicyDefinition document shape - SPEC_V0.md Jackson-annotated
  * so any consumer with a Jackson (de)serializer for their format of
  * choice - YAML, JSON, ... - can bind a document straight to/from this
  * type. This only pulls in jackson-databind (for the annotation types
@@ -33,7 +31,7 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class PolicyDefinition {
     /**
-     * Required SemVer string, e.g. "1.0.0" - see SPEC_V0.md §2.
+     * Required SemVer string, e.g. "1.0.0" - see SPEC_V0.md
      */
     @JsonProperty("version")
     private String version = KeyCardVersion.KEYCARD_POLICY_VERSION.toString();
@@ -68,18 +66,50 @@ public final class PolicyDefinition {
         @JsonDeserialize(using = WildcardTokenDeserializer.class)
         @JsonSerialize(using = WildcardTokenSerializer.class)
         private WildcardToken anyAction = null;
+
         @JsonProperty("anySubject")
         @JsonDeserialize(using = WildcardTokenDeserializer.class)
         @JsonSerialize(using = WildcardTokenSerializer.class)
         private WildcardToken anySubject = null;
+
         @JsonProperty("actions")
         private List<String> actions = null;
+
         @JsonProperty("subjects")
         private List<String> subjects = null;
+
         @JsonProperty("operators")
         private List<String> operators = null;
+
         @JsonProperty("application")
         private Object application = null;
+
+        public Meta anySubject(@Nullable Subject<?> subject) {
+            return subject != null
+                ? anySubject(subject.name())
+                : anySubject(false);
+        }
+
+        public Meta anySubject(String value) {
+            this.anySubject = new WildcardToken.Named(value);
+            return this;
+        }
+
+        public Meta anySubject(boolean enabled) {
+            this.anySubject = enabled ? new WildcardToken.Named("_ANY_") : new WildcardToken.Disabled();
+            return this;
+        }
+
+        public Meta anySubject(@Nullable WildcardToken token) {
+            this.anySubject = token;
+            return this;
+        }
+
+        public Meta anyAction(@Nullable Action action) {
+            return action != null
+                ? anyAction(action.name())
+                : anyAction(false);
+        }
 
         public Meta anyAction(String value) {
             this.anyAction = new WildcardToken.Named(value);
@@ -98,7 +128,7 @@ public final class PolicyDefinition {
     }
 
     /**
-     * `[Effect, Action, Subject, Conditions?]` - SPEC_V0.md §3.3. Ordered; declaration order is significant (§6).
+     * `[Effect, Action, Subject, Conditions?]` - SPEC_V0.md Ordered; declaration order is significant.
      * {@code @JsonFormat(shape = ARRAY)} binds this straight from/to that tuple, positionally, rather than an
      * `{effect, action, ...}` object.
      */

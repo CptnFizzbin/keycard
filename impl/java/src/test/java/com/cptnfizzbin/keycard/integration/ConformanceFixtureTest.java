@@ -1,5 +1,7 @@
 package com.cptnfizzbin.keycard.integration;
 
+import com.cptnfizzbin.keycard.KeycardConfig;
+import com.cptnfizzbin.keycard.conditions.OperatorCatalog;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
 import org.junit.Test;
@@ -18,21 +20,6 @@ import java.util.Objects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
-/**
- * Metaprogrammed: every case in every suite in every fixture file under
- * test/fixtures/v1 is discovered at test-run time (via {@link Parameterized})
- * and becomes its own case below. Dropping a new suite, or a new case into
- * an existing suite, adds coverage automatically - no new test code
- * required. See {@link Fixtures} and {@link FixtureUtils} for the
- * fixture format this suite parses each case from.
- * <p>
- * A fixture whose declared `version` isn't covered by
- * {@link #COMPLIANT_VERSION} - this suite's own baked-in ceiling, per
- * SPEC_V0.md §2's compatibility rule - is skipped (not failed) via
- * {@link org.junit.Assume}; see {@link FixtureUtils#isIncluded} for
- * the mechanics and {@link FixtureUtils#MAX_VERSION_PROPERTY} for the
- * knob that overrides it for a single run.
- */
 @RunWith(Parameterized.class)
 public class ConformanceFixtureTest {
     @Parameters(name = "{0} > {1} > {2}")
@@ -69,7 +56,10 @@ public class ConformanceFixtureTest {
             Objects.requireNonNull(Semver.coerce(suite.definition().version())).satisfies(KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS)
         );
 
-        Policy policy = Policy.from(suite.definition(), Fixtures.operatorsFor(fixtureName));
+        KeycardConfig config = new KeycardConfig()
+            .operators(new OperatorCatalog().addAll(Fixtures.operatorsFor(fixtureName)));
+
+        Policy policy = new Policy(suite.definition(), config);
 
         assertEquals(testCase.name(), testCase.expected(), FixtureUtils.resolve(policy, testCase));
     }

@@ -1,54 +1,26 @@
 package com.cptnfizzbin.keycard.subject;
 
+import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
+
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
- * A keyed catalog of Subjects - each key becomes the serialized name for
- * its Subject, which is how a {@link Subject#create()} call with no name
- * gets a real, stable name. Handed to {@code KeycardConfig} via {@code
- * subjectCatalog}; {@code KeycardConfig.Builder#addSubject} is a shorthand
- * for building one entry-by-entry alongside the rest of the config.
+ * A plain {@code name -> Subject} catalog - both a self-keyed vocabulary
+ * declaration ({@link #add(Subject)}, keyed by the Subject's own name) and
+ * an explicitly-keyed catalog ({@link #add(String, Subject)}, required for
+ * a dynamic Subject) share this one map. {@code PolicyBuilder}/{@code
+ * Policy} resolve it into the actual {@code id -> catalog key} reverse
+ * lookup once, at construction, via {@code lib.Catalog}.
  */
-public final class SubjectCatalog {
-    private final Map<String, Subject<?>> subjects;
-
-    private SubjectCatalog(Map<String, Subject<?>> subjects) {
-        this.subjects = subjects;
+public final class SubjectCatalog extends LinkedHashMap<String, Subject<?>> {
+    public SubjectCatalog add(String name, Subject<?> subject) {
+        this.put(name, subject);
+        return this;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    /** A snapshot of this catalog's entries. */
-    public Map<String, Subject<?>> toMap() {
-        return Map.copyOf(subjects);
-    }
-
-    /** A builder pre-populated with this catalog's existing entries - the basis for {@code KeycardConfig.Builder#addSubject}. */
-    public Builder toBuilder() {
-        return new Builder(subjects);
-    }
-
-    public static final class Builder {
-        private final Map<String, Subject<?>> subjects;
-
-        private Builder() {
-            this.subjects = new LinkedHashMap<>();
-        }
-
-        private Builder(Map<String, Subject<?>> subjects) {
-            this.subjects = new LinkedHashMap<>(subjects);
-        }
-
-        public Builder add(String key, Subject<?> subject) {
-            subjects.put(key, subject);
-            return this;
-        }
-
-        public SubjectCatalog build() {
-            return new SubjectCatalog(new LinkedHashMap<>(subjects));
-        }
+    public SubjectCatalog add(Subject<?> subject) {
+        if (subject.dynamic())
+            throw new PolicyArgumentException("Dynamic subject must added to the catalog with a name");
+        return this.add(subject.name(), subject);
     }
 }

@@ -31,7 +31,9 @@ policy.can(create, article);
 // Check if the user can update THIS article (with conditions)
 Article data = new Article(1, userId);
 Subject<Article> ref = article.wrap(data);
-policy.can(update, ref);
+policy.
+
+can(update, ref);
 ```
 
 ### Multiple conditions
@@ -55,11 +57,17 @@ at evaluation time:
 
 ```java
 new PolicyBuilder(config)
-    .allow(update, article, Conditions.and(
-        Conditions.eq(Article::getOwnerId, userId),
-        Conditions.ne(Article::getId, 1)
+    .
+
+allow(update, article, Conditions.and(
+    Conditions.eq(Article::getOwnerId, userId),
+        Conditions.
+
+ne(Article::getId, 1)
     ))
-    .build();
+        .
+
+build();
 ```
 
 ### Field mappers for renamed or computed fields
@@ -76,8 +84,8 @@ SubjectFieldMapper<Post> authorNameMapper = SubjectFieldMapper.<Post>builder()
     .field("authorName", (post) -> post.getAuthor().getName())
     .build();
 
-Subject<Post> post = SubjectFactory.create("Post", authorNameMapper);
-Action read = ActionFactory.create("Read");
+Subject<Post> post = new Subject<>("Post", authorNameMapper);
+Action read = new Action("Read");
 
 KeycardConfig postConfig = KeycardConfig.builder()
     .action(read)
@@ -117,7 +125,7 @@ PolicyDefinition def = new PolicyBuilder(config)
 
 // def.getMeta().getSubjects() includes "Post" even though no allow()/deny()
 // call above needed to declare it separately.
-Policy policy = Policy.from(def, config);
+Policy policy = new Policy(def, config);
 ```
 
 ### Custom error handling

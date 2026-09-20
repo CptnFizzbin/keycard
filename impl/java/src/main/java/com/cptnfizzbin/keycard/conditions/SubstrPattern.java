@@ -3,7 +3,7 @@ package com.cptnfizzbin.keycard.conditions;
 import java.util.regex.Pattern;
 
 /**
- * §7.4.6: a small, non-regex substring pattern language, implemented by
+ * a small, non-regex substring pattern language, implemented by
  * compiling it to a Java regex - the spec explicitly permits this
  * ("Implementations MAY implement $substr however they like internally
  * (including compiling it to the host language's native regex engine, e.g.

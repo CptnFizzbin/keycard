@@ -12,16 +12,16 @@ import { DISABLED, effectiveAnyAction, effectiveAnySubject } from "../policy/wil
 import type { Subject } from "../subject/index.ts"
 import { KEYCARD_POLICY_VERSION } from "../version.ts"
 
-/** The v1 SemVer this builder implements - stamped onto every `buildDef()` output, per SPEC_V0.md §2. */
+/** The v1 SemVer this builder implements - stamped onto every `buildDef()` output, per SPEC_V0.md */
 export const BUILDER_VERSION = KEYCARD_POLICY_VERSION
 
 /**
  * The only things a caller ever needs to declare explicitly - the
- * wildcard tokens themselves (§3.2.1), since nothing about them can be
+ * wildcard tokens themselves, since nothing about them can be
  * inferred from usage, plus the custom operators to register. `anyAction`/
  * `anySubject` accept a bare token string, an `Action`/`Subject` (its
  * `.name` is used), or `null` to disable that wildcard position entirely;
- * omitted means the §3.2.1 "_ANY_" default applies. Deliberately typed
+ * omitted means the "_ANY_" default applies. Deliberately typed
  * against the base `Action`/`Subject` (not `TActions`/`TSubjects`) -
  * a wildcard token isn't one of the policy's own declared actions/
  * subjects, and tying it to those generics would make passing e.g. a
@@ -150,7 +150,7 @@ export class PolicyBuilder<
     return def
   }
 
-  /** §3.2.2/§3.2.3: derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config.actions`/`config.subjects` additionally declare - see the class doc. */
+  /** derives `actions`/`subjects`/`operators` from what was actually used/registered, plus whatever `config.actions`/`config.subjects` additionally declare - see the class doc. */
   private buildMeta(): Meta {
     const meta: Meta = {
       actions: Array.from(new Set([...this.actionsUsed, ...this.configActionNames])),
@@ -178,7 +178,7 @@ export class PolicyBuilder<
     const subjectName = resolveName(this.subjectCatalog, subject.name)
 
     if (conditions) {
-      // SPEC_V0.md §6 property 5, EC-6: a rule wildcarded on both the
+      // SPEC_V0.md property 5, EC-6: a rule wildcarded on both the
       // action and the subject MUST NOT carry a Conditions element - the
       // builder MUST catch this immediately, rather than waiting for
       // eventual construction (Policy.from) to catch it.
@@ -189,7 +189,7 @@ export class PolicyBuilder<
         && anySubject !== DISABLED && subjectName === anySubject
       ) {
         throw new PolicyArgumentError(
-          `A rule wildcarded on both the action ("${anyAction}") and the subject ("${anySubject}") MUST NOT carry a Conditions element (SPEC_V0.md §6 property 5, EC-6).`,
+          `A rule wildcarded on both the action ("${anyAction}") and the subject ("${anySubject}") MUST NOT carry a Conditions element (SPEC_V0.md property 5, EC-6).`,
         )
       }
     }

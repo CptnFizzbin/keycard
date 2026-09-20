@@ -9,7 +9,6 @@ const GITHUB_URL = "https://github.com/CptnFizzbin/keycard"
 
 const config: Config = {
   title: "KeyCard",
-  tagline: "Define your access policy once. Enforce it everywhere.",
   favicon: "img/favicon.svg",
 
   url: "https://keycard.cptnfizzbin.dev",
@@ -71,6 +70,15 @@ const config: Config = {
         editUrl: `${GITHUB_URL}/tree/main/website/`,
       } satisfies PluginContentDocs.Options,
     ],
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "spec",
+        path: "spec",
+        routeBasePath: "spec",
+        editUrl: `${GITHUB_URL}/tree/main/website/`,
+      } satisfies PluginContentDocs.Options,
+    ],
   ],
 
   themeConfig: {
@@ -105,6 +113,13 @@ const config: Config = {
           type: "custom-languageSelector",
           position: "left",
           label: "Language",
+        },
+        {
+          type: "doc",
+          docsPluginId: "spec",
+          docId: "spec-v0",
+          label: "Spec",
+          position: "right",
         },
         {
           href: GITHUB_URL,

@@ -36,6 +36,7 @@ implementation 'com.cptnfizzbin:keycard:0.0.4'
 
 ```java
 import com.cptnfizzbin.keycard.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -52,12 +53,12 @@ class Article {
 public class Main {
     public static void main(String[] args) {
         // Define your actions
-        Action create = ActionFactory.create("create");
-        Action update = ActionFactory.create("update");
-        Action delete = ActionFactory.create("delete");
+        Action create = new Action("create");
+        Action update = new Action("update");
+        Action delete = new Action("delete");
 
         // Define your subjects
-        Subject<Article> article = SubjectFactory.create("article");
+        Subject<Article> article = new Subject<>("article");
 
         // Bundle the action/subject vocabulary into one KeycardConfig, built
         // once and shared by every PolicyBuilder/Policy instead of kept in
@@ -102,12 +103,18 @@ public class Main {
 Java's generic type system ensures compile-time verification:
 
 ```java
-Action create = ActionFactory.create("create");
-Subject<Article> article = SubjectFactory.create("article");
+Action create = new Action("create");
+Subject<Article> article = new Subject<>("article");
 
-policy.can(create, article);        // ✓ OK
-policy.can("create", article);      // ✗ Compiler error - action must be an Action
-policy.can(create, "article");      // ✗ Compiler error - subject must be a Subject<?>
+policy.
+
+can(create, article);        // ✓ OK
+policy.
+
+can("create",article);      // ✗ Compiler error - action must be an Action
+policy.
+
+can(create, "article");      // ✗ Compiler error - subject must be a Subject<?>
 ```
 
 ## Condition Operators
@@ -135,7 +142,7 @@ policy.can(create, "article");      // ✗ Compiler error - subject must be a Su
 Create type-safe actions:
 
 ```java
-Action create = ActionFactory.create("create");
+Action create = new Action("create");
 ```
 
 ### SubjectFactory
@@ -143,7 +150,7 @@ Action create = ActionFactory.create("create");
 Create type-safe subjects:
 
 ```java
-Subject<Article> article = SubjectFactory.create("article");
+Subject<Article> article = new Subject<>("article");
 ```
 
 ### Subject<T>
@@ -211,30 +218,42 @@ policy.can(create, article);
 // Check if user can update THIS article (with conditions)
 Article data = new Article(1, userId);
 Subject<Article> ref = article.wrap(data);
-policy.can(update, ref);
+policy.
+
+can(update, ref);
 ```
 
 ### Multiple Conditions
 
 ```java
 new PolicyBuilder(config)
-    .allow(update, article, Map.of(
-        "$and", List.of(
-            Map.of("ownerId", userId),
-            Map.of("id", Map.of("$ne", 1))
-        )
+    .
+
+allow(update, article, Map.of(
+    "$and", List.of(
+          Map.of("ownerId", userId),
+            Map.
+
+of("id",Map.of("$ne", 1))
+    )
     ))
-    .build();
+    .
+
+build();
 ```
 
 ### Custom Error Handling
 
 ```java
-try {
+try{
     policy.require(delete, article);
-} catch (PolicyException e) {
-    logger.warn("Access denied: {}", e.getMessage());
-    sendError(403, "You do not have permission to delete this article");
+}catch(
+PolicyException e){
+    logger.
+
+warn("Access denied: {}",e.getMessage());
+
+sendError(403,"You do not have permission to delete this article");
 }
 ```
 
@@ -245,8 +264,8 @@ Policies can be serialized with Gson and shared across languages:
 ```java
 // Build policy in Java
 Policy policy = new PolicyBuilder(config)
-    .allow(create, article)
-    .build();
+        .allow(create, article)
+        .build();
 
 // Serialize
 Gson gson = new Gson();

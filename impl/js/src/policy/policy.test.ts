@@ -11,7 +11,7 @@ import { KEYCARD_POLICY_VERSION } from "../version.ts"
 const Delete = createAction("Delete")
 const Read = createAction("Read")
 
-describe("Policy: last-rule-wins evaluation (SPEC_V0.md §6)", () => {
+describe("Policy: last-rule-wins evaluation", () => {
   test("a later-declared deny rule overrides an earlier allow for the same action/subject", () => {
     const policy = Policy.from({
       version: "0.1",
@@ -124,7 +124,7 @@ describe("Policy: construction-time validation", () => {
     ).toThrow(PolicyLoadException)
   })
 
-  // --- operator registry collisions (SPEC_V0.md §3.2.3, EC-16) ---
+  // --- operator registry collisions ---
 
   test("throws PolicyLoadException when a custom operator collides with a builtin", () => {
     expect(() =>
@@ -158,7 +158,7 @@ describe("Policy: construction-time validation", () => {
   test("throws PolicyLoadException when meta.operators declares a name nothing is registered for", () => {
     // Unlike EC-13 above, this throws even though no rule references
     // $hasRole at all - meta.operators' registration requirement is
-    // checked in full at construction time, not merely for names rules
+    // checked in full when loading a policy, not merely for names rules
     // actually use.
     expect(() =>
       Policy.from({

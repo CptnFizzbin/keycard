@@ -51,12 +51,11 @@ implementation 'com.cptnfizzbin:keycard:0.0.4'
 ```java
 import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
-import com.cptnfizzbin.keycard.action.ActionFactory;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFactory;
 import com.cptnfizzbin.keycard.builder.PolicyBuilder;
 import com.cptnfizzbin.keycard.policy.Policy;
 import com.cptnfizzbin.keycard.errors.PolicyException;
+
 import java.util.List;
 import java.util.Map;
 
@@ -73,12 +72,12 @@ class Article {
 public class Main {
     public static void main(String[] args) {
         // Define your actions
-        Action create = ActionFactory.create("create");
-        Action update = ActionFactory.create("update");
-        Action delete = ActionFactory.create("delete");
+        Action create = new Action("create");
+        Action update = new Action("update");
+        Action delete = new Action("delete");
 
         // Define your subjects
-        Subject<Article> article = SubjectFactory.create("article");
+        Subject<Article> article = new Subject<>("article");
 
         // Bundle the action/subject vocabulary into one KeycardConfig, built
         // once and shared by every PolicyBuilder/Policy instead of kept in
@@ -123,12 +122,18 @@ public class Main {
 Java's generic type system enforces compile-time verification:
 
 ```java
-Action create = ActionFactory.create("create");
-Subject<Article> article = SubjectFactory.create("article");
+Action create = new Action("create");
+Subject<Article> article = new Subject<>("article");
 
-policy.can(create, article);        // OK
-policy.can("create", article);      // compiler error: action must be an Action
-policy.can(create, "article");      // compiler error: subject must be a Subject<?>
+policy.
+
+can(create, article);        // OK
+policy.
+
+can("create",article);      // compiler error: action must be an Action
+policy.
+
+can(create, "article");      // compiler error: subject must be a Subject<?>
 ```
 
 ## Beyond the basics

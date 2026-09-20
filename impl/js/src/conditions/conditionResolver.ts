@@ -13,7 +13,7 @@ import { checkField } from "./operators/field/fieldAccess.ts"
 export const BUILTIN_OPERATOR_NAMES: ReadonlySet<string> = new Set(DefaultOperators.map((op) => op.name))
 
 /**
- * Implements SPEC_V0.md §7: the condition language and its
+ * Implements SPEC_V0.md: the condition language and its
  * evaluation semantics. Every operator's own behavior lives in
  * `./operators/**` - this class is just the dispatch loop: it looks a
  * `$`-prefixed key up in its registry (built-ins plus whatever custom
@@ -27,11 +27,11 @@ export class ConditionResolver {
 
   /**
    * @param operators custom operators to register alongside the built-ins
-   *   (§7.4.12) - built-in and custom operators share this one array-based
+   * - built-in and custom operators share this one array-based
    *   entry point. Constructing this with a name collision (a custom
    *   operator sharing a `$name` with a built-in, or with another operator
    *   in `operators`) MUST throw a {@link PolicyLoadException} immediately
-   *   - never a silent overwrite (SPEC_V0.md §3.2.3, EC-16).
+   *   - never a silent overwrite.
    */
   constructor(operators: AnyOperator[] = []) {
     for (const operator of DefaultOperators) {
@@ -41,7 +41,7 @@ export class ConditionResolver {
     for (const operator of operators) {
       if (this.operatorRegistry.has(operator.name)) {
         throw new PolicyLoadException(
-          `Duplicate operator "${operator.name}": an operator with this name is already registered (built-in or custom) - operator names MUST be unique (SPEC_V0.md §3.2.3, EC-16).`,
+          `Duplicate operator "${operator.name}": an operator with this name is already registered (built-in or custom) - operator names MUST be unique.`,
         )
       }
       this.operatorRegistry.set(operator.name, operator)
@@ -49,7 +49,7 @@ export class ConditionResolver {
   }
 
   /**
-   * §3.2.3, EC-15 (promoted): throws if any name in `names` isn't
+   * throws if any name in `names` isn't
    * registered on this resolver - built-in or custom. Used by `Policy` to
    * enforce `meta.operators` registration coverage in full at construction
    * time, regardless of whether any rule actually reaches a given operator
@@ -71,7 +71,7 @@ export class ConditionResolver {
    *   is still the object in scope (bare-key/`$field` access at the top
    *   level, and inside `$and`/`$or`/`$not`, none of which narrow). Never
    *   consulted once a field access has narrowed once - v1 permits only
-   *   one level of field narrowing (§7.4.10) - so a field the mapper
+   *   one level of field narrowing - so a field the mapper
    *   doesn't define, or any nested access, falls back to ordinary
    *   property access.
    */
@@ -80,7 +80,7 @@ export class ConditionResolver {
   }
 
   /**
-   * §7.4.10: `canNarrowField` tracks whether a field condition (bare-key or
+   * `canNarrowField` tracks whether a field condition (bare-key or
    * `$field`) is still allowed to narrow at this point in the tree - `true`
    * at the root and while only recursing through non-narrowing combinators
    * (`$and`/`$or`/`$not`), `false` once a field condition has already

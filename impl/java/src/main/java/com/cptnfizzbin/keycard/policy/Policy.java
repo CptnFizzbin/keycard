@@ -3,174 +3,49 @@ package com.cptnfizzbin.keycard.policy;
 import com.cptnfizzbin.keycard.KeycardConfig;
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.conditions.ConditionResolver;
-import com.cptnfizzbin.keycard.conditions.Operator;
+import com.cptnfizzbin.keycard.conditions.OperatorCatalog;
 import com.cptnfizzbin.keycard.errors.PolicyException;
 import com.cptnfizzbin.keycard.errors.PolicyLoadException;
 import com.cptnfizzbin.keycard.errors.PolicyVersionException;
 import com.cptnfizzbin.keycard.lib.Catalog;
-import com.cptnfizzbin.keycard.lib.Logger;
 import com.cptnfizzbin.keycard.subject.Subject;
-import com.cptnfizzbin.keycard.subject.SubjectFieldMapper;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
+import lombok.Getter;
+import lombok.val;
 import org.semver4j.Semver;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public final class Policy {
+    @Getter
     private final PolicyDefinition definition;
+
     private final ConditionResolver resolver;
     private final KeycardConfig config;
-    /**
-     * Resolves a dynamic Action/Subject's random name to its catalog key - see {@code lib/Catalog}. Empty (never null) when {@link #config} declares no keyed catalog.
-     */
     private final Map<String, String> actionReverseMap;
     private final Map<String, String> subjectReverseMap;
-    /**
-     * Distinct raw ids already warned about via {@link #warnIfUnregisteredDynamic} - deduped per id, not per {@link #can}/{@link #cannot}/{@link #require} call.
-     */
-    private final Set<String> warnedDynamicIds = new HashSet<>();
 
     public Policy(PolicyDefinition definition) {
-        this(definition, (Collection<Operator>) null);
+        this(definition, new KeycardConfig());
     }
 
-    /**
-     * @param operators custom operators to register alongside the
-     *                  built-ins (SPEC_V0.md §7.4.12) - a single collection-based
-     *                  entry point shared with {@code PolicyBuilder}, so a
-     *                  builder-produced definition can carry its operators through
-     *                  consistently.
-     */
-    public Policy(PolicyDefinition definition, Collection<Operator> operators) {
-        validateVersion(definition.version());
-
-        this.definition = definition;
-        this.config = null;
-        this.actionReverseMap = Map.of();
-        this.subjectReverseMap = Map.of();
-        this.resolver = new ConditionResolver(operators);
-        validateOperatorsRegistered(definition, resolver);
-        validateRules(definition, List.of(), List.of());
-    }
-
-    /**
-     * Advanced escape hatch: supply an already-built {@link ConditionResolver} directly.
-     */
-    public Policy(PolicyDefinition definition, ConditionResolver resolver) {
-        validateVersion(definition.version());
-
-        this.definition = definition;
-        this.config = null;
-        this.actionReverseMap = Map.of();
-        this.subjectReverseMap = Map.of();
-        this.resolver = resolver != null ? resolver : new ConditionResolver();
-        validateOperatorsRegistered(definition, this.resolver);
-        validateRules(definition, List.of(), List.of());
-    }
-
-    /**
-     * @param config shared, optional config also accepted by {@code
-     *               PolicyBuilder} (SPEC_V1-0-0.md §3.2.2/§7.4.12 and the
-     *               SubjectFieldMapper feature): {@code actions}/{@code subjects} widen
-     *               the {@code meta.actions}/{@code meta.subjects} catalogs (EC-8)
-     *               beyond what {@code definition.meta} itself declares; a keyed
-     *               {@code actionCatalog}/{@code subjectCatalog} is also a catalog
-     *               resolving a dynamic (no-name) Action/Subject's random name to its
-     *               key, built once here and cached (see {@code lib/Catalog});
-     *               {@code operators} is registered on this Policy's resolver; {@code
-     *               mapper} is consulted for a subject's fields whenever the {@link
-     *               Subject} passed to {@link #can} doesn't carry its own field mapper.
-     */
     public Policy(PolicyDefinition definition, KeycardConfig config) {
         validateVersion(definition.version());
-
         this.definition = definition;
         this.config = config;
-        this.resolver = new ConditionResolver(config != null ? config.getOperators() : null);
+        this.resolver = new ConditionResolver(config.operators());
 
-        Catalog.Resolution actionsResolution = Catalog.build(
-            config != null ? config.getActions() : null,
-            config != null && config.getActionCatalog() != null ? config.getActionCatalog().toMap() : null,
-            Action::getNameStr,
-            "action");
-        Catalog.Resolution subjectsResolution = Catalog.build(
-            config != null ? config.getSubjects() : null,
-            config != null && config.getSubjectCatalog() != null ? config.getSubjectCatalog().toMap() : null,
-            Subject::getName,
-            "subject");
-        this.actionReverseMap = actionsResolution.reverseMap();
-        this.subjectReverseMap = subjectsResolution.reverseMap();
+        Catalog.Resolution actions = Catalog.build(null, config.actions(), Action::name, "action");
+        Catalog.Resolution subjects = Catalog.build(null, config.subjects(), Subject::name, "subject");
+        this.actionReverseMap = actions.reverseMap();
+        this.subjectReverseMap = subjects.reverseMap();
 
         validateOperatorsRegistered(definition, resolver);
-        validateRules(definition, actionsResolution.names(), subjectsResolution.names());
-    }
-
-    /**
-     * Builds a Policy from an already-parsed PolicyDefinition. KeyCard itself
-     * never reads or writes policy.yaml text - an application (or a test,
-     * via a YAML library of its own choosing) parses the file into a plain
-     * PolicyDefinition and hands it to KeyCard.
-     */
-    public static Policy from(PolicyDefinition definition) {
-        return new Policy(definition);
-    }
-
-    public static Policy from(PolicyDefinition definition, Collection<Operator> operators) {
-        return new Policy(definition, operators);
-    }
-
-    public static Policy from(PolicyDefinition definition, ConditionResolver resolver) {
-        return new Policy(definition, resolver);
-    }
-
-    public static Policy from(PolicyDefinition definition, KeycardConfig config) {
-        return new Policy(definition, config);
-    }
-
-    /**
-     * Alias of {@link #from(PolicyDefinition)}.
-     */
-    public static Policy fromDto(PolicyDefinition definition) {
-        return from(definition);
-    }
-
-    /**
-     * Alias of {@link #from(PolicyDefinition, Collection)}.
-     */
-    public static Policy fromDto(PolicyDefinition definition, Collection<Operator> operators) {
-        return from(definition, operators);
-    }
-
-    /**
-     * Alias of {@link #from(PolicyDefinition, ConditionResolver)}.
-     */
-    public static Policy fromDto(PolicyDefinition definition, ConditionResolver resolver) {
-        return from(definition, resolver);
-    }
-
-    /**
-     * Alias of {@link #from(PolicyDefinition, KeycardConfig)}.
-     */
-    public static Policy fromDto(PolicyDefinition definition, KeycardConfig config) {
-        return from(definition, config);
-    }
-
-    public PolicyDefinition getDefinition() {
-        return toDefinition();
-    }
-
-    /**
-     * Returns the PolicyDefinition backing this policy.
-     */
-    public PolicyDefinition toDefinition() {
-        return definition;
-    }
-
-    /**
-     * Alias of {@link #toDefinition()}.
-     */
-    public PolicyDefinition toDto() {
-        return toDefinition();
+        validateRules(definition, actions.names(), subjects.names());
     }
 
     /**
@@ -186,14 +61,14 @@ public final class Policy {
 
     public void require(Action action, Subject<?> subject) throws PolicyException {
         if (!can(action, subject)) {
-            String actionName = Catalog.resolveName(actionReverseMap, action.getNameStr());
-            String subjectName = Catalog.resolveName(subjectReverseMap, subject.getName());
+            String actionName = Catalog.resolveName(actionReverseMap, action.name());
+            String subjectName = Catalog.resolveName(subjectReverseMap, subject.name());
             throw new PolicyException("Access denied: cannot " + actionName + " on " + subjectName);
         }
     }
 
     /**
-     * SPEC_V0.md §6: reverse scan over `rules`, returning the effect of
+     * SPEC_V1-0.md: reverse scan over `rules`, returning the effect of
      * the first (i.e. most-recently-declared) rule whose action, subject,
      * and (if present) conditions all match. There is no independent
      * "allow AND NOT deny" veto and no combination of multiple matching
@@ -204,11 +79,10 @@ public final class Policy {
         PolicyDefinition.Meta meta = definition.meta();
         WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
         WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);
-        List<PolicyDefinition.Rule> rules = definition.rules();
-        warnIfUnregisteredDynamic(action.isDynamic(), action.getNameStr(), actionReverseMap, "Action", "Action.create()/ActionFactory.create()");
-        warnIfUnregisteredDynamic(subject.isDynamic(), subject.getName(), subjectReverseMap, "Subject", "Subject.create()/SubjectFactory.create()");
-        String actionName = Catalog.resolveName(actionReverseMap, action.getNameStr());
-        String subjectName = Catalog.resolveName(subjectReverseMap, subject.getName());
+        List<PolicyDefinition.Rule> rules = definition.getRules();
+
+        String actionName = Catalog.resolveName(actionReverseMap, action.name());
+        String subjectName = Catalog.resolveName(subjectReverseMap, subject.name());
 
         for (int i = rules.size() - 1; i >= 0; i--) {
             PolicyDefinition.Rule rule = rules.get(i);
@@ -220,52 +94,23 @@ public final class Policy {
             if (conditions != null) {
                 // A conditional rule can never be satisfied by a bare-type/no-instance
                 // check - there's no instance data for the condition to inspect (EC-7).
-                if (subject.getInstance().isEmpty()) continue;
-                if (!resolver.evaluate(subject.getInstance().get(), conditions, resolveFieldMapper(subject))) continue;
+                if (subject.claims().isEmpty()) continue;
+                if (!resolver.evaluate(subject.claims().get(), conditions)) continue;
                 return "allow".equals(rule.effect());
             }
 
             return "allow".equals(rule.effect());
         }
 
-        return false; // EC-1, EC-2: default deny.
-    }
-
-    /**
-     * The subject's own field mapper (set via {@code SubjectFactory.create}) takes precedence; {@code config.getMapper()}, keyed by the subject's resolved catalog name, is the fallback.
-     */
-    private SubjectFieldMapper<?> resolveFieldMapper(Subject<?> subject) {
-        if (subject.getFieldMapper().isPresent()) return subject.getFieldMapper().get();
-        if (config == null || config.getMapper() == null) return null;
-        return config.getMapper().get(Catalog.resolveName(subjectReverseMap, subject.getName())).orElse(null);
-    }
-
-    /**
-     * A dynamic (no-name) Action/Subject never registered in any catalog
-     * reachable from this Policy can't resolve to a real name - it falls
-     * through to default-deny like any other non-match (unless a wildcard
-     * rule catches it), but that's silent otherwise, so warn once per
-     * distinct id rather than once per {@link #can}/{@link #cannot}/
-     * {@link #require} call.
-     */
-    private void warnIfUnregisteredDynamic(boolean dynamic, String rawName, Map<String, String> reverseMap, String kind, String factory) {
-        if (!dynamic || reverseMap.containsKey(rawName) || warnedDynamicIds.contains(rawName)) return;
-        warnedDynamicIds.add(rawName);
-        Logger logger = config != null && config.getLogger() != null ? config.getLogger() : Logger.NO_OP;
-        logger.warn(
-            kind + " created via " + factory + " with no name was checked but never registered in any"
-                + " KeycardConfig catalog reachable from this Policy - it can never match a non-wildcard rule."
-        );
+        return false;
     }
 
     private static void validateVersion(String version) {
-        Semver parsed;
-        try {
-            parsed = Semver.coerce(version);
-        } catch (RuntimeException e) {
-            throw new PolicyVersionException("Invalid policy version \"" + version + "\": " + e.getMessage());
-        }
-        if (!parsed.satisfies(KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS)) {
+        val supported = Optional.ofNullable(Semver.coerce(version))
+            .orElseThrow(() -> new PolicyVersionException("Invalid version " + version))
+            .satisfies(KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS);
+
+        if (!supported) {
             throw new PolicyVersionException(
                 "Unsupported policy version \"" + version + "\": this implementation supports " + KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS
             );
@@ -273,12 +118,10 @@ public final class Policy {
     }
 
     /**
-     * §3.2.3, EC-15 (promoted): when {@code meta.operators} is declared,
-     * every name it lists MUST already be registered on this Policy - built
-     * -in or custom - checked once here at construction time, regardless of
+     * when `meta.operators` is declared, every
+     * name it lists MUST already be registered on this Policy - built-in or
+     * custom - checked once here when loading a policy, regardless of
      * whether any rule actually reaches that operator during evaluation.
-     * This replaces the previous behavior of deferring an unregistered-but
-     * -cataloged name to a runtime-only diagnostic.
      */
     private static void validateOperatorsRegistered(PolicyDefinition definition, ConditionResolver resolver) {
         PolicyDefinition.Meta meta = definition.meta();
@@ -289,80 +132,103 @@ public final class Policy {
     }
 
     /**
-     * @param configActionNames/@param configSubjectNames resolved catalog names (see {@code lib/Catalog}) that, when given, widen the {@code meta.actions}/{@code meta.subjects} catalogs below (EC-8) beyond what {@code definition.meta} declares.
+     * @param configActionNames resolved catalog names (see {@code lib.Catalog}) that, when given, widen the `meta.actions` catalog below beyond what `definition.meta` declares.
+     * @param configSubjectNames resolved catalog names (see {@code lib.Catalog}) that, when given, widen the `meta.subjects` catalog below beyond what `definition.meta` declares.
      */
     private static void validateRules(PolicyDefinition definition, List<String> configActionNames, List<String> configSubjectNames) {
         PolicyDefinition.Meta meta = definition.meta();
         WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
         WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);
 
-        Set<String> actionsCatalog = (meta != null && meta.actions() != null) || !configActionNames.isEmpty()
-            ? unionNames(meta != null ? meta.actions() : null, configActionNames)
-            : null;
-        Set<String> subjectsCatalog = (meta != null && meta.subjects() != null) || !configSubjectNames.isEmpty()
-            ? unionNames(meta != null ? meta.subjects() : null, configSubjectNames)
-            : null;
-        Set<String> operatorsCatalog = meta != null && meta.operators() != null ? new HashSet<>(meta.operators()) : null;
+        List<String> metaActions = meta != null ? meta.actions() : null;
+        List<String> metaSubjects = meta != null ? meta.subjects() : null;
+        List<String> metaOperators = meta != null ? meta.operators() : null;
+
+        Set<String> actionsCatalog = null;
+        if ((metaActions != null && !metaActions.isEmpty()) || !configActionNames.isEmpty()) {
+            actionsCatalog = new LinkedHashSet<>();
+            if (metaActions != null) actionsCatalog.addAll(metaActions);
+            actionsCatalog.addAll(configActionNames);
+        }
+
+        Set<String> subjectsCatalog = null;
+        if ((metaSubjects != null && !metaSubjects.isEmpty()) || !configSubjectNames.isEmpty()) {
+            subjectsCatalog = new LinkedHashSet<>();
+            if (metaSubjects != null) subjectsCatalog.addAll(metaSubjects);
+            subjectsCatalog.addAll(configSubjectNames);
+        }
+
+        Set<String> operatorsCatalog = metaOperators != null ? new LinkedHashSet<>(metaOperators) : null;
 
         for (PolicyDefinition.Rule rule : definition.getRules()) {
-            String effect = rule.effect();
-            String action = rule.action();
-            String subjectName = rule.subjectName();
-            Map<String, Object> conditions = rule.conditions();
-
-            if (!"allow".equals(effect) && !"deny".equals(effect)) {
+            if (!"allow".equals(rule.effect()) && !"deny".equals(rule.effect())) {
                 throw new PolicyLoadException(
-                    "Malformed rule tuple: effect must be \"allow\" or \"deny\", got " + effect
-                        + " (SPEC_V0.md §3.3, EC-10)."
+                    "Malformed rule tuple: effect must be \"allow\" or \"deny\", got " + rule.effect() + "."
                 );
             }
-            if (action == null) {
-                throw new PolicyLoadException("Malformed rule tuple: action is required (SPEC_V0.md §3.3, EC-10).");
+            if (rule.action() == null) {
+                throw new PolicyLoadException("Malformed rule tuple: action must be a string, got null.");
             }
-            if (subjectName == null) {
-                throw new PolicyLoadException("Malformed rule tuple: subject is required (SPEC_V0.md §3.3, EC-10).");
+            if (rule.subjectName() == null) {
+                throw new PolicyLoadException("Malformed rule tuple: subject must be a string, got null.");
             }
 
-            boolean isWildcardAction = anyAction instanceof WildcardToken.Named named && action.equals(named.token());
-            boolean isWildcardSubject = anySubject instanceof WildcardToken.Named named && subjectName.equals(named.token());
+            boolean isWildcardAction = anyAction instanceof WildcardToken.Named named && rule.action().equals(named.token());
+            boolean isWildcardSubject = anySubject instanceof WildcardToken.Named named && rule.subjectName().equals(named.token());
 
-            if (isWildcardAction && isWildcardSubject && conditions != null) {
+            if (isWildcardAction && isWildcardSubject && rule.conditions() != null) {
                 throw new PolicyLoadException(
-                    "Rule [" + effect + ", " + action + ", " + subjectName
-                        + "] is wildcarded on both the action and the subject but carries a Conditions element"
-                        + " - this MUST be unconditional (SPEC_V0.md §6 property 5, EC-6)."
+                    "Rule [" + rule.effect() + ", " + rule.action() + ", " + rule.subjectName()
+                        + "] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md property 5, EC-6)."
                 );
             }
 
-            if (actionsCatalog != null && !isWildcardAction && !actionsCatalog.contains(action)) {
-                throw new PolicyLoadException(
-                    "Rule action \"" + action + "\" is not covered by meta.actions (SPEC_V0.md §3.2.2, EC-8)."
-                );
+            if (actionsCatalog != null && !isWildcardAction && !actionsCatalog.contains(rule.action())) {
+                throw new PolicyLoadException("Rule action \"" + rule.action() + "\" is not covered by meta.actions.");
             }
-            if (subjectsCatalog != null && !isWildcardSubject && !subjectsCatalog.contains(subjectName)) {
-                throw new PolicyLoadException(
-                    "Rule subject \"" + subjectName + "\" is not covered by meta.subjects (SPEC_V0.md §3.2.2, EC-8)."
-                );
+            if (subjectsCatalog != null && !isWildcardSubject && !subjectsCatalog.contains(rule.subjectName())) {
+                throw new PolicyLoadException("Rule subject \"" + rule.subjectName() + "\" is not covered by meta.subjects.");
             }
 
-            if (operatorsCatalog != null && conditions != null) {
-                Set<String> used = new HashSet<>();
-                ConditionResolver.collectCustomOperatorNames(conditions, used);
+            if (operatorsCatalog != null && rule.conditions() != null) {
+                Set<String> used = new LinkedHashSet<>();
+                collectCustomOperators(rule.conditions(), used);
                 for (String op : used) {
                     if (!operatorsCatalog.contains(op)) {
-                        throw new PolicyLoadException(
-                            "Rule uses custom operator \"" + op + "\" not covered by meta.operators (SPEC_V0.md §3.2.3, EC-13)."
-                        );
+                        throw new PolicyLoadException("Rule uses custom operator \"" + op + "\" not covered by meta.operators.");
                     }
                 }
             }
         }
     }
 
-    private static Set<String> unionNames(List<String> metaNames, List<String> configNames) {
-        Set<String> names = new HashSet<>();
-        if (metaNames != null) names.addAll(metaNames);
-        names.addAll(configNames);
-        return names;
+    /**
+     * Recursively collects every non-built-in, `$`-prefixed operator name
+     * used anywhere in a Conditions tree - used to enforce `meta.operators`
+     * coverage when loading a policy.
+     */
+    private static void collectCustomOperators(Object condition, Set<String> out) {
+        if (!(condition instanceof Map<?, ?> map)) return;
+
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            String key = String.valueOf(entry.getKey());
+            Object value = entry.getValue();
+
+            if (key.startsWith("$")) {
+                if (key.equals("$or") || key.equals("$and")) {
+                    if (value instanceof List<?> list) {
+                        for (Object c : list) collectCustomOperators(c, out);
+                    }
+                } else if (key.equals("$not")) {
+                    collectCustomOperators(value, out);
+                } else if (key.equals("$field") && value instanceof List<?> list && list.size() == 2) {
+                    collectCustomOperators(list.get(1), out);
+                } else if (!OperatorCatalog.BUILTIN_NAMES.contains(key)) {
+                    out.add(key);
+                }
+            } else {
+                collectCustomOperators(value, out);
+            }
+        }
     }
 }

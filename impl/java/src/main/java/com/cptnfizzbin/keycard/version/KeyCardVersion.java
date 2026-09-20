@@ -8,7 +8,7 @@ import org.semver4j.range.RangeListFactory;
 import java.util.Objects;
 
 /**
- * The v1 SemVer this implementation speaks (SPEC_V0.md §2) - the
+ * The v1 SemVer this implementation speaks - the
  * single source of truth {@link com.cptnfizzbin.keycard.policy.Policy}'s
  * {@code SUPPORTED_VERSION}, {@link
  * com.cptnfizzbin.keycard.builder.PolicyBuilder}'s {@code
