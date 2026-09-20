@@ -132,7 +132,8 @@ public final class Policy {
     }
 
     /**
-     * @param configActionNames/@param configSubjectNames resolved catalog names (see {@code lib.Catalog}) that, when given, widen the `meta.actions`/`meta.subjects` catalogs below beyond what `definition.meta` declares.
+     * @param configActionNames resolved catalog names (see {@code lib.Catalog}) that, when given, widen the `meta.actions` catalog below beyond what `definition.meta` declares.
+     * @param configSubjectNames resolved catalog names (see {@code lib.Catalog}) that, when given, widen the `meta.subjects` catalog below beyond what `definition.meta` declares.
      */
     private static void validateRules(PolicyDefinition definition, List<String> configActionNames, List<String> configSubjectNames) {
         PolicyDefinition.Meta meta = definition.meta();
