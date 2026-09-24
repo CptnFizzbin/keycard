@@ -54,7 +54,7 @@ public class DynamicCatalogTest {
 
     @Test
     public void subjectCreateWithANameBehavesAsBeforeNotDynamic() {
-        Subject<?> subject = new Subject<>("Article");
+        Subject<?, ?> subject = new Subject<>("Article");
 
         assertEquals("Article", subject.name());
         assertFalse(subject.dynamic());
@@ -62,7 +62,7 @@ public class DynamicCatalogTest {
 
     @Test
     public void subjectCreateWithNoNameGeneratesAUsableIdAndMarksItDynamic() {
-        Subject<?> subject = new Subject<>();
+        Subject<?, ?> subject = new Subject<>();
 
         assertFalse(subject.name().isEmpty());
         assertTrue(subject.dynamic());
@@ -70,16 +70,16 @@ public class DynamicCatalogTest {
 
     @Test
     public void eachNoArgSubjectCreateCallGeneratesADistinctId() {
-        Subject<?> a = new Subject<>();
-        Subject<?> b = new Subject<>();
+        Subject<?, ?> a = new Subject<>();
+        Subject<?, ?> b = new Subject<>();
 
         assertNotEquals(a.name(), b.name());
     }
 
     @Test
     public void subjectWrapPreservesTheGeneratedIdAndDynamicMarker() {
-        Subject<Integer> subject = new Subject<>();
-        Subject<Integer> wrapped = subject.wrap(1);
+        Subject<Integer, ?> subject = new Subject<>();
+        Subject<Integer, ?> wrapped = subject.wrap(1);
 
         assertEquals(subject.name(), wrapped.name());
         assertTrue(wrapped.dynamic());
@@ -91,7 +91,7 @@ public class DynamicCatalogTest {
     @Test
     public void aKeyedCatalogsKeyNotTheDynamicDefsRandomIdIsWhatGetsSerialized() {
         Action create = new Action();
-        Subject<?> article = new Subject<>();
+        Subject<?, ?> article = new Subject<>();
 
         KeycardConfig config = new KeycardConfig();
         config.actions().add("create", create);
@@ -123,7 +123,7 @@ public class DynamicCatalogTest {
     @Test
     public void allowThrowsPolicyArgumentExceptionForADynamicActionNeverRegisteredInTheCatalog() {
         Action create = new Action();
-        Subject<?> article = new Subject<>("Article");
+        Subject<?, ?> article = new Subject<>("Article");
 
         KeycardConfig config = new KeycardConfig();
         config.actions().add("update", new Action());
@@ -134,7 +134,7 @@ public class DynamicCatalogTest {
     @Test
     public void allowThrowsPolicyArgumentExceptionForADynamicSubjectNeverRegisteredInTheCatalog() {
         Action read = new Action("Read");
-        Subject<?> article = new Subject<>();
+        Subject<?, ?> article = new Subject<>();
 
         assertThrows(PolicyArgumentException.class, () -> new PolicyBuilder(new KeycardConfig()).allow(read, article));
     }
@@ -155,7 +155,7 @@ public class DynamicCatalogTest {
         // "if using a catalog, defining the name is optional" - a catalog
         // key wins for any entry, named or not.
         Action create = new Action("Create");
-        Subject<?> article = new Subject<>("Article");
+        Subject<?, ?> article = new Subject<>("Article");
 
         KeycardConfig config = new KeycardConfig();
         config.actions().add("submit", create);
@@ -172,7 +172,7 @@ public class DynamicCatalogTest {
     @Test
     public void aDynamicDefResolvesViaItsCatalogKeyToMatchARuleWrittenAgainstThatKey() {
         Action create = new Action();
-        Subject<?> article = new Subject<>();
+        Subject<?, ?> article = new Subject<>();
 
         KeycardConfig config = new KeycardConfig();
         config.actions().add("create", create);

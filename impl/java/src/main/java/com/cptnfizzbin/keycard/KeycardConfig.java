@@ -27,6 +27,28 @@ public class KeycardConfig {
     private OperatorCatalog operators = new OperatorCatalog();
 
     /**
+     * Gates two things together: the eager, fail-fast checks {@link
+     * com.cptnfizzbin.keycard.builder.PolicyBuilder}/{@code Policy} do at
+     * construction beyond what's needed to actually resolve/evaluate a rule
+     * (a dynamic Action/Subject used but never registered on this catalog,
+     * a {@code Policy}'s loaded {@code PolicyDefinition} not actually
+     * satisfying its own declared {@code meta.actions}/{@code
+     * meta.subjects}/{@code meta.operators}) - and whether {@link
+     * PolicyBuilder#buildDef()} attaches the derived {@code meta} block at
+     * all. Worth paying for in development, where the goal is catching a
+     * bad rule before it's reviewed. In production, a definition that
+     * already passed CI doesn't need to re-prove itself on every boot.
+     */
+    private boolean emitMeta = true;
+
+    /**
+     * Reserved for embedding/running a policy's own shared, cross-language
+     * test cases (SPEC_V0.md's {@code tests} block) - not yet wired to
+     * anything in this implementation.
+     */
+    private boolean emitTests = false;
+
+    /**
      * Undeclared ({@code null}) by default - only {@code PolicyBuilder}'s
      * {@code buildMeta()} ever needs to fold this into {@code
      * meta.anyAction}/{@code meta.anySubject}, and it MUST be able to tell
@@ -56,7 +78,7 @@ public class KeycardConfig {
         return this.anySubject;
     }
 
-    public KeycardConfig anySubject(@Nullable Subject<?> subject) {
+    public KeycardConfig anySubject(@Nullable Subject<?, ?> subject) {
         this.anySubject = subject != null ? new WildcardToken.Named(subject.name()) : new WildcardToken.Disabled();
         return this;
     }

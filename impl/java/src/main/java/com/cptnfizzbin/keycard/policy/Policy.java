@@ -44,22 +44,24 @@ public final class Policy {
         this.actionReverseMap = actions.reverseMap();
         this.subjectReverseMap = subjects.reverseMap();
 
-        validateOperatorsRegistered(definition, resolver);
-        validateRules(definition, actions.names(), subjects.names());
+        if (config.emitMeta()) {
+            validateOperatorsRegistered(definition, resolver);
+            validateRules(definition, actions.names(), subjects.names());
+        }
     }
 
     /**
      * A bare-type check (no instance) - EC-7/EC-9: a conditional rule can never match this.
      */
-    public boolean can(Action action, Subject<?> subject) {
+    public boolean can(Action action, Subject<?, ?> subject) {
         return checkPermission(action, subject);
     }
 
-    public boolean cannot(Action action, Subject<?> subject) {
+    public boolean cannot(Action action, Subject<?, ?> subject) {
         return !can(action, subject);
     }
 
-    public void require(Action action, Subject<?> subject) throws PolicyException {
+    public void require(Action action, Subject<?, ?> subject) throws PolicyException {
         if (!can(action, subject)) {
             String actionName = Catalog.resolveName(actionReverseMap, action.name());
             String subjectName = Catalog.resolveName(subjectReverseMap, subject.name());
@@ -75,7 +77,7 @@ public final class Policy {
      * rules: exactly one rule decides the outcome, or none does and the
      * result is default deny.
      */
-    private boolean checkPermission(Action action, Subject<?> subject) {
+    private boolean checkPermission(Action action, Subject<?, ?> subject) {
         PolicyDefinition.Meta meta = definition.meta();
         WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
         WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);

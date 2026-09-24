@@ -25,7 +25,7 @@ public class PolicyTest {
 
     @Test
     public void testCanCheckByDefinition() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action create = new Action("Create");
 
         Policy policy = new PolicyBuilder()
@@ -37,7 +37,7 @@ public class PolicyTest {
 
     @Test
     public void testCanCheckByReference() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action update = new Action("Update");
 
         Article data = new Article(1, 42, "published");
@@ -50,7 +50,7 @@ public class PolicyTest {
 
     @Test
     public void testCannotCheck() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
@@ -62,7 +62,7 @@ public class PolicyTest {
 
     @Test
     public void testRequireAllowed() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action create = new Action("Create");
 
         Policy policy = new PolicyBuilder()
@@ -75,7 +75,7 @@ public class PolicyTest {
 
     @Test(expected = PolicyException.class)
     public void testRequireDenied() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
@@ -87,7 +87,7 @@ public class PolicyTest {
 
     @Test
     public void testDenyOverridesAllow() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
@@ -101,7 +101,7 @@ public class PolicyTest {
 
     @Test
     public void testDenyWithConditionOnlyOverridesWhenItMatches() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
@@ -115,7 +115,7 @@ public class PolicyTest {
 
     @Test
     public void testLastRuleWinsReopensWhatAnEarlierDenyClosed() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
 
         Policy policy = new PolicyBuilder()
@@ -128,13 +128,13 @@ public class PolicyTest {
 
     /**
      * `allow`/`deny`/`can`/`cannot`/`require` always take a real
-     * `Action` and `Subject<?>` - no bare-`String` or raw-instance
+     * `Action` and `Subject<?, ?>` - no bare-`String` or raw-instance
      * overloads. A bare Subject (no `.wrap()`) is a type-only check; a
      * wrapped one carries instance data a Conditions element can inspect.
      */
     @Test
     public void alwaysRequiresActionAndSubject() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action read = new Action("Read");
         Action update = new Action("Update");
 
@@ -162,7 +162,7 @@ public class PolicyTest {
      */
     @Test
     public void builderSuppliedOperatorsCarryThroughToTheBuiltPolicy() {
-        Subject<Article> article = new Subject<>("Article");
+        Subject<Article, ?> article = new Subject<>("Article");
         Action delete = new Action("Delete");
 
         KeycardConfig config = new KeycardConfig();

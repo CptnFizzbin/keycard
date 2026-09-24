@@ -165,8 +165,8 @@ public class PolicyValidationTest {
 
     @Test
     public void buildDefDerivesActionsSubjectsAndOperatorsFromWhatWasActuallyUsed() {
-        Subject<?> article = new Subject<>("Article");
-        Subject<?> user = new Subject<>("User");
+        Subject<?, ?> article = new Subject<>("Article");
+        Subject<?, ?> user = new Subject<>("User");
         Action read = new Action("Read");
         Action update = new Action("Update");
         Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> true);
@@ -239,7 +239,7 @@ public class PolicyValidationTest {
     public void keycardConfigOperatorsIsUsedByPolicyBuilder() {
         Operator hasRole = Operator.of("$hasRole", (s, v, ctx) -> true);
         KeycardConfig config = withOperators(hasRole);
-        Subject<Object> article = new Subject<>("Article");
+        Subject<Object, ?> article = new Subject<>("Article");
 
         Policy policy = new PolicyBuilder(config)
             .allow(new Action("Read"), article, Condition.op("$hasRole", "admin"))
@@ -261,7 +261,7 @@ public class PolicyValidationTest {
     @Test
     public void keycardConfigAnyActionAndAnySubjectDeclareTheWildcardTokens() {
         Action AnyAction = new Action("*");
-        Subject<Object> AnySubject = new Subject<>("*");
+        Subject<Object, ?> AnySubject = new Subject<>("*");
 
         KeycardConfig config = new KeycardConfig()
             .anyAction(AnyAction)

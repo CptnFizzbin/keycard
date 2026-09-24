@@ -102,6 +102,23 @@ public class Condition<S> {
         return new Condition<>(operator, value);
     }
 
+    /**
+     * A custom (or built-in) operator scoped to a field, for an operator
+     * with no dedicated helper above - e.g. {@code Condition.op(Claims::createdAt, "$withinDays", 30)}.
+     */
+    public static <T, R> Condition<T> op(FieldGetter<T, R> getter, String operator, Object value) {
+        return new Condition<>(extractFieldName(getter), operator, value);
+    }
+
+    /**
+     * Identity - returns {@code condition} unchanged. Purely for
+     * readability at the top of an {@code allow}/{@code deny} call, so a
+     * composite condition tree reads as "allow ... where &lt;condition&gt;".
+     */
+    public static <S> Condition<S> where(Condition<S> condition) {
+        return condition;
+    }
+
     private static String extractFieldName(FieldGetter<?, ?> getter) {
         try {
             Method writeReplaceMethod = getter.getClass().getDeclaredMethod("writeReplace");

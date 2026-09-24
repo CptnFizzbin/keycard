@@ -84,7 +84,7 @@ public final class PolicyDefinition {
         @JsonProperty("application")
         private Object application = null;
 
-        public Meta anySubject(@Nullable Subject<?> subject) {
+        public Meta anySubject(@Nullable Subject<?, ?> subject) {
             return subject != null
                 ? anySubject(subject.name())
                 : anySubject(false);
