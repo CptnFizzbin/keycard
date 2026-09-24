@@ -29,6 +29,13 @@ public final class Policy {
     private final Map<String, String> actionReverseMap;
     private final Map<String, String> subjectReverseMap;
 
+    // Snapshotted at construction, so evaluation only ever sees the rules and
+    // wildcard tokens that were validated here - later mutation of the
+    // (mutable) PolicyDefinition can't bypass validation.
+    private final List<PolicyDefinition.Rule> rules;
+    private final WildcardToken anyAction;
+    private final WildcardToken anySubject;
+
     public Policy(PolicyDefinition definition) {
         this(definition, new KeycardConfig());
     }
@@ -44,9 +51,16 @@ public final class Policy {
         this.actionReverseMap = actions.reverseMap();
         this.subjectReverseMap = subjects.reverseMap();
 
+        this.rules = definition.getRules();
+        this.anyAction = Wildcards.effectiveAnyAction(definition.meta());
+        this.anySubject = Wildcards.effectiveAnySubject(definition.meta());
+
+        // Structural validity is what evaluation itself relies on, so it's
+        // checked regardless of emitMeta - only the catalog checks are gated.
+        validateRuleShapes(rules, anyAction, anySubject);
         if (config.emitMeta()) {
             validateOperatorsRegistered(definition, resolver);
-            validateRules(definition, actions.names(), subjects.names());
+            validateRuleCatalogs(definition, rules, anyAction, anySubject, actions.names(), subjects.names());
         }
     }
 
@@ -78,11 +92,6 @@ public final class Policy {
      * result is default deny.
      */
     private boolean checkPermission(Action action, Subject<?, ?> subject) {
-        PolicyDefinition.Meta meta = definition.meta();
-        WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
-        WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);
-        List<PolicyDefinition.Rule> rules = definition.getRules();
-
         String actionName = Catalog.resolveName(actionReverseMap, action.name());
         String subjectName = Catalog.resolveName(subjectReverseMap, subject.name());
 
@@ -98,7 +107,6 @@ public final class Policy {
                 // check - there's no instance data for the condition to inspect (EC-7).
                 if (subject.claims().isEmpty()) continue;
                 if (!resolver.evaluate(subject.claims().get(), conditions)) continue;
-                return "allow".equals(rule.effect());
             }
 
             return "allow".equals(rule.effect());
@@ -134,13 +142,50 @@ public final class Policy {
     }
 
     /**
+     * Malformed rule tuples (EC-10) and conditional both-sides-wildcarded
+     * rules (property 5, EC-6) - always checked, since evaluation can't
+     * proceed safely past either.
+     */
+    private static void validateRuleShapes(List<PolicyDefinition.Rule> rules, WildcardToken anyAction, WildcardToken anySubject) {
+        for (PolicyDefinition.Rule rule : rules) {
+            if (!"allow".equals(rule.effect()) && !"deny".equals(rule.effect())) {
+                throw new PolicyLoadException(
+                    "Malformed rule tuple: effect must be \"allow\" or \"deny\", got " + rule.effect() + "."
+                );
+            }
+            if (rule.action() == null) {
+                throw new PolicyLoadException("Malformed rule tuple: action must be a string, got null.");
+            }
+            if (rule.subjectName() == null) {
+                throw new PolicyLoadException("Malformed rule tuple: subject must be a string, got null.");
+            }
+
+            if (isWildcard(anyAction, rule.action()) && isWildcard(anySubject, rule.subjectName()) && rule.conditions() != null) {
+                throw new PolicyLoadException(
+                    "Rule [" + rule.effect() + ", " + rule.action() + ", " + rule.subjectName()
+                        + "] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md property 5, EC-6)."
+                );
+            }
+        }
+    }
+
+    private static boolean isWildcard(WildcardToken any, String value) {
+        return any instanceof WildcardToken.Named named && value.equals(named.token());
+    }
+
+    /**
      * @param configActionNames resolved catalog names (see {@code lib.Catalog}) that, when given, widen the `meta.actions` catalog below beyond what `definition.meta` declares.
      * @param configSubjectNames resolved catalog names (see {@code lib.Catalog}) that, when given, widen the `meta.subjects` catalog below beyond what `definition.meta` declares.
      */
-    private static void validateRules(PolicyDefinition definition, List<String> configActionNames, List<String> configSubjectNames) {
+    private static void validateRuleCatalogs(
+        PolicyDefinition definition,
+        List<PolicyDefinition.Rule> rules,
+        WildcardToken anyAction,
+        WildcardToken anySubject,
+        List<String> configActionNames,
+        List<String> configSubjectNames
+    ) {
         PolicyDefinition.Meta meta = definition.meta();
-        WildcardToken anyAction = Wildcards.effectiveAnyAction(meta);
-        WildcardToken anySubject = Wildcards.effectiveAnySubject(meta);
 
         List<String> metaActions = meta != null ? meta.actions() : null;
         List<String> metaSubjects = meta != null ? meta.subjects() : null;
@@ -162,28 +207,9 @@ public final class Policy {
 
         Set<String> operatorsCatalog = metaOperators != null ? new LinkedHashSet<>(metaOperators) : null;
 
-        for (PolicyDefinition.Rule rule : definition.getRules()) {
-            if (!"allow".equals(rule.effect()) && !"deny".equals(rule.effect())) {
-                throw new PolicyLoadException(
-                    "Malformed rule tuple: effect must be \"allow\" or \"deny\", got " + rule.effect() + "."
-                );
-            }
-            if (rule.action() == null) {
-                throw new PolicyLoadException("Malformed rule tuple: action must be a string, got null.");
-            }
-            if (rule.subjectName() == null) {
-                throw new PolicyLoadException("Malformed rule tuple: subject must be a string, got null.");
-            }
-
-            boolean isWildcardAction = anyAction instanceof WildcardToken.Named named && rule.action().equals(named.token());
-            boolean isWildcardSubject = anySubject instanceof WildcardToken.Named named && rule.subjectName().equals(named.token());
-
-            if (isWildcardAction && isWildcardSubject && rule.conditions() != null) {
-                throw new PolicyLoadException(
-                    "Rule [" + rule.effect() + ", " + rule.action() + ", " + rule.subjectName()
-                        + "] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md property 5, EC-6)."
-                );
-            }
+        for (PolicyDefinition.Rule rule : rules) {
+            boolean isWildcardAction = isWildcard(anyAction, rule.action());
+            boolean isWildcardSubject = isWildcard(anySubject, rule.subjectName());
 
             if (actionsCatalog != null && !isWildcardAction && !actionsCatalog.contains(rule.action())) {
                 throw new PolicyLoadException("Rule action \"" + rule.action() + "\" is not covered by meta.actions.");
