@@ -51,7 +51,7 @@ public final class Policy {
     }
 
     /**
-     * A bare-type check (no instance) - EC-7/EC-9: a conditional rule can never match this.
+     * A bare-type check (no instance): a conditional rule can never match this.
      */
     public boolean can(Action action, Subject<?, ?> subject) {
         return checkPermission(action, subject);
@@ -70,7 +70,7 @@ public final class Policy {
     }
 
     /**
-     * SPEC_V1-0.md: reverse scan over `rules`, returning the effect of
+     * Reverse scan over `rules`, returning the effect of
      * the first (i.e. most-recently-declared) rule whose action, subject,
      * and (if present) conditions all match. There is no independent
      * "allow AND NOT deny" veto and no combination of multiple matching
@@ -95,7 +95,7 @@ public final class Policy {
             Map<String, Object> conditions = rule.conditions();
             if (conditions != null) {
                 // A conditional rule can never be satisfied by a bare-type/no-instance
-                // check - there's no instance data for the condition to inspect (EC-7).
+                // check - there's no instance data for the condition to inspect.
                 if (subject.claims().isEmpty()) continue;
                 if (!resolver.evaluate(subject.claims().get(), conditions)) continue;
                 return "allow".equals(rule.effect());
@@ -181,7 +181,7 @@ public final class Policy {
             if (isWildcardAction && isWildcardSubject && rule.conditions() != null) {
                 throw new PolicyLoadException(
                     "Rule [" + rule.effect() + ", " + rule.action() + ", " + rule.subjectName()
-                        + "] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md property 5, EC-6)."
+                        + "] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional."
                 );
             }
 

@@ -1,5 +1,6 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#or
 version: "0.1"
-name: "$or (§7.4.7)"
+name: "$or"
 rules:
   - [ allow, Read, Article, { $or: [ { status: published }, { status: featured } ] } ]
 
@@ -17,8 +18,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#or
 version: "0.1"
-name: "$or with a non-array operand is a type issue, always false (§7.4.7)"
+name: "$or with a non-array operand is a type issue, always false"
 rules:
   - [ allow, Read, Article, { $or: { status: published } } ]
 
@@ -28,8 +30,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#or
 version: "0.1"
-name: "$or: [] is vacuously false (§7.4.7)"
+name: "$or: [] is vacuously false"
 rules:
   - [ allow, Read, Article, { $or: [ ] } ]
 
@@ -39,8 +42,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#and
 version: "0.1"
-name: "$and (§7.4.8)"
+name: "$and"
 rules:
   - [ allow, Read, Article, { $and: [ { status: published }, { view_count: { $gt: 100 } } ] } ]
 
@@ -58,8 +62,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#and
 version: "0.1"
-name: "$and with a non-array operand is a type issue, always false (§7.4.8)"
+name: "$and with a non-array operand is a type issue, always false"
 rules:
   - [ allow, Read, Article, { $and: { status: published } } ]
 
@@ -69,8 +74,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#and
 version: "0.1"
-name: "$and: [] is vacuously true (§7.4.8)"
+name: "$and: [] is vacuously true"
 rules:
   - [ allow, Read, Article, { $and: [ ] } ]
 
@@ -84,8 +90,9 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#not
 version: "0.1"
-name: "$not (§7.4.9)"
+name: "$not"
 rules:
   - [ allow, Read, Article, { $not: { status: archived } } ]
 
@@ -103,8 +110,9 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#multi-key-condition-objects
 version: "0.1"
-name: "multiple keys in one condition object are implicitly ANDed (§7.5)"
+name: "multiple keys in one condition object are implicitly ANDed"
 description: >
   An operator key MUST NOT consume the whole object or cause sibling keys
   to be ignored - mirrors the spec's own { $ne: null, status: open }

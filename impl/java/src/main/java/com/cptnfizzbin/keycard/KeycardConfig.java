@@ -43,7 +43,7 @@ public class KeycardConfig {
 
     /**
      * Reserved for embedding/running a policy's own shared, cross-language
-     * test cases (SPEC_V0.md's {@code tests} block) - not yet wired to
+     * test cases (the {@code tests} block) - not yet wired to
      * anything in this implementation.
      */
     private boolean emitTests = false;

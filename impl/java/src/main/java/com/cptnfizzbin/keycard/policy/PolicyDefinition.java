@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The PolicyDefinition document shape - SPEC_V0.md Jackson-annotated
+ * The PolicyDefinition document shape, Jackson-annotated
  * so any consumer with a Jackson (de)serializer for their format of
  * choice - YAML, JSON, ... - can bind a document straight to/from this
  * type. This only pulls in jackson-databind (for the annotation types
@@ -31,7 +31,7 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class PolicyDefinition {
     /**
-     * Required SemVer string, e.g. "1.0.0" - see SPEC_V0.md
+     * Required SemVer string, e.g. "1.0.0".
      */
     @JsonProperty("version")
     private String version = KeyCardVersion.KEYCARD_POLICY_VERSION.toString();
@@ -128,7 +128,7 @@ public final class PolicyDefinition {
     }
 
     /**
-     * `[Effect, Action, Subject, Conditions?]` - SPEC_V0.md Ordered; declaration order is significant.
+     * `[Effect, Action, Subject, Conditions?]`. Ordered; declaration order is significant.
      * {@code @JsonFormat(shape = ARRAY)} binds this straight from/to that tuple, positionally, rather than an
      * `{effect, action, ...}` object.
      */
@@ -137,7 +137,7 @@ public final class PolicyDefinition {
     @JsonFormat(shape = JsonFormat.Shape.ARRAY)
     public static final class Rule {
         /**
-         * MUST be "allow" or "deny" - anything else is a malformed rule tuple (EC-10).
+         * MUST be "allow" or "deny" - anything else is a malformed rule tuple.
          */
         @JsonProperty("effect")
         private final String effect;

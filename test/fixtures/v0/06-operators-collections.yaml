@@ -1,5 +1,6 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#in
 version: "0.1"
-name: "$in (§7.4.4)"
+name: "$in"
 rules:
   - [ allow, Read, Article, { status: { $in: [ published, featured ] } } ]
 
@@ -21,8 +22,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#in
 version: "0.1"
-name: "$in with a non-array operand is a type issue, always false (§7.4.4)"
+name: "$in with a non-array operand is a type issue, always false"
 rules:
   - [ allow, Read, Article, { status: { $in: published } } ]
 
@@ -32,8 +34,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#has
 version: "0.1"
-name: "$has (§7.4.5)"
+name: "$has"
 rules:
   - [ allow, Read, Article, { tags: { $has: featured } } ]
 
@@ -55,8 +58,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#has
 version: "0.1"
-name: "$has against a non-array subject value is a type issue, always false (§7.4.5)"
+name: "$has against a non-array subject value is a type issue, always false"
 rules:
   - [ allow, Read, Article, { tags: { $has: featured } } ]
 

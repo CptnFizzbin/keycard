@@ -21,7 +21,7 @@ export function actionArgFor(name: string): Action {
 
 /**
  * The subject argument every fixture-driven suite passes to `Policy.can`:
- * a bare Subject (no instance) when there's no instance data (EC-7/EC-9),
+ * a bare Subject (no instance) when there's no instance data,
  * or one wrapping `subjectData` as its instance when there is.
  */
 export function subjectArgFor(name: string, claims?: JsonValue): Subject {

@@ -1,5 +1,6 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#custom-operators-op
 version: "0.1"
-name: "unregistered, undeclared custom operator always evaluates false (§5.5)"
+name: "unregistered, undeclared custom operator always evaluates false"
 description: >
   $hasRole isn't a built-in operator. With no meta.operators catalog
   declared and no checker registered at runtime, it MUST evaluate to false -
@@ -16,17 +17,20 @@ tests:
     check: [ Read, Article ]
     expected: false
 
-# A cataloged-but-never-registered custom operator (§5.5) is not
+# A cataloged-but-never-registered custom operator is not
 # expressible as an allow/deny case here: declaring $hasRole in
 # meta.operators without registering a checker for it MUST throw a
 # PolicyLoadException at construction time, not merely log a diagnostic at
-# evaluation time (SPEC_V0.md §4.2.3) - see each implementation's
-# own construction-time unit tests (e.g. impl/java's PolicyValidationTest,
-# impl/js's policy.test.ts) instead.
+# evaluation time - see each implementation's own construction-time unit
+# tests (e.g. impl/java's PolicyValidationTest, impl/js's policy.test.ts)
+# instead.
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaoperators
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#custom-operators-op
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#multi-key-condition-objects
 version: "0.1"
-name: "a $-prefixed key is always an operator, never a field name, even if unregistered (§5.5, §5.6)"
+name: "a $-prefixed key is always an operator, never a field name, even if unregistered"
 description: >
   A subject that happens to have a literal "$hasRole" field is irrelevant -
   the condition key is resolved as an operator lookup, not a field lookup,
