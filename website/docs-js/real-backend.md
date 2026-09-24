@@ -1,16 +1,17 @@
 ---
-title: "Vision: A Real Backend"
-sidebar_label: "Vision: A Real Backend"
-slug: /vision-real-backend
+title: "A Real Backend"
+sidebar_label: "A Real Backend"
+slug: /real-backend
 ---
 
-# Vision: A Real Backend (JavaScript)
+# A Real Backend (JavaScript)
 
-:::info[Vision — not yet implemented]
-This page is a design exploration for what version 0.1.0 of KeyCard may look 
-like
-:::
-:::
+A larger, more realistic walkthrough than [Examples](./examples.md): a whole
+app's `policy/` module (a dynamic Action/Subject/Operator catalog, JWT-derived
+Policy Claims, and a `buildPolicy()` scoped per request), Express middleware
+enforcing it, and a client-side copy for UX-only gating. The surrounding app
+code (Express routes, a database layer, React) is illustrative only —
+`impl/js` has no dependency on any of it.
 
 ### `policy/catalog.ts`
 
@@ -100,11 +101,10 @@ export function policyClaimsFromJwt(payload: JwtPayload): PolicyClaims {
 }
 ```
 
-Subject Claims mapping lives inline now, via `createSubject({ from: ... })`
+Subject Claims mapping lives inline, via `createSubject({ from: ... })`
 — the same `TaskSubject.from(...)`/`ProjectSubject.from(...)` pattern as
 the [Java version](/java/vision-real-backend), so there's no standalone
-`policy/subjects.ts` translating between an entity and its claims
-anymore.
+`policy/subjects.ts` translating between an entity and its claims.
 
 ### `policy/buildPolicy.ts`
 

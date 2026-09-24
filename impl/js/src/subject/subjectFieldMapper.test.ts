@@ -112,7 +112,6 @@ describe("SubjectFieldMapper: registered via KeycardConfig.mapper", () => {
         version: "0.1",
         rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
       },
-      {},
       { mapper: catalog },
     )
 
@@ -132,7 +131,6 @@ describe("SubjectFieldMapper: registered via KeycardConfig.mapper", () => {
         version: "0.1",
         rules: [["allow", "Read", "Post", { authorName: "Alice" }]],
       },
-      {},
       { mapper: catalog },
     )
 
@@ -145,16 +143,14 @@ describe("KeycardConfig: actions/subjects widen meta.actions/meta.subjects (EC-8
     expect(() =>
       Policy.from(
         { version: "0.1", rules: [["allow", "Write", "Post"]] },
-        {},
-        { actions: [createAction("Read")], subjects: [createSubject("Post")] },
+        { actions: { Read: createAction("Read") }, subjects: { Post: createSubject("Post") } },
       ),
     ).toThrow()
 
     expect(() =>
       Policy.from(
         { version: "0.1", rules: [["allow", "Read", "Post"]] },
-        {},
-        { actions: [createAction("Read")], subjects: [createSubject("Post")] },
+        { actions: { Read: createAction("Read") }, subjects: { Post: createSubject("Post") } },
       ),
     ).not.toThrow()
   })

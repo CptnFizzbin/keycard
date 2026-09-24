@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest"
 import { Policy } from "./policy.ts"
 import { createAction } from "../action/index.ts"
 import { createOperator } from "../conditions/index.ts"
-import { PolicyLoadException, PolicyVersionException } from "../errors/index.ts"
+import { PolicyError, PolicyLoadException, PolicyVersionException } from "../errors/index.ts"
 import { createSubject } from "../subject/index.ts"
 import { KEYCARD_POLICY_VERSION } from "../version.ts"
 
@@ -196,7 +196,6 @@ describe("Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig 
 
     const policy = Policy.from(
       { version: "0.1", rules: [["allow", "create", "article"]] },
-      {},
       { actions: { create }, subjects: { article } },
     )
 
@@ -207,7 +206,6 @@ describe("Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig 
     expect(() =>
       Policy.from(
         { version: "0.1", rules: [["allow", "write", "article"]] },
-        {},
         { actions: { read: createAction() } },
       ),
     ).toThrow(PolicyLoadException)
@@ -220,7 +218,6 @@ describe("Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig 
 
     const policy = Policy.from(
       { version: "0.1", rules: [["allow", "Read", "Article"]] },
-      {},
       { logger },
     )
 
@@ -235,7 +232,6 @@ describe("Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig 
 
     const policy = Policy.from(
       { version: "0.1", meta: { anyAction: "_ANY_" }, rules: [["allow", "_ANY_", "Article"]] },
-      {},
       { logger },
     )
 
@@ -247,5 +243,60 @@ describe("Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig 
     const policy = Policy.from({ version: "0.1", rules: [] })
 
     expect(() => policy.can(ghost, createSubject("Article"))).not.toThrow()
+  })
+})
+
+describe("Policy: require() error message", () => {
+  test("names the action and subject", () => {
+    const policy = Policy.from({ version: "0.1", rules: [] })
+
+    expect(() => policy.require(Delete, createSubject("Article"))).toThrow(PolicyError)
+    expect(() => policy.require(Delete, createSubject("Article"))).toThrow(
+      "\"Delete\" is not allowed on this \"Article\"",
+    )
+  })
+})
+
+describe("Policy: KeycardConfig.operators accepts an OperatorCatalog", () => {
+  test("a bare { $name: resolver } map is normalized the same as createOperator()", () => {
+    const article = createSubject<{ id: number }>("Article")
+
+    const policy = Policy.from(
+      { version: "0.1", rules: [["allow", "Read", "Article", { $hasRole: "admin" }]] },
+      { operators: { $hasRole: () => true } },
+    )
+
+    expect(policy.can(Read, article.wrap({ id: 1 }))).toBe(true)
+  })
+})
+
+describe("Policy: emitMeta", () => {
+  test("false: skips meta.actions/subjects coverage and meta.operators registration checks at construction", () => {
+    expect(() =>
+      Policy.from(
+        { version: "0.1", meta: { actions: ["Read"], operators: ["$hasRole"] }, rules: [["allow", "Write", "Article"]] },
+        { emitMeta: false },
+      ),
+    ).not.toThrow()
+  })
+
+  test("false: still runs the structural checks (malformed rule tuples, EC-6)", () => {
+    expect(() =>
+      Policy.from(
+        { version: "0.1", rules: [["allow", "_ANY_", "_ANY_", { owner_id: 1 }]] },
+        { emitMeta: false },
+      ),
+    ).toThrow(PolicyLoadException)
+  })
+
+  test("false: a duplicate KeycardConfig catalog key no longer throws at construction", () => {
+    const create = createAction()
+
+    expect(() =>
+      Policy.from(
+        { version: "0.1", rules: [] },
+        { emitMeta: false, actions: { create, submit: create } },
+      ),
+    ).not.toThrow()
   })
 })

@@ -17,3 +17,11 @@ export interface Action<T extends string = string> {
    */
   readonly __dynamic?: true
 }
+
+/**
+ * A keyed collection of Actions whose keys become the serialized names for
+ * their entries - what lets a dynamic (no-name) `createAction()` result be
+ * registered with a real, stable name (GLOSSARY.md "Catalog"). Handed to
+ * `PolicyBuilder`/`Policy` via `KeycardConfig.actions`.
+ */
+export type ActionCatalog = Record<string, Action>

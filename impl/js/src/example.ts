@@ -26,13 +26,13 @@ type AppSubjects = InferSubjects<typeof Subjects>
 // Bundle the action/subject vocabulary into one KeycardConfig, built once
 // and shared by every PolicyBuilder/Policy instead of kept in sync by hand
 const config: KeycardConfig = {
-  actions: Object.values(Actions),
-  subjects: Object.values(Subjects),
+  actions: Actions,
+  subjects: Subjects,
 }
 
 // Build a policy scoped to one user - owners can update their own articles
 function createUserPolicy(user: { id: number }): Policy<AppActions, AppSubjects> {
-  return new PolicyBuilder<AppActions, AppSubjects>({}, config)
+  return new PolicyBuilder<AppActions, AppSubjects>(config)
     .allow(Actions.create, Subjects.article)
     .allow(Actions.read, Subjects.article)
     .allow(Actions.update, Subjects.article, { ownerId: user.id })
@@ -63,7 +63,7 @@ if (policy.can(Actions.update, othersArticle)) {
 // sent anywhere, and reloaded with the same shared config
 const json = JSON.stringify(policy.def())
 const def = JSON.parse(json)
-const restoredPolicy = new Policy<AppActions, AppSubjects>(def, {}, config)
+const restoredPolicy = new Policy<AppActions, AppSubjects>(def, config)
 
 logger.info(`Restored policy agrees: ${restoredPolicy.can(Actions.update, ownArticle)}`)
 

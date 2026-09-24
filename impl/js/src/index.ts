@@ -1,14 +1,14 @@
 // Actions
 
-export type { Action, InferActions } from "./action/index.ts"
+export type { Action, ActionCatalog, InferActions } from "./action/index.ts"
 export { createAction } from "./action/index.ts"
 
 // Subjects
-export type { Subject, InferSubjects, SubjectFieldMapper } from "./subject/index.ts"
+export type { CreateSubjectOptions, Subject, SubjectCatalog, InferSubjects, SubjectFieldMapper } from "./subject/index.ts"
 export { createSubject, SubjectFieldMapperCatalog } from "./subject/index.ts"
 
 // Conditions
-export type { Condition, Operator, OperatorContext } from "./conditions/index.ts"
+export type { Condition, Operator, OperatorCatalog, OperatorContext, OperatorResolver } from "./conditions/index.ts"
 export { ConditionResolver, createOperator } from "./conditions/index.ts"
 
 // Policy

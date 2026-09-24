@@ -51,3 +51,36 @@ export function createOperator<TSubject, TValue = JsonValue>(
     },
   }
 }
+
+/**
+ * A bare resolver function, keyed by its own `$name` in an
+ * {@link OperatorCatalog} rather than wrapped via `createOperator` - `ctx`
+ * is optional since most operators (comparisons, pattern matching) never
+ * need it.
+ */
+export type OperatorResolver<TSubject = unknown, TValue = JsonValue> = (
+  subject: TSubject,
+  value: TValue,
+  ctx: OperatorContext,
+) => boolean
+
+/**
+ * A keyed collection of custom operators - the catalog counterpart to
+ * `AnyOperator[]` (built via `createOperator`), symmetric with
+ * `ActionCatalog`/`SubjectCatalog`: each key is the operator's own
+ * `$`-prefixed name, and its value is a bare resolver function rather than
+ * an `Operator` object, since an operator (unlike an Action/Subject) has no
+ * "dynamic, no name yet" state for a catalog key to resolve. Handed to
+ * `PolicyBuilder`/`Policy` via `KeycardConfig.operators`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OperatorCatalog<TSubject = any, TValue = JsonValue> = Record<`$${string}`, OperatorResolver<TSubject, TValue>>
+
+/** Normalizes `KeycardConfig.operators` (an `AnyOperator[]`, an `OperatorCatalog`, or neither) into the `AnyOperator[]` form `ConditionResolver` accepts. */
+export function normalizeOperators<TOperators extends AnyOperator>(
+  operators: TOperators[] | OperatorCatalog | undefined,
+): AnyOperator[] {
+  if (operators === undefined) return []
+  if (Array.isArray(operators)) return operators
+  return Object.entries(operators).map(([name, resolve]) => createOperator(name as `$${string}`, resolve))
+}

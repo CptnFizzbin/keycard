@@ -5,11 +5,7 @@ const sidebars: SidebarsConfig = {
     "intro",
     "api-reference",
     "examples",
-    {
-      type: "category",
-      label: "Vision",
-      items: ["vision-quickstart", "vision-real-backend"],
-    },
+    "real-backend",
   ],
 }
 
