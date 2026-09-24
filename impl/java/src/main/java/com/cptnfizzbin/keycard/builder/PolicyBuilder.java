@@ -136,8 +136,8 @@ public class PolicyBuilder {
         String subjectName = Catalog.resolveName(subjectResolution.reverseMap(), subject.name());
 
         if (condition != null) {
-            // SPEC_V0.md property 5, EC-6: a rule wildcarded on both the
-            // action and the subject MUST NOT carry a Conditions element -
+            // A rule wildcarded on both the action and the subject MUST
+            // NOT carry a Conditions element -
             // caught here immediately, rather than waiting for eventual
             // construction (new Policy(...)) to catch it.
             WildcardToken anyAction = Wildcards.orDefault(config.anyAction());
@@ -149,7 +149,7 @@ public class PolicyBuilder {
             if (isWildcardAction && isWildcardSubject) {
                 throw new PolicyArgumentException(
                     "A rule wildcarded on both the action (\"" + actionName + "\") and the subject (\"" + subjectName
-                        + "\") MUST NOT carry a Conditions element (SPEC_V0.md property 5, EC-6)."
+                        + "\") MUST NOT carry a Conditions element."
                 );
             }
         }

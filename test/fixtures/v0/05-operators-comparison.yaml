@@ -1,5 +1,7 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#eq
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#ne
 version: "0.1"
-name: "$eq / $ne (§7.4.1, §7.4.2)"
+name: "$eq / $ne"
 rules:
   - [ allow, Read, Article, { status: { $eq: published } } ]
   - [ allow, Update, Article ]
@@ -27,8 +29,9 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#gt--gte--lt--lte
 version: "0.1"
-name: "$gt (§7.4.3)"
+name: "$gt"
 rules:
   - [ allow, Read, Article, { view_count: { $gt: 100 } } ]
 
@@ -54,8 +57,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#gt--gte--lt--lte
 version: "0.1"
-name: "$gte (§7.4.3)"
+name: "$gte"
 rules:
   - [ allow, Read, Article, { view_count: { $gte: 100 } } ]
 
@@ -73,8 +77,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#gt--gte--lt--lte
 version: "0.1"
-name: "$lt (§7.4.3)"
+name: "$lt"
 rules:
   - [ allow, Read, Article, { view_count: { $lt: 100 } } ]
 
@@ -92,8 +97,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#gt--gte--lt--lte
 version: "0.1"
-name: "$lte (§7.4.3)"
+name: "$lte"
 rules:
   - [ allow, Read, Article, { view_count: { $lte: 100 } } ]
 

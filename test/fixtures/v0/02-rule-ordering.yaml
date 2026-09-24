@@ -1,3 +1,4 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
 version: "0.1"
 name: "last matching rule wins"
 description: >
@@ -27,6 +28,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
 version: "0.1"
 name: "a later, narrower allow reopens what an earlier deny closed"
 rules:
@@ -52,6 +54,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
 version: "0.1"
 name: "a trailing blanket deny shadows every earlier rule for the same action/subject"
 description: >
@@ -74,12 +77,14 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#rules
 version: "0.1"
 name: "double-wildcard unconditional rule ordering"
 description: >
-  An unconditional [allow, _ANY_, _ANY_] rule is a legal, single rule (§6.2.2
-  property 5) whose position relative to other rules still follows
-  last-rule-wins like any other rule.
+  An unconditional [allow, _ANY_, _ANY_] rule is a legal, single rule whose
+  position relative to other rules still follows last-rule-wins like any
+  other rule.
 rules:
   - [ deny, Delete, Article ]
   - [ allow, _ANY_, _ANY_ ]
@@ -94,6 +99,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
 version: "0.1"
 name: "double-wildcard unconditional rule declared first is overridable"
 rules:

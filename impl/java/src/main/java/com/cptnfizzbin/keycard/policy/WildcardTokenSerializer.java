@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
 
 /**
- * Writes a {@link WildcardToken} back out as the raw scalar SPEC_V0.md
+ * Writes a {@link WildcardToken} back out as the raw scalar
  * form it was read from - a {@link WildcardToken.Named}'s token
  * string, or {@code null} for {@link WildcardToken.Disabled} - never the
  * record's own field shape. Paired with {@link WildcardTokenDeserializer}

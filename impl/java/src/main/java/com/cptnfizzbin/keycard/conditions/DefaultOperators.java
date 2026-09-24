@@ -6,8 +6,8 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 /**
- * Every operator {@link ConditionResolver} understands natively
- * (SPEC_V0.md), as {@link Operator} instances - the
+ * Every operator {@link ConditionResolver} understands natively,
+ * as {@link Operator} instances - the
  * same type a custom, host-application-supplied operator uses, so built-in
  * and custom operators are constructed, registered, and dispatched
  * identically.

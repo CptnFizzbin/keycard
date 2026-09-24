@@ -19,6 +19,6 @@ define still falls back to the existing property access (JS) / reflection
 - New `KeycardConfig`, optionally accepted by both `Policy` and `PolicyBuilder`
   alongside their existing options/constructors: bundles `anyAction`/
   `anySubject` (Java only - JS already has these on `PolicyBuilderOptions`),
-  `actions`/`subjects` (additive to the `meta.actions`/`meta.subjects` catalogs,
-  SPEC_V1-0-0.md §3.2.2 EC-8), `operators`, and `mapper` (a
+  `actions`/`subjects` (additive to the `meta.actions`/`meta.subjects` catalogs),
+  `operators`, and `mapper` (a
   `SubjectFieldMapperCatalog`) into one object built once and handed to both.

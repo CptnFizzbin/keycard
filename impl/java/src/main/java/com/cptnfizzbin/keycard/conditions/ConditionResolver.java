@@ -3,7 +3,7 @@ package com.cptnfizzbin.keycard.conditions;
 import java.util.Map;
 
 /**
- * Implements SPEC_V0.md: the condition language and its evaluation
+ * Implements the condition language and its evaluation
  * semantics. Built-in and custom {@link Operator}s share one registry and
  * are dispatched identically - this class is just the dispatch
  * loop: it looks a `$`-prefixed key up in that registry and delegates, or

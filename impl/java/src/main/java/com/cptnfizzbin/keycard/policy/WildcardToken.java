@@ -22,8 +22,8 @@ public sealed interface WildcardToken {
     Disabled DISABLED = new Disabled();
 
     /**
-     * Four-way dispatch for a raw, untyped declaration (SPEC_V0.md
-     * ): {@code null} or {@code false} disables the wildcard
+     * Four-way dispatch for a raw, untyped declaration:
+     * {@code null} or {@code false} disables the wildcard
      * position; a {@link String} names an explicit token; anything else -
      * a number, {@code true}, a list, ... - is invalid and MUST throw
      * immediately rather than being silently coerced or passed through as

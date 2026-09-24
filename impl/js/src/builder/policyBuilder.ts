@@ -13,7 +13,7 @@ import { DISABLED, effectiveAnyAction, effectiveAnySubject } from "../policy/wil
 import type { Subject } from "../subject/index.ts"
 import { KEYCARD_POLICY_VERSION } from "../version.ts"
 
-/** The v1 SemVer this builder implements - stamped onto every `buildDef()` output, per SPEC_V0.md */
+/** The v1 SemVer this builder implements - stamped onto every `buildDef()` output. */
 export const BUILDER_VERSION = KEYCARD_POLICY_VERSION
 
 /** @param reverseMap resolves a dynamic Action/Subject's random name to its catalog key - see `lib/catalog.ts`. */
@@ -175,10 +175,10 @@ export class PolicyBuilder<
     const subjectName = resolveName(this.subjectCatalog, subject.name)
 
     if (conditions) {
-      // SPEC_V0.md property 5, EC-6: a rule wildcarded on both the
-      // action and the subject MUST NOT carry a Conditions element - the
-      // builder MUST catch this immediately, rather than waiting for
-      // eventual construction (Policy.from) to catch it. Always checked,
+      // A rule wildcarded on both the action and the subject MUST NOT
+      // carry a Conditions element - the builder MUST catch this
+      // immediately, rather than waiting for eventual construction
+      // (Policy.from) to catch it. Always checked,
       // regardless of emitMeta - this guards evaluation correctness, not
       // just diagnostics.
       const anyAction = effectiveAnyAction({ anyAction: this.anyAction })
@@ -188,7 +188,7 @@ export class PolicyBuilder<
         && anySubject !== DISABLED && subjectName === anySubject
       ) {
         throw new PolicyArgumentError(
-          `A rule wildcarded on both the action ("${anyAction}") and the subject ("${anySubject}") MUST NOT carry a Conditions element (SPEC_V0.md property 5, EC-6).`,
+          `A rule wildcarded on both the action ("${anyAction}") and the subject ("${anySubject}") MUST NOT carry a Conditions element.`,
         )
       }
     }

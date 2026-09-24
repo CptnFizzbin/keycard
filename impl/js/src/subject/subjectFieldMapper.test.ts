@@ -138,7 +138,8 @@ describe("SubjectFieldMapper: registered via KeycardConfig.mapper", () => {
   })
 })
 
-describe("KeycardConfig: actions/subjects widen meta.actions/meta.subjects (EC-8)", () => {
+// Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaactions--metasubjects
+describe("KeycardConfig: actions/subjects widen meta.actions/meta.subjects", () => {
   test("Policy validates rule actions/subjects against config.actions/config.subjects even without a matching meta declaration", () => {
     expect(() =>
       Policy.from(

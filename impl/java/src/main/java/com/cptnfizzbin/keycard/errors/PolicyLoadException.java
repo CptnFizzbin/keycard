@@ -4,9 +4,9 @@ import lombok.experimental.StandardException;
 
 /**
  * Thrown by {@code new Policy(...)} when loading a policy when a
- * PolicyDefinition is structurally invalid per SPEC_V0.md - a
+ * PolicyDefinition is structurally invalid - a
  * malformed rule tuple, a both-sides-wildcarded rule
- * carrying a Conditions element (property 5, EC-6), or a rule
+ * carrying a Conditions element, or a rule
  * referencing an action/subject/custom-operator name outside a declared
  * {@code meta} catalog.
  */

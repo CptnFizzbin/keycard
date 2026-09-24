@@ -18,11 +18,11 @@ import type { Subject, SubjectCatalog, SubjectFieldMapperCatalog } from "./subje
  */
 export interface KeycardConfig<TOperators extends AnyOperator = never> {
   /**
-   * Declared action vocabulary, additive to `meta.actions` (SPEC_V0.md) -
+   * Declared action vocabulary, additive to `meta.actions` -
    * each key becomes the serialized name for its entry, which is how a
    * `createAction()` call with no name (see {@link Action.__dynamic}) gets
    * a real, stable name. A named entry may still be given its own key
-   * (SPEC_V0.md "if using a catalog, defining the name is optional") - the
+   * (if using a catalog, defining the name is optional) - the
    * catalog key always wins over the entry's own name.
    */
   actions?: ActionCatalog

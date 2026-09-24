@@ -190,8 +190,9 @@ public class DynamicCatalogTest {
         assertTrue(policy.can(create, article));
     }
 
+    // Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaactions--metasubjects
     @Test
-    public void ec8CoverageIsStillEnforcedUsingCatalogResolvedNames() {
+    public void catalogCoverageIsStillEnforcedUsingCatalogResolvedNames() {
         KeycardConfig config = new KeycardConfig();
         config.actions().add("read", new Action());
 

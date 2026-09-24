@@ -23,7 +23,7 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * Construction-time validation required by SPEC_V0.md but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section).
+ * Construction-time validation required by the spec but not covered by the allow/deny-outcome-only v1 conformance suite (see test/fixtures/v1/README.md's Scope section).
  */
 public class PolicyValidationTest {
     private static KeycardConfig withOperators(Operator... operators) {
@@ -114,13 +114,14 @@ public class PolicyValidationTest {
             )));
     }
 
-    // --- Issue 4: meta.operators promotes "cataloged but never registered" to a construction-time throw (EC-15) ---
+    // --- Issue 4: meta.operators promotes "cataloged but never registered" to a construction-time throw ---
+    // Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaoperators
 
     @Test
     public void throwsPolicyLoadExceptionWhenMetaOperatorsDeclaresANameNothingIsRegisteredFor() {
         PolicyDefinition.Meta meta = new PolicyDefinition.Meta().operators(List.of("$hasRole"));
 
-        // Unlike EC-13 above, this throws even though no rule references
+        // Unlike the uncataloged-operator case above, this throws even though no rule references
         // $hasRole at all - meta.operators' registration requirement is
         // checked in full when loading a policy, not merely for names rules
         // actually use.

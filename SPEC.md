@@ -49,8 +49,8 @@ an action/subject/condition wins, not "any deny beats any allow." Every
 policy has a default wildcard token, `_ANY_`, for both actions and
 subjects (e.g. `[allow, _ANY_, _ANY_]` matches anything); a policy MAY
 override either via `meta.anyAction`/`meta.anySubject`. See
-[`SPEC_V0.md`](docs/spec/SPEC_V0.md) §6.2.2 for the exact algorithm, and
-§4.2.1 for `meta` and the wildcards.
+[`SPEC_V0.md`](docs/spec/SPEC_V0.md) for the exact algorithm, `meta`, and
+the wildcards.
 
 Condition
 ---------
@@ -78,9 +78,9 @@ condition, so `{ status: "archived" }` is valid but `{ author: { name: "Alice" }
 is not — inspecting a subject's nested fields is out of scope for v1 and is
 left for a future version.
 
-See [`SPEC_V0.md`](docs/spec/SPEC_V0.md) §5 for full operator semantics,
-including `$substr`'s pattern language (§5.4.6), the top-level-only field
-restriction (§5.4.10), and why regex matching (`$rgx`) isn't part of v1.
+See [`SPEC_V0.md`](docs/spec/SPEC_V0.md) for full operator semantics,
+including `$substr`'s pattern language, the top-level-only field
+restriction, and why regex matching (`$rgx`) isn't part of v1.
 
 Tests
 -----
@@ -103,8 +103,8 @@ tests:
 `tests` plays no role in evaluation — it's purely for tooling (a CLI, a
 test runner, a CI check) to load a `PolicyDefinition` and assert each
 case's `expected` outcome against `can(...check)`. Added in `1.1.0`; see
-[`SPEC_V0.md`](docs/spec/SPEC_V0.md) §4.4 for the full field
-requirements and §6.2.3 for how an implementation that runs `tests` must
+[`SPEC_V0.md`](docs/spec/SPEC_V0.md) for the full field
+requirements and for how an implementation that runs `tests` must
 behave.
 
 Policy
@@ -117,4 +117,4 @@ Policy
   - cannot(TAction, TSubjectName | TSubject) => boolean
   - require(TAction, TSubjectName | TSubject) => void throws PolicyError
 
-`append` is not part of v1 — see [`SPEC_V0.md`](docs/spec/SPEC_V0.md) §1.
+`append` is not part of v1 — see [`SPEC_V0.md`](docs/spec/SPEC_V0.md).

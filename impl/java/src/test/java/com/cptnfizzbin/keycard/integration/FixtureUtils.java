@@ -91,7 +91,7 @@ final class FixtureUtils {
     /**
      * Resolves one {@link TestCase} against a {@link Policy} the same way
      * every fixture-driven suite does: a bare Subject (no instance) when
-     * there's no instance data (EC-7/EC-9), or one wrapping
+     * there's no instance data, or one wrapping
      * {@code subjectData} as its instance when there is.
      */
     static boolean resolve(Policy policy, TestCase testCase) {
@@ -105,8 +105,8 @@ final class FixtureUtils {
 
     /**
      * True when a fixture declaring {@code fixtureVersion} is compatible
-     * with an implementation targeting {@code maxSupportedVersion}, per
-     * SPEC_V0.md: the same MAJOR, and a MINOR no higher than what's
+     * with an implementation targeting {@code maxSupportedVersion}:
+     * the same MAJOR, and a MINOR no higher than what's
      * supported. PATCH never affects compatibility. Parsing/comparison is
      * delegated to semver4j - the same library {@link
      * com.cptnfizzbin.keycard.version.KeyCardVersion} uses - rather than

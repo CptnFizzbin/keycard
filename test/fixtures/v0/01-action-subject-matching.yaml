@@ -1,7 +1,8 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
 version: "0.1"
 name: "exact action/subject matching"
 description: >
-  §6.2.2: action and subject-name matching is an exact string comparison.
+  Action and subject-name matching is an exact string comparison.
   No rule uses a wildcard here.
 
 rules:
@@ -29,6 +30,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
 version: "0.1"
 name: "empty rule list"
 description: "rules: [] denies everything; there is nothing to match."

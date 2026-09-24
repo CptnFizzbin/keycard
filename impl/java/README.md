@@ -127,7 +127,7 @@ can(create, "article");      // ✗ Compiler error - subject must be a Subject<?
 - `$in` - Value in collection
 - `$has` - Collection contains value
 - `$substr` - Substring pattern match (a small, non-regex pattern language - see
-  SPEC_V0.md §7.4.6)
+  the spec)
 - `$or` - Logical OR
 - `$and` - Logical AND
 - `$not` - Logical NOT
@@ -191,7 +191,7 @@ Evaluates conditions:
 
 ### PolicyDefinition
 
-Serializable policy, per SPEC_V0.md §3:
+Serializable policy:
 
 - `getVersion()` - Get the SemVer spec version, e.g. `"1.0"`
 - `getMeta()` - Get the optional `meta` object (wildcard tokens, catalogs,
