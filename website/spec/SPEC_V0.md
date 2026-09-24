@@ -15,7 +15,7 @@ wins.
 The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY**
 are to be interpreted as in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
 
-## 1. Overview
+## Overview
 
 This document defines:
 
@@ -29,12 +29,12 @@ This document defines:
 It does not define the `PolicyBuilder`'s fluent API, wire format (YAML vs.
 JSON), or any language-specific type system
 
-## 2. Versioning
+## Versioning
 
 `version` is a [SemVer](https://semver.org/) string, `MAJOR.MINOR.PATCH` (e. g.
 `"1.0.0"`).
 
-### 2.1 What counts as a `MAJOR`, `MINOR`, or `PATCH` change to this spec
+### What counts as a `MAJOR`, `MINOR`, or `PATCH` change to this spec
 
 This subsection governs how *this specification* is versioned from release to
 release — guidance for spec maintainers, not something an implementation checks
@@ -54,42 +54,42 @@ as `MINOR` here lands within the current `0.1` without a version bump.
   `PATCH` carries no compatibility meaning, a policy document's `version`
   field can omit it — `"1.0"` is a valid shorthand for `"1.0.*"`.
 
-### 2.2 Pre-Alpha Specification v0
+### Pre-Alpha Specification v0
 
 While `MAJOR` is `0` the entire `0.y.z` line is unstable and carries no
 compatibility promise.
 
-## 3. Terminology
+## Terminology
 
-### 3.1 Implimentation
+### Implimentation
 
 An Implimentation in this document refers to a library or package that is able
 to understand the specification for a Policy Definition. Some
 
-### 3.1 Claims
+### Claims
 
 A Claim is a key/value pair used during permission checks (Subject Claim) or for
 constructing a policy (Policy Claim). Claims are recommended to be scoped to the
 specific subset of values needed for permission checks.
 
-### 3.2 Action
+### Action
 
 An Action is something the user wants to do (`Read`, `Create`, `Update`,
 `MarkDone`, ...). Actions are not tied explictly to a Subject.
 
-### 3.3 Subject
+### Subject
 
 A Subject is something the user wants to act upon (e.g. `Article`, `Comment`,
 `User`). A Subject can optionally contain Subject Claims that are for a specific
 instance of a object (e.g. `Article.wrap({ id: 1, ownerId: 5 })`)
 
-### 3.3 Operators
+### Operators
 
 A condition operator is a `$`-prefixed key inside a `Condition` value (e.g.
 `$eq`, `$gt`, `$hasRole`). All implimenations **MUST** support the common set of
 built in operators as specified in the spec document the implimentation supports
 
-### 3.4 Builder
+### Builder
 
 A `PolicyBuilder` takes Policy Claims (arbitrary application data, e.g. a JWT or
 `{ ownerOf: number[] }`) and produces a `Policy` and/or
@@ -98,19 +98,19 @@ A `PolicyBuilder` takes Policy Claims (arbitrary application data, e.g. a JWT or
 This document does not define the builder's API surface, but it is encuraged for
 implimenations to follow a common pattern based on existing implimentations.
 
-### 3.5 Policy
+### Policy
 
 A `Policy` is an object used to perform checks (`can`/`cannot`/`require`)
 against/with. It is constructed from a `PolicyDefinition` or directly from a
 `PolicyBuilder`.
 
-### 3.6 Rule
+### Rule
 
 A rule is a combination of an effect, an Action, a Subject, and optionally a
 Condition. For example `[allow, Update, Article, { ownerId: 4 }]` or in english,
 "Allow the user to Update an Article when the article's ownerId is 4"
 
-## 4. Definition Structure
+## Definition Structure
 
 ```yaml
 version: "0.1"                        # required, SemVer string
@@ -137,7 +137,7 @@ tests: # optional
         expected: boolean
 ```
 
-### 4.1 Envelope
+### Envelope
 
 - `version` — **REQUIRED**. A SemVer string (`MAJOR.MINOR.PATCH`).
     - `PATCH` **MAY** be omitted from the version string. If not given, it is
@@ -174,12 +174,12 @@ tests: # optional
 - `description` — **OPTIONAL**. A human-readable description of the policy.
   Informational only.
 
-### 4.2 Meta
+### Meta
 
 `meta` is an **OPTIONAL** object grouping information that can be used for
 performing checks against a list of registered Actions, Subjects, and Operators
 
-#### 4.2.1 `meta.anyAction` / `meta.anySubject`
+#### `meta.anyAction` / `meta.anySubject`
 
 - The wildcard tokens for the policy's Action and Subject positions respectively
   Implementations **MUST** default to the literal string `"_ANY_"` when not
@@ -199,7 +199,7 @@ performing checks against a list of registered Actions, Subjects, and Operators
   within that policy: a rule meaning the literal value equal to that string is
   indistinguishable from the wildcard.
 
-#### 4.2.2 `meta.actions` / `meta.subjects`
+#### `meta.actions` / `meta.subjects`
 
 - The full set of action names and subject names this policy's rules use. When
   declared, they **SHOULD** be enforced when loading a
@@ -221,7 +221,7 @@ performing checks against a list of registered Actions, Subjects, and Operators
   names a policy's rules actually use (e.g. when a tool regenerates or
   re-serializes a `PolicyDefinition`).
 
-#### 4.2.3 `meta.operators`
+#### `meta.operators`
 
 - A declarative catalog of the custom `$`-prefixed condition operator names
   (e.g. `"$hasRole"`) this policy's rules use.
@@ -241,7 +241,7 @@ performing checks against a list of registered Actions, Subjects, and Operators
   names a policy's rules actually use (e.g. when a tool regenerates or
   re-serializes a `PolicyDefinition`).
 
-#### 4.2.4 `meta.application`
+#### `meta.application`
 
 - An open slot for a host application to embed its own custom data in the
   `PolicyDefinition` — this spec imposes no shape on it and gives it no meaning.
@@ -250,7 +250,7 @@ performing checks against a list of registered Actions, Subjects, and Operators
   otherwise reject a definition merely because `meta.application` is present,
   regardless of its shape or contents.
 
-### 4.3 Rules
+### Rules
 
 - `rules` **MUST** be present and **MAY** be an empty array (an empty policy —
   `rules: []` — is structurally valid and denies everything).
@@ -265,7 +265,7 @@ performing checks against a list of registered Actions, Subjects, and Operators
   `Subject` is its effective `anySubject` **MUST NOT** carry a `Condition`
   element — a rule wildcarded on both sides **MUST** be unconditional.
 
-### 4.4 Tests
+### Tests
 
 `tests` is an **OPTIONAL** top-level field that embeds test cases directly in a
 `PolicyDefinition`, so a policy's expected `can` outcomes travel with the
@@ -300,12 +300,12 @@ tests:
     - `expected` — **REQUIRED**. A boolean: the result of calling `can`
       with the provided check.
 
-## 5. Operators
+## Operators
 
 A `Condition` value filters *when* a rule applies, evaluated against the
 subject's **value**.
 
-### 5.1 General requirements
+### General requirements
 
 - A condition that cannot be meaningfully evaluated against the given subject
   **SHOULD** evaluate to `false`. Implimentations **MAY** print a diagnostic log
@@ -319,7 +319,7 @@ subject's **value**.
 { status: archived }         # same as { status: { $eq: archived } }
 ```
 
-### 5.2 Missing fields vs. explicit `null`
+### Missing fields vs. explicit `null`
 
 These are two different things and **MUST** be distinguished:
 
@@ -333,13 +333,13 @@ These are two different things and **MUST** be distinguished:
   `subject.field` is present and is anything other than `null`.
 - `null` **MUST NOT** be treated as a wildcard that matches anything.
 
-### 5.3 Built-in operators
+### Built-in operators
 
 Every operator below takes the *current* subject value at that point in the
 condition tree (initially the subject's full value; narrowed by field
 condition).
 
-#### 5.3.1 `$eq`
+#### `$eq`
 
 `{ $eq: value }`. Matches when `subject === value`.
 
@@ -349,7 +349,7 @@ condition).
 - Equality **MUST** use value equality (not reference/identity equality) for
   primitives.
 
-#### 5.3.2 `$ne`
+#### `$ne`
 
 `{ $ne: value }`. Matches when `subject !== value`.
 
@@ -360,7 +360,7 @@ condition).
   since a missing field makes `$eq` evaluate to `false`, `$ne` on a missing
   field **MUST** evaluate to `true`.
 
-#### 5.3.3 `$gt` / `$gte` / `$lt` / `$lte`
+#### `$gt` / `$gte` / `$lt` / `$lte`
 
 `{ $gt: number }` (and `$gte`/`$lt`/`$lte` identically shaped). Numeric
 comparison.
@@ -373,7 +373,7 @@ comparison.
   language's default equality would say otherwise (e.g. Java's `Double.equals`
   treats `NaN` as equal to `NaN`).
 
-#### 5.3.4 `$in`
+#### `$in`
 
 `{ $in: value[] }`. Matches when the array `value` contains `subject`.
 
@@ -383,7 +383,7 @@ comparison.
 - If it is not an array, the condition **MUST** evaluate to `false`.
 - Containment **MUST** use the same equality semantics as `$eq` per element.
 
-#### 5.3.5 `$has`
+#### `$has`
 
 `{ $has: value }`. Matches when the array `subject` contains `value`.
 
@@ -392,7 +392,7 @@ comparison.
 - `subject` **MUST** be an array.
 - If it is not, the condition **MUST** evaluate to `false`
 
-#### 5.3.6 `$substr`
+#### `$substr`
 
 `{ $substr: pattern }`. Matches when `String(subject)` contains a substring
 described by `pattern`.
@@ -413,7 +413,7 @@ Token `\`
 `\*`, `\\`, `\e` are the literals `^`, `$`, `*`, `\`, `e`). A trailing `\`
 with nothing following it **SHOULD** be discarded.
 
-#### 5.3.7 `$or`
+#### `$or`
 
 `{ $or: Condition[] }`. Matches when at least one sub-condition matches.
 
@@ -423,7 +423,7 @@ with nothing following it **SHOULD** be discarded.
 - If it is not an array, the condition **MUST** evaluate to `false`
 - `{ $or: [] }` **MUST** evaluate to `false` (no alternative can be satisfied)
 
-#### 5.3.8 `$and`
+#### `$and`
 
 `{ $and: Condition[] }`. Matches when every sub-condition matches.
 
@@ -433,7 +433,7 @@ with nothing following it **SHOULD** be discarded.
 - If it is not an array, the condition **MUST** evaluate to `false`
 - `{ $and: [] }` **MUST** evaluate to `true` (there is no unsatisfied conjunct)
 
-#### 5.3.9 `$not`
+#### `$not`
 
 `{ $not: Condition }`. Matches when the sub-condition does **not** match.
 
@@ -442,7 +442,7 @@ with nothing following it **SHOULD** be discarded.
 - **MUST** be the exact negation of evaluating `Condition` against the same
   `subject`.
 
-#### 5.3.10 Field condition
+#### Field condition
 
 `{ fieldName: Condition }` — any object key that does not start with `$`.
 
@@ -454,13 +454,13 @@ with nothing following it **SHOULD** be discarded.
   `false`.
 - For v0, only a check against the top level fields is supported.
 
-#### 5.3.11 `$field` (explicit field access)
+#### `$field` (explicit field access)
 
 `{ $field: [name, Condition] }`. Equivalent to the bare-key field condition but
 with the field name given explicitly as a tuple element instead of as the object
 key.
 
-### 5.5 Custom operators (`$op`)
+### Custom operators (`$op`)
 
 `{ $op: value }`, where `$op` is neither a built-in operator.
 
@@ -478,7 +478,7 @@ recurse into the condition language (e.g. implementing its own
 - An unregistered `$op` (no operator registered for it on this instance)
   MUST evaluate to `false`.
 
-### 5.6 Multi-key condition objects
+### Multi-key condition objects
 
 A condition object **MAY** contain more than one key. Every key in a condition
 object **MUST** be evaluated, and the object matches only if all of them do.
@@ -492,9 +492,9 @@ names, or a mix of both:
 - An operator key (`$eq`, `$gt`, `$or`, ...) **MUST NOT** "consume" the whole
   object or cause sibling keys to be ignored.
 
-## 6. Evaluating a check
+## Evaluating a check
 
-#### 6.1 `can` / `cannot` / `require`
+### `can` / `cannot` / `require`
 
 The last matching rule wins:
 
@@ -679,7 +679,7 @@ reopening something an earlier `deny` closed. Because only one rule ever decides
 the outcome, implementation documentation **SHOULD** encourage this convention
 explicitly.
 
-### 6 Running `tests`
+### Running `tests`
 
 - An implementation that exposes a way to run a `PolicyDefinition`'s embedded
   `tests` — whatever it calls that operation, and whatever shape its report
@@ -694,7 +694,7 @@ explicitly.
   construction, a build, or a CI job is an application/tooling concern outside
   this spec's scope.
 
-## 8. Prior work
+## Prior work
 
 KeyCard's condition language and rule-based `allow`/`deny` model draw on
 [CASL](https://casl.js.org/), a JavaScript authorization library. In particular,
