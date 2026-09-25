@@ -46,7 +46,7 @@ public class PolicyDefinitionJacksonTest {
         assertEquals(new WildcardToken.Named("ALL"), definition.meta().anyAction());
         assertEquals(List.of("Read", "Write"), definition.meta().actions());
 
-        List<PolicyDefinition.Rule> rules = definition.getRules();
+        List<PolicyDefinition.Rule> rules = definition.rules();
         assertEquals(2, rules.size());
 
         assertEquals("allow", rules.get(0).effect());
@@ -110,10 +110,10 @@ public class PolicyDefinitionJacksonTest {
         // "not declared" survives the round trip too, rather than coming back "declared null".
         assertNull(roundTripped.meta().anySubject());
 
-        assertEquals(original.getRules().size(), roundTripped.getRules().size());
-        for (int i = 0; i < original.getRules().size(); i++) {
-            PolicyDefinition.Rule expected = original.getRules().get(i);
-            PolicyDefinition.Rule actual = roundTripped.getRules().get(i);
+        assertEquals(original.rules().size(), roundTripped.rules().size());
+        for (int i = 0; i < original.rules().size(); i++) {
+            PolicyDefinition.Rule expected = original.rules().get(i);
+            PolicyDefinition.Rule actual = roundTripped.rules().get(i);
             assertEquals(expected.effect(), actual.effect());
             assertEquals(expected.action(), actual.action());
             assertEquals(expected.subjectName(), actual.subjectName());

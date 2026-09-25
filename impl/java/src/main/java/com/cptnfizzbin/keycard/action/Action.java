@@ -10,7 +10,7 @@ import java.util.UUID;
 public class Action {
     private final String id = UUID.randomUUID().toString();
     private final String name;
-    private final Boolean dynamic;
+    private final boolean dynamic;
 
     public Action() {
         this.name = this.id;

@@ -3,22 +3,29 @@ package com.cptnfizzbin.keycard;
 
 import com.cptnfizzbin.keycard.action.Action;
 import com.cptnfizzbin.keycard.action.ActionCatalog;
+import com.cptnfizzbin.keycard.builder.PolicyBuilder;
 import com.cptnfizzbin.keycard.conditions.OperatorCatalog;
 import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.subject.SubjectCatalog;
+import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.jspecify.annotations.Nullable;
 
 import java.lang.System.Logger;
 
-@Data
+/**
+ * Mutable, shared configuration for {@link PolicyBuilder} and {@code Policy}.
+ * Deliberately has no {@code equals}/{@code hashCode}: it holds mutable
+ * catalogs and a logger, so identity is the only meaningful equality.
+ */
+@Getter
+@Setter
 @Accessors(fluent = true, chain = true)
 public class KeycardConfig {
+    /** Where type-issue diagnostics from condition evaluation are reported (at {@code ERROR}). */
     private Logger logger = System.getLogger("Keycard");
 
     private ActionCatalog actions = new ActionCatalog();
@@ -35,7 +42,8 @@ public class KeycardConfig {
      * satisfying its own declared {@code meta.actions}/{@code
      * meta.subjects}/{@code meta.operators}) - and whether {@link
      * PolicyBuilder#buildDef()} attaches the derived {@code meta} block at
-     * all. Worth paying for in development, where the goal is catching a
+     * all. Structural rule checks (a malformed rule tuple, a conditional
+     * both-sides-wildcarded rule) always run regardless. Worth paying for in development, where the goal is catching a
      * bad rule before it's reviewed. In production, a definition that
      * already passed CI doesn't need to re-prove itself on every boot.
      */
@@ -54,8 +62,7 @@ public class KeycardConfig {
      * meta.anyAction}/{@code meta.anySubject}, and it MUST be able to tell
      * "never configured" (stays {@code null}, {@code meta.anyAction} comes
      * out undeclared too) apart from "explicitly disabled" ({@link
-     * WildcardToken.Disabled}, from a bare {@code null} Action/Subject
-     * argument here).
+     * WildcardToken.Disabled}, from {@link #disableAnyAction()}).
      */
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
@@ -69,8 +76,18 @@ public class KeycardConfig {
         return this.anyAction;
     }
 
-    public KeycardConfig anyAction(@Nullable Action action) {
-        this.anyAction = action != null ? new WildcardToken.Named(action.name()) : new WildcardToken.Disabled();
+    /** Declares {@code action}'s name as the action wildcard token. */
+    public KeycardConfig anyAction(Action action) {
+        if (action == null) {
+            throw new PolicyArgumentException("anyAction(null): use disableAnyAction() to disable the action wildcard.");
+        }
+        this.anyAction = new WildcardToken.Named(action.name());
+        return this;
+    }
+
+    /** Disables the action wildcard - no action name, including {@code "_ANY_"}, has special meaning. */
+    public KeycardConfig disableAnyAction() {
+        this.anyAction = WildcardToken.DISABLED;
         return this;
     }
 
@@ -78,8 +95,18 @@ public class KeycardConfig {
         return this.anySubject;
     }
 
-    public KeycardConfig anySubject(@Nullable Subject<?, ?> subject) {
-        this.anySubject = subject != null ? new WildcardToken.Named(subject.name()) : new WildcardToken.Disabled();
+    /** Declares {@code subject}'s name as the subject wildcard token. */
+    public KeycardConfig anySubject(Subject<?, ?> subject) {
+        if (subject == null) {
+            throw new PolicyArgumentException("anySubject(null): use disableAnySubject() to disable the subject wildcard.");
+        }
+        this.anySubject = new WildcardToken.Named(subject.name());
+        return this;
+    }
+
+    /** Disables the subject wildcard - no subject name, including {@code "_ANY_"}, has special meaning. */
+    public KeycardConfig disableAnySubject() {
+        this.anySubject = WildcardToken.DISABLED;
         return this;
     }
 }

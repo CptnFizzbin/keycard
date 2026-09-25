@@ -11,12 +11,10 @@ import com.cptnfizzbin.keycard.policy.Wildcards;
 import com.cptnfizzbin.keycard.policy.WildcardToken;
 import com.cptnfizzbin.keycard.subject.Subject;
 import lombok.NonNull;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,20 +48,20 @@ public class PolicyBuilder {
 
     public PolicyBuilder(@NonNull KeycardConfig config) {
         this.config = config;
-        this.actionResolution = Catalog.build(null, config.actions(), Action::name, "action");
-        this.subjectResolution = Catalog.build(null, config.subjects(), Subject::name, "subject");
+        this.actionResolution = Catalog.build(config.actions().asMap(), Action::name, "action");
+        this.subjectResolution = Catalog.build(config.subjects().asMap(), Subject::name, "subject");
     }
 
     public PolicyBuilder allow(Action action, Subject<?, ?> subject) {
         return allow(action, subject, null);
     }
 
-    public PolicyBuilder allow(Collection<Action> actions, Subject<?, ?> subject) {
+    public PolicyBuilder allow(Iterable<? extends Action> actions, Subject<?, ?> subject) {
         actions.forEach(action -> this.allow(action, subject));
         return this;
     }
 
-    public <S> PolicyBuilder allow(Collection<Action> actions, Subject<S, ?> subject, Condition<S> condition) {
+    public <S> PolicyBuilder allow(Iterable<? extends Action> actions, Subject<S, ?> subject, Condition<S> condition) {
         actions.forEach(action -> this.allow(action, subject, condition));
         return this;
     }
@@ -76,14 +74,18 @@ public class PolicyBuilder {
         return deny(action, subject, null);
     }
 
-    public PolicyBuilder deny(Iterable<Action> actions, Subject<?, ?> subject) {
+    public PolicyBuilder deny(Iterable<? extends Action> actions, Subject<?, ?> subject) {
         actions.forEach(action -> this.deny(action, subject));
         return this;
     }
 
-    public <S> PolicyBuilder deny(Action action, Subject<S, ?> subject, Condition<S> conditions) {
-        this.addRule("deny", action, subject, conditions);
+    public <S> PolicyBuilder deny(Iterable<? extends Action> actions, Subject<S, ?> subject, Condition<S> condition) {
+        actions.forEach(action -> this.deny(action, subject, condition));
         return this;
+    }
+
+    public <S> PolicyBuilder deny(Action action, Subject<S, ?> subject, Condition<S> condition) {
+        return addRule("deny", action, subject, condition);
     }
 
     public Policy build() {
@@ -92,9 +94,9 @@ public class PolicyBuilder {
 
     public PolicyDefinition buildDef() {
         return new PolicyDefinition()
-            // A copy, so allow()/deny() calls made after this can't reach
-            // back into an already-built definition (or a Policy made from it).
-            .rules(new ArrayList<>(this.rules))
+            // rules(...) copies, so allow()/deny() calls made after this can't
+            // reach back into an already-built definition (or a Policy made from it).
+            .rules(this.rules)
             .meta(config.emitMeta() ? buildMeta() : null);
     }
 
@@ -159,7 +161,7 @@ public class PolicyBuilder {
         actionsUsed.add(actionName);
         subjectsUsed.add(subjectName);
 
-        val conditionMap = condition != null ? condition.toMap() : null;
+        var conditionMap = condition != null ? condition.toMap() : null;
 
         this.rules.add(new PolicyDefinition.Rule(effect, actionName, subjectName, conditionMap));
 

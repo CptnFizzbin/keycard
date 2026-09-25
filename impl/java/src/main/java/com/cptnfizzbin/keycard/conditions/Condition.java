@@ -6,6 +6,7 @@ import org.jspecify.annotations.NonNull;
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -129,7 +130,26 @@ public class Condition<S> {
         } catch (Exception e) {
             throw new PolicyArgumentException("Could not extract field name from method reference", e);
         }
+        if (isRecordComponent(getter, lambda)) {
+            // A record's accessor is named exactly after its component, so
+            // "isActive()" reads component "isActive" - no bean-prefix stripping.
+            return lambda.getImplMethodName();
+        }
         return getFieldName(lambda);
+    }
+
+    private static boolean isRecordComponent(FieldGetter<?, ?> getter, SerializedLambda lambda) {
+        Class<?> implClass;
+        try {
+            implClass = Class.forName(lambda.getImplClass().replace('/', '.'), false, getter.getClass().getClassLoader());
+        } catch (ClassNotFoundException | LinkageError e) {
+            return false;
+        }
+        if (!implClass.isRecord()) return false;
+        for (RecordComponent component : implClass.getRecordComponents()) {
+            if (component.getName().equals(lambda.getImplMethodName())) return true;
+        }
+        return false;
     }
 
     private static @NonNull String getFieldName(SerializedLambda lambda) {

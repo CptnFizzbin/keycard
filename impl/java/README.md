@@ -168,11 +168,12 @@ instance - `getInstance()` is empty until `.wrap()` is called.
 Build policies with fluent API:
 
 - `allow(action, subject)` - Allow action
-- `allow(action, subject, conditions)` - Allow with conditions
+- `allow(action, subject, condition)` - Allow with a condition
 - `deny(action, subject)` - Deny action
-- `deny(action, subject, conditions)` - Deny with conditions
+- `deny(action, subject, condition)` - Deny with a condition
+- Each of the above also accepts an `Iterable` of actions in place of one
 - `build()` - Create Policy
-- `buildDefinition()` - Create PolicyDefinition
+- `buildDef()` - Create PolicyDefinition
 
 ### Policy
 
@@ -193,11 +194,12 @@ Evaluates conditions:
 
 Serializable policy:
 
-- `getVersion()` - Get the SemVer spec version, e.g. `"1.0"`
-- `getMeta()` - Get the optional `meta` object (wildcard tokens, catalogs,
+- `version()` - Get the SemVer spec version, e.g. `"0.1"`
+- `meta()` - Get the optional `meta` object (wildcard tokens, catalogs,
   application data)
-- `getRules()` - Get the ordered list of
-  `[effect, action, subject, conditions?]` rules
+- `rules()` - Get an unmodifiable snapshot of the ordered
+  `[effect, action, subject, conditions?]` rules; `rules(list)` replaces
+  them with a copy of `list`
 
 ### PolicyException
 

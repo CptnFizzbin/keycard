@@ -77,7 +77,7 @@ Serializable policy, per the [spec](/spec/v0):
 - `getVersion()` — get the SemVer spec version, e.g. `"1.0"`
 - `getMeta()` — get the optional `meta` object (wildcard tokens, catalogues,
   application data)
-- `getRules()` — get the ordered list of
+- `rules()` — get an unmodifiable snapshot of the ordered
   `[effect, action, subject, conditions?]` rules
 
 ## `PolicyException`

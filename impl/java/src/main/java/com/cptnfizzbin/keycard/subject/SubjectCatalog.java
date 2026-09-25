@@ -2,25 +2,42 @@ package com.cptnfizzbin.keycard.subject;
 
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * A plain {@code name -> Subject} catalog - both a self-keyed vocabulary
+ * A {@code name -> Subject} catalog - both a self-keyed vocabulary
  * declaration ({@link #add(Subject)}, keyed by the Subject's own name) and
  * an explicitly-keyed catalog ({@link #add(String, Subject)}, required for
  * a dynamic Subject) share this one map. {@code PolicyBuilder}/{@code
  * Policy} resolve it into the actual {@code id -> catalog key} reverse
  * lookup once, at construction, via {@code lib.Catalog}.
+ * <p>
+ * Wraps its map rather than extending one, so every registration goes
+ * through the checks below - {@link #asMap()} is a read-only view.
  */
-public final class SubjectCatalog extends LinkedHashMap<String, Subject<?, ?>> {
+public final class SubjectCatalog {
+    private final Map<String, Subject<?, ?>> entries = new LinkedHashMap<>();
+
+    /**
+     * Registering the same Subject under the same key again is a no-op; a
+     * different Subject under an already-used key throws rather than
+     * silently replacing the first.
+     */
     public SubjectCatalog add(String name, Subject<?, ?> subject) {
-        this.put(name, subject);
+        Subject<?, ?> existing = entries.putIfAbsent(name, subject);
+        if (existing != null && existing != subject) {
+            throw new PolicyArgumentException(
+                "SubjectCatalog already has a different Subject registered under \"" + name + "\"."
+            );
+        }
         return this;
     }
 
     public SubjectCatalog add(Subject<?, ?> subject) {
         if (subject.dynamic())
-            throw new PolicyArgumentException("Dynamic subject must be added to the catalog with a name");
+            throw new PolicyArgumentException("Dynamic subjects must be added to the catalog with a name");
         return this.add(subject.name(), subject);
     }
 
@@ -31,7 +48,7 @@ public final class SubjectCatalog extends LinkedHashMap<String, Subject<?, ?>> {
      * line: {@code static ProjectSubject Project = catalog.set("project", new ProjectSubject());}
      */
     public <S extends Subject<?, ?>> S set(String name, S subject) {
-        this.put(name, subject);
+        this.add(name, subject);
         return subject;
     }
 
@@ -41,8 +58,21 @@ public final class SubjectCatalog extends LinkedHashMap<String, Subject<?, ?>> {
      * for a non-dynamic Subject that already carries its own name.
      */
     public <S extends Subject<?, ?>> S set(S subject) {
-        if (subject.dynamic())
-            throw new PolicyArgumentException("Dynamic subject must be added to the catalog with a name");
-        return this.set(subject.name(), subject);
+        this.add(subject);
+        return subject;
+    }
+
+    /** The Subject registered under {@code name}, or {@code null}. */
+    public Subject<?, ?> get(String name) {
+        return entries.get(name);
+    }
+
+    public boolean contains(String name) {
+        return entries.containsKey(name);
+    }
+
+    /** A read-only, insertion-ordered view of every {@code key -> Subject} registration. */
+    public Map<String, Subject<?, ?>> asMap() {
+        return Collections.unmodifiableMap(entries);
     }
 }
