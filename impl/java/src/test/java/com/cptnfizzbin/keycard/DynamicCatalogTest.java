@@ -99,8 +99,8 @@ public class DynamicCatalogTest {
 
         PolicyDefinition def = new PolicyBuilder(config).allow(create, article).buildDef();
 
-        assertEquals("create", def.getRules().get(0).action());
-        assertEquals("article", def.getRules().get(0).subjectName());
+        assertEquals("create", def.rules().get(0).action());
+        assertEquals("article", def.rules().get(0).subjectName());
         assertEquals(List.of("create"), def.meta().actions());
         assertEquals(List.of("article"), def.meta().subjects());
     }
@@ -163,8 +163,8 @@ public class DynamicCatalogTest {
 
         PolicyDefinition def = new PolicyBuilder(config).allow(create, article).buildDef();
 
-        assertEquals("submit", def.getRules().get(0).action());
-        assertEquals("post", def.getRules().get(0).subjectName());
+        assertEquals("submit", def.rules().get(0).action());
+        assertEquals("post", def.rules().get(0).subjectName());
     }
 
     // --- Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig catalog ---

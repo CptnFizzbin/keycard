@@ -11,8 +11,12 @@ import lombok.experimental.Accessors;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * The PolicyDefinition document shape, Jackson-annotated
@@ -48,10 +52,20 @@ public final class PolicyDefinition {
     @JsonProperty("meta")
     private Meta meta = null;
     @JsonProperty("rules")
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private List<Rule> rules = new ArrayList<>();
 
-    public List<Rule> getRules() {
-        return List.copyOf(rules);
+    /** An unmodifiable snapshot of the rules, in declaration order. */
+    public List<Rule> rules() {
+        // null when a bound document says "rules: null"
+        return rules != null ? List.copyOf(rules) : List.of();
+    }
+
+    /** Replaces the rules with a copy of {@code rules}, so later changes to the passed list don't leak in. */
+    public PolicyDefinition rules(List<Rule> rules) {
+        this.rules = new ArrayList<>(rules);
+        return this;
     }
 
     @Data
@@ -84,15 +98,20 @@ public final class PolicyDefinition {
         @JsonProperty("application")
         private Object application = null;
 
-        public Meta anySubject(@Nullable Subject<?, ?> subject) {
-            return subject != null
-                ? anySubject(subject.name())
-                : anySubject(false);
+        /** Declares {@code subject}'s name as the subject wildcard token. */
+        public Meta anySubject(Subject<?, ?> subject) {
+            return anySubject(Objects.requireNonNull(subject, "subject - use disableAnySubject() to disable the wildcard").name());
         }
 
+        /** Declares {@code value} as the subject wildcard token. */
         public Meta anySubject(String value) {
-            this.anySubject = new WildcardToken.Named(value);
+            this.anySubject = new WildcardToken.Named(Objects.requireNonNull(value, "value - use disableAnySubject() to disable the wildcard"));
             return this;
+        }
+
+        /** Disables the subject wildcard. Same as {@code anySubject(false)}. */
+        public Meta disableAnySubject() {
+            return anySubject(false);
         }
 
         public Meta anySubject(boolean enabled) {
@@ -100,20 +119,26 @@ public final class PolicyDefinition {
             return this;
         }
 
+        /** Sets the raw token - {@code null} means "not declared" ({@code "_ANY_"} applies). */
         public Meta anySubject(@Nullable WildcardToken token) {
             this.anySubject = token;
             return this;
         }
 
-        public Meta anyAction(@Nullable Action action) {
-            return action != null
-                ? anyAction(action.name())
-                : anyAction(false);
+        /** Declares {@code action}'s name as the action wildcard token. */
+        public Meta anyAction(Action action) {
+            return anyAction(Objects.requireNonNull(action, "action - use disableAnyAction() to disable the wildcard").name());
         }
 
+        /** Declares {@code value} as the action wildcard token. */
         public Meta anyAction(String value) {
-            this.anyAction = new WildcardToken.Named(value);
+            this.anyAction = new WildcardToken.Named(Objects.requireNonNull(value, "value - use disableAnyAction() to disable the wildcard"));
             return this;
+        }
+
+        /** Disables the action wildcard. Same as {@code anyAction(false)}. */
+        public Meta disableAnyAction() {
+            return anyAction(false);
         }
 
         public Meta anyAction(boolean enabled) {
@@ -121,6 +146,7 @@ public final class PolicyDefinition {
             return this;
         }
 
+        /** Sets the raw token - {@code null} means "not declared" ({@code "_ANY_"} applies). */
         public Meta anyAction(@Nullable WildcardToken token) {
             this.anyAction = token;
             return this;
@@ -134,6 +160,8 @@ public final class PolicyDefinition {
      */
     @Getter
     @Accessors(fluent = true)
+    @EqualsAndHashCode
+    @ToString
     @JsonFormat(shape = JsonFormat.Shape.ARRAY)
     public static final class Rule {
         /**
@@ -147,16 +175,15 @@ public final class PolicyDefinition {
         private final String subjectName;
 
         /**
-         * Nullable - a rule with no conditions is unconditional.
+         * Nullable - a rule with no conditions is unconditional. A deep,
+         * unmodifiable copy of what was passed in, so a Rule can't be changed
+         * after a Policy has validated it.
          */
         @JsonProperty("conditions")
         private final Map<String, Object> conditions;
 
         public Rule(String effect, String action, String subjectName) {
-            this.effect = effect;
-            this.action = action;
-            this.subjectName = subjectName;
-            this.conditions = null;
+            this(effect, action, subjectName, null);
         }
 
         @JsonCreator
@@ -169,7 +196,24 @@ public final class PolicyDefinition {
             this.effect = effect;
             this.action = action;
             this.subjectName = subjectName;
-            this.conditions = conditions;
+            this.conditions = conditions != null ? freezeMap(conditions) : null;
+        }
+
+        /** Recursively copies a Conditions tree into unmodifiable maps/lists - {@code null} values are kept (an explicit {@code $eq: null}). */
+        private static Map<String, Object> freezeMap(Map<?, ?> map) {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            map.forEach((k, v) -> copy.put(String.valueOf(k), freeze(v)));
+            return Collections.unmodifiableMap(copy);
+        }
+
+        private static Object freeze(Object value) {
+            if (value instanceof Map<?, ?> map) return freezeMap(map);
+            if (value instanceof Collection<?> collection) {
+                List<Object> copy = new ArrayList<>(collection.size());
+                collection.forEach(v -> copy.add(freeze(v)));
+                return Collections.unmodifiableList(copy);
+            }
+            return value;
         }
     }
 }

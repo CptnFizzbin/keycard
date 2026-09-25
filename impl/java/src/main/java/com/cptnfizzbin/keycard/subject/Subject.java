@@ -29,7 +29,7 @@ import java.util.UUID;
 public class Subject<T, TSelf extends Subject<T, TSelf>> {
     private final String id;
     private final String name;
-    private final Boolean dynamic;
+    private final boolean dynamic;
 
     @Nullable
     private final T claims;

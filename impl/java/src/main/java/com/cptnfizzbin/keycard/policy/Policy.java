@@ -11,7 +11,6 @@ import com.cptnfizzbin.keycard.lib.Catalog;
 import com.cptnfizzbin.keycard.subject.Subject;
 import com.cptnfizzbin.keycard.version.KeyCardVersion;
 import lombok.Getter;
-import lombok.val;
 import org.semver4j.Semver;
 
 import java.util.LinkedHashSet;
@@ -44,14 +43,14 @@ public final class Policy {
         validateVersion(definition.version());
         this.definition = definition;
         this.config = config;
-        this.resolver = new ConditionResolver(config.operators());
+        this.resolver = new ConditionResolver(config.operators(), config.logger());
 
-        Catalog.Resolution actions = Catalog.build(null, config.actions(), Action::name, "action");
-        Catalog.Resolution subjects = Catalog.build(null, config.subjects(), Subject::name, "subject");
+        Catalog.Resolution actions = Catalog.build(config.actions().asMap(), Action::name, "action");
+        Catalog.Resolution subjects = Catalog.build(config.subjects().asMap(), Subject::name, "subject");
         this.actionReverseMap = actions.reverseMap();
         this.subjectReverseMap = subjects.reverseMap();
 
-        this.rules = definition.getRules();
+        this.rules = definition.rules();
         this.anyAction = Wildcards.effectiveAnyAction(definition.meta());
         this.anySubject = Wildcards.effectiveAnySubject(definition.meta());
 
@@ -116,7 +115,7 @@ public final class Policy {
     }
 
     private static void validateVersion(String version) {
-        val supported = Optional.ofNullable(Semver.coerce(version))
+        var supported = Optional.ofNullable(Semver.coerce(version))
             .orElseThrow(() -> new PolicyVersionException("Invalid version " + version))
             .satisfies(KeyCardVersion.KEYCARD_POLICY_SUPPORTED_VERSIONS);
 

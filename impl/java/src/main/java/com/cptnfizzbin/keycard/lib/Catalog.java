@@ -9,45 +9,35 @@ import java.util.function.Function;
 import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 
 /**
- * Resolves a {@code KeycardConfig}'s plain {@code actions}/{@code
- * subjects} list alongside its keyed {@code actionCatalog}/{@code
- * subjectCatalog} map into the reverse {@code id -> catalog key} map
- * {@code PolicyBuilder}/{@code Policy} use to resolve a dynamic Action/
- * Subject's random name into its real, serializable one, plus the full
- * list of names to fold into {@code meta.actions}/{@code meta.subjects}.
+ * Resolves a {@code KeycardConfig}'s {@code actions}/{@code subjects}
+ * catalog into the reverse {@code raw name -> catalog key} map {@code
+ * PolicyBuilder}/{@code Policy} use to resolve a dynamic Action/Subject's
+ * random name into its real, serializable one, plus the full list of names
+ * to fold into {@code meta.actions}/{@code meta.subjects}.
  */
 public final class Catalog {
     private Catalog() {}
 
     /**
-     * @param reverseMap raw name (a dynamic Action/Subject's random id) ->
-     *   catalog key. Empty when no keyed catalog was given - there are no
-     *   keys to resolve from.
-     * @param names every resolved name: a plain list entry's own name, or a
-     *   keyed catalog entry's key.
+     * @param reverseMap raw name (a dynamic Action/Subject's random id, or a
+     *   named one's own name) -> catalog key.
+     * @param names every catalog key, in registration order.
      */
     public record Resolution(Map<String, String> reverseMap, List<String> names) {}
 
     /**
-     * @param list the plain, non-keyed vocabulary declaration (e.g.
-     *   {@code KeycardConfig.getActions()}) - declares vocabulary only,
-     *   each entry's own name used as-is.
      * @param catalog the keyed catalog (e.g. {@code
-     *   KeycardConfig.getActionCatalog()}) - each key becomes the
-     *   serialized name for its entry.
+     *   KeycardConfig.actions().asMap()}) - each key becomes the serialized
+     *   name for its entry.
      * @param nameOf reads an entry's own (possibly dynamic/random) name.
      * @param kind used only to name the vocabulary ("action"/"subject") in
      *   a duplicate-registration error message.
      */
-    public static <T> Resolution build(List<T> list, Map<String, T> catalog, Function<T, String> nameOf, String kind) {
+    public static <T> Resolution build(Map<String, ? extends T> catalog, Function<T, String> nameOf, String kind) {
         List<String> names = new ArrayList<>();
-        if (list != null) {
-            for (T entry : list) names.add(nameOf.apply(entry));
-        }
-
         Map<String, String> reverseMap = new LinkedHashMap<>();
         if (catalog != null) {
-            for (Map.Entry<String, T> entry : catalog.entrySet()) {
+            for (Map.Entry<String, ? extends T> entry : catalog.entrySet()) {
                 String key = entry.getKey();
                 String rawName = nameOf.apply(entry.getValue());
                 String existingKey = reverseMap.get(rawName);

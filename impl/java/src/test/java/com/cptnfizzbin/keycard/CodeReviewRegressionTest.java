@@ -42,11 +42,15 @@ public class CodeReviewRegressionTest {
 
     @Test
     public void mutatingTheDefinitionAfterLoadDoesNotChangeThePolicy() {
-        PolicyDefinition def = new PolicyDefinition()
-            .rules(new ArrayList<>(List.of(new PolicyDefinition.Rule("allow", "read", "doc"))));
+        List<PolicyDefinition.Rule> rules = new ArrayList<>(List.of(new PolicyDefinition.Rule("allow", "read", "doc")));
+        PolicyDefinition def = new PolicyDefinition().rules(rules);
         Policy policy = new Policy(def);
 
-        def.rules().add(new PolicyDefinition.Rule("allow", "delete", "doc"));
+        // Neither the list passed in nor the definition's own rules can reach the Policy.
+        rules.add(new PolicyDefinition.Rule("allow", "delete", "doc"));
+        assertThrows(UnsupportedOperationException.class,
+            () -> def.rules().add(new PolicyDefinition.Rule("allow", "delete", "doc")));
+        def.rules(List.of(new PolicyDefinition.Rule("allow", "delete", "doc")));
 
         assertFalse(policy.can(DELETE, DOC));
     }

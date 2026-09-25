@@ -1,5 +1,9 @@
 package com.cptnfizzbin.keycard.conditions;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -15,8 +19,29 @@ import java.util.regex.Pattern;
 final class SubstrPattern {
     private final Pattern compiled;
 
+    private static final int CACHE_SIZE = 256;
+
+    /**
+     * Parsed patterns, keyed by raw pattern text - bounded (LRU), since
+     * patterns built from per-request claims could otherwise grow without
+     * limit. {@code Optional.empty()} caches a malformed pattern too.
+     */
+    private static final Map<String, Optional<SubstrPattern>> CACHE = Collections.synchronizedMap(
+        new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Optional<SubstrPattern>> eldest) {
+                return size() > CACHE_SIZE;
+            }
+        }
+    );
+
     private SubstrPattern(Pattern compiled) {
         this.compiled = compiled;
+    }
+
+    /** {@link #parse}, memoized - returns {@code null} for a malformed pattern. */
+    static SubstrPattern cached(String raw) {
+        return CACHE.computeIfAbsent(raw, r -> Optional.ofNullable(parse(r))).orElse(null);
     }
 
     static SubstrPattern parse(String raw) {
