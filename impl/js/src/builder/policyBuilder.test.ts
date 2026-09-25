@@ -52,7 +52,8 @@ describe("PolicyBuilder: meta.actions/subjects/operators are derived from usage"
     expect(policy.can(createAction("Read"), createSubject("*"))).toBe(true)
   })
 
-  test("still catches EC-6 at addRule time with the config constructor", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#rules
+  test("still catches a both-sides-wildcarded conditional rule at addRule time with the config constructor", () => {
     expect(() =>
       new PolicyBuilder({ anyAction: "*", anySubject: "*" })
         // @ts-expect-error -- specifically testing an invalid type

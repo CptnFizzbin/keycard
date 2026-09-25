@@ -1,9 +1,9 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#appendix-worked-example
 version: "0.1"
 name: "Article Ownership Policy"
 description: >
-  End-to-end mirror of the spec's own Appendix worked example
-  (SPEC_V0.md, "Appendix: worked example"), $hasRole included: this
-  conformance suite registers a real checker for it (subject.roles contains
+  End-to-end mirror of the spec's own Appendix worked example, $hasRole
+  included: this conformance suite registers a real checker for it (subject.roles contains
   the requested role), so the admin-overrides-an-archive-deny case from the
   narrative appendix is reproduced here for real, not merely described.
 meta:
@@ -49,7 +49,7 @@ tests:
   - name: >
       an admin CAN delete someone else's archived article, because the last
       rule ($hasRole: admin) is declared after - and so overrides - the
-      blanket archived-article deny rule above it (§6 last-rule-wins)
+      blanket archived-article deny rule above it (last-rule-wins)
     check: [ Delete, Article, { owner_id: 2, status: archived, roles: [ admin ], } ]
     expected: true
 

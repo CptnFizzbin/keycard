@@ -56,7 +56,8 @@ describe("Policy: last-rule-wins evaluation", () => {
     expect(policy.can(Delete, createSubject("User"))).toBe(true)
   })
 
-  test("an empty rule list denies everything (EC-1)", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
+  test("an empty rule list denies everything", () => {
     const policy = Policy.from({ version: "0.1", rules: [] })
 
     expect(policy.can(Read, createSubject("Article"))).toBe(false)
@@ -81,21 +82,24 @@ describe("Policy: construction-time validation", () => {
     expect(() => Policy.from({ version: nextPatch, rules: [] })).not.toThrow()
   })
 
-  test("throws PolicyLoadException for a malformed rule tuple (EC-10)", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#rules
+  test("throws PolicyLoadException for a malformed rule tuple", () => {
     expect(() =>
       // @ts-expect-error -- explicitly testing invalid types
       Policy.from({ version: "0.1", rules: [["allow", "Read"]] }),
     ).toThrow(PolicyLoadException)
   })
 
-  test("throws PolicyLoadException for an effect that isn't allow/deny (EC-10)", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#rules
+  test("throws PolicyLoadException for an effect that isn't allow/deny", () => {
     expect(() =>
       // @ts-expect-error -- explicitly testing invalid types
       Policy.from({ version: "0.1", rules: [["maybe", "Read", "Article"]] }),
     ).toThrow(PolicyLoadException)
   })
 
-  test("throws PolicyLoadException for a rule wildcarded on both sides carrying a condition (EC-6)", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#rules
+  test("throws PolicyLoadException for a rule wildcarded on both sides carrying a condition", () => {
     expect(() =>
       Policy.from({
         version: "0.1",
@@ -104,7 +108,8 @@ describe("Policy: construction-time validation", () => {
     ).toThrow(PolicyLoadException)
   })
 
-  test("throws PolicyLoadException when a rule's action isn't covered by a declared meta.actions catalog (EC-8)", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaactions--metasubjects
+  test("throws PolicyLoadException when a rule's action isn't covered by a declared meta.actions catalog", () => {
     expect(() =>
       Policy.from({
         version: "0.1",
@@ -114,7 +119,8 @@ describe("Policy: construction-time validation", () => {
     ).toThrow(PolicyLoadException)
   })
 
-  test("throws PolicyLoadException when a rule uses a custom operator outside a declared meta.operators catalog (EC-13)", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaoperators
+  test("throws PolicyLoadException when a rule uses a custom operator outside a declared meta.operators catalog", () => {
     expect(() =>
       Policy.from({
         version: "0.1",
@@ -153,10 +159,11 @@ describe("Policy: construction-time validation", () => {
     ).toThrow(PolicyLoadException)
   })
 
-  // --- meta.operators promotes "cataloged but never registered" to a construction-time throw (EC-15) ---
+  // --- meta.operators promotes "cataloged but never registered" to a construction-time throw ---
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaoperators
 
   test("throws PolicyLoadException when meta.operators declares a name nothing is registered for", () => {
-    // Unlike EC-13 above, this throws even though no rule references
+    // Unlike the uncataloged-operator case above, this throws even though no rule references
     // $hasRole at all - meta.operators' registration requirement is
     // checked in full when loading a policy, not merely for names rules
     // actually use.
@@ -202,7 +209,8 @@ describe("Policy: dynamic (no-name) Action/Subject resolved via a KeycardConfig 
     expect(policy.can(create, article)).toBe(true)
   })
 
-  test("EC-8 coverage is still enforced using catalog-resolved names", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaactions--metasubjects
+  test("catalog coverage is still enforced using catalog-resolved names", () => {
     expect(() =>
       Policy.from(
         { version: "0.1", rules: [["allow", "write", "article"]] },
@@ -280,7 +288,8 @@ describe("Policy: emitMeta", () => {
     ).not.toThrow()
   })
 
-  test("false: still runs the structural checks (malformed rule tuples, EC-6)", () => {
+  // Spec: https://keycard.cptnfizzbin.dev/spec/v0#rules
+  test("false: still runs the structural checks (malformed rule tuples, both-sides-wildcarded conditions)", () => {
     expect(() =>
       Policy.from(
         { version: "0.1", rules: [["allow", "_ANY_", "_ANY_", { owner_id: 1 }]] },

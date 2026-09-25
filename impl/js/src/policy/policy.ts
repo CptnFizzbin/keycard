@@ -55,7 +55,7 @@ export class Policy<
 
   /**
    * @param config shared, optional config also accepted by `PolicyBuilder`
-   *   (SPEC_V0.md and the SubjectFieldMapper feature): `actions`/`subjects`
+   *   (and the SubjectFieldMapper feature): `actions`/`subjects`
    *   widen the `meta.actions`/`meta.subjects` catalogs beyond what
    *   `definition.meta` itself declares, and double as a catalog resolving
    *   a dynamic (no-name) Action/Subject's random name to its key, built
@@ -133,7 +133,7 @@ export class Policy<
    * @param emitMeta when false, skips only the catalog-coverage checks
    *   below (a rule action/subject/operator not covered by
    *   `meta.actions`/`meta.subjects`/`meta.operators`) - the structural
-   *   checks (malformed rule tuples, EC-6) always run regardless, since
+   *   checks (malformed rule tuples, both-sides-wildcarded rules with conditions) always run regardless, since
    *   those guard evaluation correctness rather than diagnostics.
    */
   private static validateRules(
@@ -184,7 +184,7 @@ export class Policy<
 
       if (isWildcardAction && isWildcardSubject && conditions) {
         throw new PolicyLoadException(
-          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional (SPEC_V0.md property 5, EC-6).`,
+          `Rule [${effect}, ${action}, ${subjectName}] is wildcarded on both the action and the subject but carries a Conditions element - this MUST be unconditional.`,
         )
       }
 
@@ -234,7 +234,7 @@ export class Policy<
   }
 
   /**
-   * SPEC_V0.md: reverse scan over `rules`, returning the effect of
+   * Reverse scan over `rules`, returning the effect of
    * the first (i.e. most-recently-declared) rule whose action, subject,
    * and (if present) conditions all match. There is no independent
    * "allow AND NOT deny" veto and no combination of multiple matching
@@ -255,7 +255,7 @@ export class Policy<
 
       if (ruleConditions) {
         // A conditional rule can never be satisfied by a bare-type/no-instance
-        // check - there's no instance data for the condition to inspect (EC-7).
+        // check - there's no instance data for the condition to inspect.
         if (subject.instance === undefined) continue
         if (!this.resolver.evaluate(subject.instance, ruleConditions, this.resolveFieldMapper(subject))) continue
         return effect === "allow"
@@ -264,7 +264,7 @@ export class Policy<
       return effect === "allow"
     }
 
-    return false // EC-1, EC-2: default deny.
+    return false // Default deny.
   }
 
   /** The subject's own `fieldMapper` (set via `createSubject`) takes precedence; `config.mapper`, keyed by the subject's resolved catalog name, is the fallback. */

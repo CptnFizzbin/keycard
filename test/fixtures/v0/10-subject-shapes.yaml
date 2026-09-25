@@ -1,3 +1,4 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#can--cannot--require
 version: "0.1"
 name: "bare type vs. wrapped instance"
 description: >

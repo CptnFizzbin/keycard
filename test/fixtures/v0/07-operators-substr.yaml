@@ -1,5 +1,6 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: unanchored literal (§7.4.6)"
+name: "$substr: unanchored literal"
 rules:
   - [ allow, Read, Article, { title: { $substr: Rust } } ]
 
@@ -21,6 +22,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: literal matching - substring in middle"
 rules:
@@ -36,8 +38,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: start anchor (§7.4.6)"
+name: "$substr: start anchor"
 rules:
   - [ allow, Read, Article, { title: { $substr: "^Getting" } } ]
 
@@ -51,8 +54,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: end anchor (§7.4.6)"
+name: "$substr: end anchor"
 rules:
   - [ allow, Read, Article, { title: { $substr: "Guide$" } } ]
 
@@ -66,8 +70,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: both anchors (exact match) (§7.4.6)"
+name: "$substr: both anchors (exact match)"
 rules:
   - [ allow, Read, Article, { title: { $substr: "^Rust$" } } ]
 
@@ -85,8 +90,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: wildcard (*) matches zero or more characters (§7.4.6)"
+name: "$substr: wildcard (*) matches zero or more characters"
 description: >
   In the simplified spec, * matches zero or more characters, not one or more.
 rules:
@@ -110,6 +116,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: wildcard at start"
 rules:
@@ -125,6 +132,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: wildcard at end"
 rules:
@@ -140,6 +148,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: single wildcard character"
 rules:
@@ -155,6 +164,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: multiple wildcards"
 description: >
@@ -176,6 +186,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: anchored wildcard at start"
 rules:
@@ -191,6 +202,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: anchored wildcard at end"
 rules:
@@ -206,6 +218,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: both anchors with wildcard"
 rules:
@@ -221,6 +234,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: empty pattern"
 rules:
@@ -236,6 +250,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: empty string with both anchors"
 rules:
@@ -251,8 +266,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: escaped special characters are literal (§7.4.6)"
+name: "$substr: escaped special characters are literal"
 rules:
   - [ allow, Read, Article, { title: { $substr: "\\^literal" } } ]
 
@@ -270,6 +286,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: escaped asterisk is literal"
 rules:
@@ -285,6 +302,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: escaped dollar sign is literal"
 rules:
@@ -300,6 +318,7 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: escaped backslash is literal"
 rules:
@@ -311,8 +330,9 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: trailing backslash is ignored (§7.4.6)"
+name: "$substr: trailing backslash is ignored"
 rules:
   - [ allow, Read, Article, { title: { $substr: "foo\\" } } ]
 
@@ -322,8 +342,9 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: an invalid pattern is a type issue, always false (§7.4.6)"
+name: "$substr: an invalid pattern is a type issue, always false"
 description: >
   An unescaped ^ anywhere but the first character, or an unescaped $
   anywhere but the last, is a structurally invalid pattern.
@@ -340,6 +361,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
 name: "$substr: invalid pattern with $ in middle"
 rules:
@@ -351,8 +373,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#substr
 version: "0.1"
-name: "$substr: a null or missing subject is an ordinary non-match, not a type issue (§7.4.6)"
+name: "$substr: a null or missing subject is an ordinary non-match, not a type issue"
 rules:
   - [ allow, Read, Article, { title: { $substr: x } } ]
 

@@ -1,8 +1,9 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaanyaction--metaanysubject
 version: "0.1"
 name: "default _ANY_ wildcard"
 description: >
   meta/meta.anyAction/meta.anySubject are all absent, so the wildcard token
-  defaults to "_ANY_" for both positions (§4.2.1).
+  defaults to "_ANY_" for both positions.
 rules:
   - [ allow, Read, _ANY_ ]
   - [ allow, _ANY_, Article, { owner_id: 1 } ]
@@ -41,6 +42,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaanyaction--metaanysubject
 version: "0.1"
 name: "a custom wildcard token for actions only"
 description: >
@@ -72,12 +74,13 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaanyaction--metaanysubject
 version: "0.1"
 name: "disabling the subject wildcard entirely"
 description: >
   meta.anySubject: null disables the wildcard mechanism for the subject
   position — every rule's Subject, including the literal string "_ANY_", is
-  now matched purely literally (§4.2.1).
+  now matched purely literally.
 
 meta:
   anySubject: null
@@ -95,6 +98,7 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#metaanyaction--metaanysubject
 version: "0.1"
 name: "disabling the action wildcard entirely"
 

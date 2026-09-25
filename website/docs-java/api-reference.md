@@ -72,8 +72,7 @@ Evaluates conditions:
 
 ## `PolicyDefinition`
 
-Serializable policy, per
-[SPEC_V0.md §3](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V0.md#3-terminology):
+Serializable policy, per the [spec](/spec/v0):
 
 - `getVersion()` — get the SemVer spec version, e.g. `"1.0"`
 - `getMeta()` — get the optional `meta` object (wildcard tokens, catalogues,
@@ -154,15 +153,14 @@ Policy policy = new PolicyBuilder(config)
     .build();
 ```
 
-- `anyAction` / `anySubject` — the wildcard tokens (§4.2.1). Unlike the
+- `anyAction` / `anySubject` — the wildcard tokens. Unlike the
   `(Object, Object)` constructors, leaving these unset here means "not declared"
   (`"_ANY_"` applies) rather than passing `null` through; use
   `Boolean.FALSE` to disable a wildcard explicitly.
 - `actions` / `subjects` — declared vocabulary, **additive** to whatever
   `PolicyBuilder.allow`/`.deny` actually used, or to `meta.actions`/
   `meta.subjects` already on a `PolicyDefinition` a `Policy` is constructed from
-  (§4.2.2's catalog enforcement —
-  see [Policy Definition](/docs/policy-definition)).
+  (catalog enforcement — see [Policy Definition](/docs/policy-definition)).
 - `operators` — custom operators, used instead of any separately-passed
   `Collection<Operator>`.
 - `mapper` — a `SubjectFieldMapperCatalog`, consulted as a fallback for any

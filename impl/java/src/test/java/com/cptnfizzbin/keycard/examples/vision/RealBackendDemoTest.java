@@ -32,7 +32,7 @@ public class RealBackendDemoTest {
         archivedProject.setArchivedAt(Instant.now());
 
         // Create/Update/Invite all carry the same in-org condition - a bare,
-        // instance-less check can never satisfy a conditional rule (EC-7).
+        // instance-less check can never satisfy a conditional rule.
         assertFalse(policy.can(AppActions.Create, AppSubjects.Project));
         assertTrue(policy.can(AppActions.Create, AppSubjects.Project.from(inOrgProject)));
         assertTrue(policy.can(AppActions.Update, AppSubjects.Project.from(inOrgProject)));

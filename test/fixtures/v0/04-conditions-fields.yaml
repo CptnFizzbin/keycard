@@ -1,5 +1,6 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#general-requirements
 version: "0.1"
-name: "bare-value shorthand (§7.2)"
+name: "bare-value shorthand"
 description: "{ status: archived } is shorthand for { status: { $eq: archived } }."
 rules:
   - [ allow, Read, Article, { status: published } ]
@@ -18,13 +19,15 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#missing-fields-vs-explicit-null
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#ne
 version: "0.1"
-name: "$ne is the exact negation of $eq, including on a missing field (§7.3, §7.4.2)"
+name: "$ne is the exact negation of $eq, including on a missing field"
 description: >
   { status: { $ne: archived } } matches whenever status isn't "archived" -
   including when status is missing entirely, since $ne MUST be the exact
-  negation of $eq (§7.4.2) and $eq on a missing field is false. This is the
-  one exception to §7.3's blanket missing-field-is-false rule.
+  negation of $eq and $eq on a missing field is false. This is the
+  one exception to the blanket missing-field-is-false rule.
 rules:
   - [ allow, Read, Article, { status: { $ne: archived } } ]
 
@@ -46,8 +49,9 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#missing-fields-vs-explicit-null
 version: "0.1"
-name: "bare-value shorthand against an explicit null (§7.3)"
+name: "bare-value shorthand against an explicit null"
 rules:
   - [ allow, Read, Article, { status: null } ]
 
@@ -65,8 +69,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#field-condition
 version: "0.1"
-name: "field conditions are top-level only in v1 - nesting not yet supported (§7.4.10)"
+name: "field conditions are top-level only in v1 - nesting not yet supported"
 description: >
   v1 restricts field conditions to a subject's own top-level fields;
   { name: "Alice" } here would be a second level of field narrowing
@@ -89,8 +94,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#field-condition
 version: "0.1"
-name: "logical and comparison operators still nest inside a top-level field condition (§7.4.10)"
+name: "logical and comparison operators still nest inside a top-level field condition"
 description: >
   The top-level-only restriction is about further FIELD narrowing, not about
   using $and/$or/$not/comparison operators against the field's own value -
@@ -109,8 +115,9 @@ tests:
     expected: true
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#field-explicit-field-access
 version: "0.1"
-name: "$field used to reach a second level of nesting not yet supported the same way (§7.4.11)"
+name: "$field used to reach a second level of nesting not yet supported the same way"
 rules:
   - [ allow, Read, Article, { author: { $field: [ "name", "Alice" ] } } ]
 
@@ -120,8 +127,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#field-explicit-field-access
 version: "0.1"
-name: "$field: explicit field access for a $-prefixed field name (§7.4.11)"
+name: "$field: explicit field access for a $-prefixed field name"
 description: >
   A subject field literally named "$type" can't be reached with the bare-key
   form (`{ $type: ... }` would mean the $type operator), so this uses the
@@ -143,8 +151,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#field-explicit-field-access
 version: "0.1"
-name: "$field with a malformed operand is a type issue, always false (§7.4.11)"
+name: "$field with a malformed operand is a type issue, always false"
 rules:
   - [ allow, Read, Article, { $field: "not-a-tuple" } ]
 
@@ -154,8 +163,9 @@ tests:
     expected: false
 
 ---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#field-explicit-field-access
 version: "0.1"
-name: "$field with the wrong tuple length is a type issue, always false (§7.4.11)"
+name: "$field with the wrong tuple length is a type issue, always false"
 rules:
   - [ allow, Read, Article, { $field: [ "name" ] } ]
 

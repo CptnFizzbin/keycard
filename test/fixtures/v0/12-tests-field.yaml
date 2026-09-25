@@ -1,10 +1,12 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#tests
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#pre-alpha-specification-v0
 version: "0.1"
 name: "embedded tests field is evaluation-inert"
 description: >
-  §4.4: a PolicyDefinition's optional `tests` field plays no role in
+  A PolicyDefinition's optional `tests` field plays no role in
   evaluation - can/cannot/require MUST behave identically whether or not
   it's present, and regardless of its contents. This suite declares
-  "1.1.0" (§2.2) since `tests` is a 1.1.0 addition; a compliance suite
+  "1.1.0" since `tests` is a 1.1.0 addition; a compliance suite
   whose adapter hasn't been updated for 1.1.0 yet skips it automatically
   (see this directory's README.md, "Filtering by version").
 

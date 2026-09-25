@@ -79,7 +79,7 @@ host language's regex engine.
 A structurally invalid pattern (a stray `^` or `$` not at a boundary)
 evaluates to `false`. A `null`/`undefined` subject is an ordinary non-match, not
 an error. See
-[§5.4.6 of the v1.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V0.md#546-substr)
+the [spec](/spec/v0)
 for the exact decomposition rules.
 
 ## Logical operators
@@ -146,5 +146,5 @@ applies: `Condition` here must not itself be a field condition.
 Implementations may support custom, application-defined operators (`$op`) in
 addition to the built-ins above — see each language guide's API reference for
 how to register one, and
-[§5.5 of the v1.0 spec](https://github.com/CptnFizzbin/keycard/blob/main/docs/spec/SPEC_V0.md#55-custom-operators-op)
+the [spec](/spec/v0)
 for the requirements a custom operator must satisfy.

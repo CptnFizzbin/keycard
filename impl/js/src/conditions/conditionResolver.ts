@@ -13,7 +13,7 @@ import { checkField } from "./operators/field/fieldAccess.ts"
 export const BUILTIN_OPERATOR_NAMES: ReadonlySet<string> = new Set(DefaultOperators.map((op) => op.name))
 
 /**
- * Implements SPEC_V0.md: the condition language and its
+ * Implements the condition language and its
  * evaluation semantics. Every operator's own behavior lives in
  * `./operators/**` - this class is just the dispatch loop: it looks a
  * `$`-prefixed key up in its registry (built-ins plus whatever custom
