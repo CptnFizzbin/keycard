@@ -15,7 +15,7 @@ import java.util.LinkedHashMap;
 public final class ActionCatalog extends LinkedHashMap<String, Action> {
     public ActionCatalog add(Action action) {
         if (action.dynamic())
-            throw new PolicyArgumentException("Dynamic actions must added to the catalog with a name");
+            throw new PolicyArgumentException("Dynamic actions must be added to the catalog with a name");
         return this.add(action.name(), action);
     }
 

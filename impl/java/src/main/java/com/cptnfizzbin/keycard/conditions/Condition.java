@@ -1,5 +1,6 @@
 package com.cptnfizzbin.keycard.conditions;
 
+import com.cptnfizzbin.keycard.errors.PolicyArgumentException;
 import org.jspecify.annotations.NonNull;
 
 import java.io.Serializable;
@@ -120,33 +121,42 @@ public class Condition<S> {
     }
 
     private static String extractFieldName(FieldGetter<?, ?> getter) {
+        SerializedLambda lambda;
         try {
             Method writeReplaceMethod = getter.getClass().getDeclaredMethod("writeReplace");
             writeReplaceMethod.setAccessible(true);
-            SerializedLambda lambda = (SerializedLambda) writeReplaceMethod.invoke(getter);
-            return getFieldName(lambda);
+            lambda = (SerializedLambda) writeReplaceMethod.invoke(getter);
         } catch (Exception e) {
-            throw new RuntimeException("Could not extract field name from method reference", e);
+            throw new PolicyArgumentException("Could not extract field name from method reference", e);
         }
+        return getFieldName(lambda);
     }
 
     private static @NonNull String getFieldName(SerializedLambda lambda) {
         String methodName = lambda.getImplMethodName();
 
-        // Convert getter method name to field name
-        // e.g., "getOwnerId" -> "ownerId"
-        String fieldName;
-        if (methodName.startsWith("get")) {
-            fieldName = methodName.substring(3);
-            return fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
+        // A lambda body (e.g. c -> c.ownerId()) compiles to a synthetic
+        // "lambda$..." method whose name says nothing about the field read.
+        if (methodName.startsWith("lambda$")) {
+            throw new PolicyArgumentException(
+                "Conditions need a method reference (e.g. Claims::ownerId), not a lambda - a lambda's field name can't be recovered."
+            );
         }
 
-        if (methodName.startsWith("is")) {
-            fieldName = methodName.substring(2);
-            return fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
-        }
+        // Convert a JavaBean getter name to its field name, e.g.
+        // "getOwnerId" -> "ownerId" - but only when the prefix is followed by
+        // an upper-case letter, so a plain accessor like "isbn()" or
+        // "getaway()" is left as-is rather than mangled to "bn"/"away".
+        String stripped = stripBeanPrefix(methodName, "get");
+        if (stripped == null) stripped = stripBeanPrefix(methodName, "is");
+        return stripped != null ? stripped : methodName;
+    }
 
-        return methodName;
+    private static String stripBeanPrefix(String methodName, String prefix) {
+        if (methodName.length() <= prefix.length() || !methodName.startsWith(prefix)) return null;
+        if (!Character.isUpperCase(methodName.charAt(prefix.length()))) return null;
+        String rest = methodName.substring(prefix.length());
+        return Character.toLowerCase(rest.charAt(0)) + rest.substring(1);
     }
 }
 

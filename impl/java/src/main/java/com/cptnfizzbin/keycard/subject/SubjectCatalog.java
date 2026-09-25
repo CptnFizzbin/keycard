@@ -20,7 +20,7 @@ public final class SubjectCatalog extends LinkedHashMap<String, Subject<?, ?>> {
 
     public SubjectCatalog add(Subject<?, ?> subject) {
         if (subject.dynamic())
-            throw new PolicyArgumentException("Dynamic subject must added to the catalog with a name");
+            throw new PolicyArgumentException("Dynamic subject must be added to the catalog with a name");
         return this.add(subject.name(), subject);
     }
 

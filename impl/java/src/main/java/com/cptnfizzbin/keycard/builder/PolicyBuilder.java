@@ -92,7 +92,9 @@ public class PolicyBuilder {
 
     public PolicyDefinition buildDef() {
         return new PolicyDefinition()
-            .rules(this.rules)
+            // A copy, so allow()/deny() calls made after this can't reach
+            // back into an already-built definition (or a Policy made from it).
+            .rules(new ArrayList<>(this.rules))
             .meta(config.emitMeta() ? buildMeta() : null);
     }
 

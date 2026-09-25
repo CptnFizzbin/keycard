@@ -1,5 +1,6 @@
 package com.cptnfizzbin.keycard.conditions;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -46,22 +47,22 @@ final class DefaultOperators {
         return cmp.test(a, b);
     }
 
-    /** $in - operand must be a collection; containment uses $eq semantics per element. */
+    /** $in - operand must be a collection (any {@link Collection}, e.g. a {@code Set}); containment uses $eq semantics per element. */
     private static boolean inCheck(Object subject, Object operand) {
-        if (!(operand instanceof List)) {
+        if (!(operand instanceof Collection<?> collection)) {
             Diagnostics.logTypeIssue("$in", "expected an array operand, got " + Diagnostics.typeName(operand));
             return false;
         }
-        return GroupConditions.in(subject, (List<?>) operand);
+        return GroupConditions.in(subject, collection);
     }
 
-    /** $has - subject must be a collection. */
+    /** $has - subject must be a collection (any {@link Collection}, e.g. a {@code Set}). */
     private static boolean hasCheck(Object subject, Object value) {
-        if (!(subject instanceof List)) {
+        if (!(subject instanceof Collection<?> collection)) {
             Diagnostics.logTypeIssue("$has", "expected an array subject, got " + Diagnostics.typeName(subject));
             return false;
         }
-        return GroupConditions.has((List<?>) subject, value);
+        return GroupConditions.has(collection, value);
     }
 
     /** $substr - a null subject is an ordinary non-match, not a type issue; an invalid pattern always is. */
