@@ -1,7 +1,7 @@
-# v1 conformance fixtures
+# v0 conformance fixtures
 
 The YAML files in this directory are a conformance test suite for
-[``SPEC_V0.md``](../../../docs/spec/SPEC_V0.md) — the authoritative v1 policy
+[`SPEC_V0.md`](../../../website/spec/SPEC_V0.md) — the authoritative v0 policy
 spec. `test/fixtures/policies/` is a separate, format-agnostic fixture set
 (shared between `impl/java` and `impl/js`'s own unit-style suites) that also
 uses this same v1 `rules`/`meta` shape.

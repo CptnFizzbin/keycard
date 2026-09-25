@@ -41,10 +41,10 @@ the **[KeyCard website](https://keycard.cptnfizzbin.dev)**:
   reference
 
 For a terser, source-of-truth overview see [`SPEC.md`](SPEC.md) and
-[`GLOSSARY.md`](GLOSSARY.md). The normative v1 specification —  exact
+[`GLOSSARY.md`](GLOSSARY.md). The normative v0 specification — exact
 rule-evaluation semantics, the full condition-operator table, and required
 edge-case behavior every implementation is validated against — lives at
-[`docs/spec/SPEC_V0.md`](docs/spec/SPEC_V0.md).
+[`website/spec/SPEC_V0.md`](website/spec/SPEC_V0.md).
 
 ## Implementations
 
@@ -63,8 +63,8 @@ add a new language implementation.
 
 ```
 impl/       Language implementations (one package per language)
-docs/       Normative specification (docs/spec/SPEC_V0.md)
-website/    Docusaurus source for keycard.cptnfizzbin.dev
+website/    Docusaurus source for keycard.cptnfizzbin.dev, including the
+            normative specification (website/spec/SPEC_V0.md)
 test/       Cross-language conformance fixtures
 ```
 
