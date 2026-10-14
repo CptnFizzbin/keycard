@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Reflection;
-using System.Text.Json.Serialization;
 
 namespace Keycard.Conditions;
 
@@ -13,7 +12,7 @@ internal static class FieldAccess
     /// <summary>
     /// Evaluates <paramref name="condition"/> against the <paramref name="fieldName"/>
     /// field of <paramref name="subject"/>: a map key, or else a public property
-    /// or field (matched by its exact name, its <see cref="JsonPropertyNameAttribute"/>,
+    /// or field (matched by its exact name, its <see cref="ClaimNameAttribute"/>,
     /// or its camelCased name). A missing field (or null subject) is absence,
     /// not a type issue: it satisfies only a bare <c>$ne</c>.
     /// </summary>
@@ -83,13 +82,13 @@ internal static class FieldAccess
 
         var property =
             properties.FirstOrDefault(p => p.Name == name)
-            ?? properties.FirstOrDefault(p => p.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name == name)
+            ?? properties.FirstOrDefault(p => p.GetCustomAttribute<ClaimNameAttribute>()?.Name == name)
             ?? properties.FirstOrDefault(p => Camel(p.Name) == name);
         if (property is not null) return property.GetValue;
 
         var field =
             fields.FirstOrDefault(f => f.Name == name)
-            ?? fields.FirstOrDefault(f => f.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name == name)
+            ?? fields.FirstOrDefault(f => f.GetCustomAttribute<ClaimNameAttribute>()?.Name == name)
             ?? fields.FirstOrDefault(f => Camel(f.Name) == name);
         return field is not null ? field.GetValue : null;
     }

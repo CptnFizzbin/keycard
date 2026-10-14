@@ -7,7 +7,7 @@ namespace Keycard.Tests;
 public class PolicyValidationTests
 {
     private static Policy Load(string json, KeycardConfig? config = null) =>
-        new(PolicyDefinition.FromJson(json), config);
+        new(PolicyJson.FromJson(json), config);
 
     // --- version ---
 
@@ -31,37 +31,22 @@ public class PolicyValidationTests
         Assert.Throws<PolicyVersionException>(() => Load($$"""{ "version": "{{version}}", "rules": [] }"""));
     }
 
-    [Fact]
-    public void RequiresAVersionWhenLoadingJson()
-    {
-        Assert.Throws<PolicyLoadException>(() => Load("""{ "rules": [] }"""));
-    }
-
     // --- rule shapes ---
+
+    [Fact]
+    public void RejectsARuleWithoutAnActionOrSubject()
+    {
+        var noAction = new PolicyDefinition { Rules = { new Rule("allow", null!, "Article") } };
+        var noSubject = new PolicyDefinition { Rules = { new Rule("allow", "Read", null!) } };
+
+        Assert.Throws<PolicyLoadException>(() => new Policy(noAction));
+        Assert.Throws<PolicyLoadException>(() => new Policy(noSubject));
+    }
 
     [Fact]
     public void RejectsAnUnknownEffect()
     {
         Assert.Throws<PolicyLoadException>(() => Load("""{ "version": "0.1", "rules": [["permit", "Read", "Article"]] }"""));
-    }
-
-    [Theory]
-    [InlineData("""["allow", "Read"]""")]
-    [InlineData("""["allow", 1, "Article"]""")]
-    [InlineData("""["allow", "Read", null]""")]
-    [InlineData("""["allow", "Read", "Article", "open"]""")]
-    [InlineData("""{ "effect": "allow" }""")]
-    public void RejectsMalformedRuleTuples(string rule)
-    {
-        Assert.Throws<PolicyLoadException>(() => Load($$"""{ "version": "0.1", "rules": [{{rule}}] }"""));
-    }
-
-    [Fact]
-    public void TreatsNullRulesAsAnEmptyPolicy()
-    {
-        var policy = Load("""{ "version": "0.1", "rules": null }""");
-
-        Assert.False(policy.Can("Read", "Article"));
     }
 
     [Fact]
@@ -90,6 +75,16 @@ public class PolicyValidationTests
     {
         Assert.Throws<PolicyLoadException>(() =>
             Load($$"""{ "version": "0.1", "meta": { "anyAction": {{declared}} }, "rules": [] }"""));
+    }
+
+    [Fact]
+    public void ParsesWildcardDeclarations()
+    {
+        Assert.Equal(new WildcardToken.Named("*"), WildcardToken.Of("*"));
+        Assert.Equal(WildcardToken.Off, WildcardToken.Of(null));
+        Assert.Equal(WildcardToken.Off, WildcardToken.Of(false));
+        Assert.Throws<PolicyLoadException>(() => WildcardToken.Of(true));
+        Assert.Throws<PolicyLoadException>(() => WildcardToken.Of(1));
     }
 
     [Fact]
@@ -215,7 +210,7 @@ public class PolicyValidationTests
     [Fact]
     public void EvaluationIgnoresLaterMutationOfTheDefinition()
     {
-        var definition = PolicyDefinition.FromJson("""{ "version": "0.1", "rules": [["allow", "Read", "Article"]] }""");
+        var definition = PolicyJson.FromJson("""{ "version": "0.1", "rules": [["allow", "Read", "Article"]] }""");
         var policy = new Policy(definition);
 
         definition.Rules.Add(new Rule("allow", "_ANY_", "_ANY_"));

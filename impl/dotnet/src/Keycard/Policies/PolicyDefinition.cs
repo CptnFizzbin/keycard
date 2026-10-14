@@ -1,44 +1,29 @@
 using System.Collections;
 using System.Collections.ObjectModel;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Keycard.Conditions;
-using Keycard.Errors;
 
 namespace Keycard;
 
 /// <summary>
-/// The <c>PolicyDefinition</c> document shape, bound to and from JSON with
-/// <see cref="FromJson"/> and <see cref="ToJson"/>. KeyCard itself never reads
-/// or writes YAML; a host that wants YAML converts it to this shape first.
+/// The <c>PolicyDefinition</c> document shape, as plain objects. KeyCard never
+/// reads or writes policy text: the host application maps this model to and
+/// from whatever format and serializer it uses.
 /// </summary>
 public sealed class PolicyDefinition
 {
     private IList<Rule> _rules = new List<Rule>();
 
-    internal static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
     /// <summary>Required; must be a SemVer string whose MAJOR and MINOR this implementation supports (e.g. <c>"0.1"</c>).</summary>
-    [JsonPropertyName("version")]
-    [JsonRequired]
     public string Version { get; set; } = KeycardVersion.PolicyVersion;
 
     /// <summary>Informational only - plays no role in evaluation.</summary>
-    [JsonPropertyName("name")]
     public string? Name { get; set; }
 
     /// <summary>Informational only - plays no role in evaluation.</summary>
-    [JsonPropertyName("description")]
     public string? Description { get; set; }
-
-    [JsonPropertyName("meta")]
     public PolicyMeta? Meta { get; set; }
 
     /// <summary>The rules in declaration order, which is significant: the last matching rule wins.</summary>
-    [JsonPropertyName("rules")]
     public IList<Rule> Rules
     {
         get => _rules;
@@ -47,54 +32,22 @@ public sealed class PolicyDefinition
     }
 
     /// <summary>Embedded test suites; they play no role in evaluation.</summary>
-    [JsonPropertyName("tests")]
     public IList<PolicyTestSuite>? Tests { get; set; }
-
-    /// <summary>Parses a policy document from JSON.</summary>
-    /// <exception cref="PolicyLoadException">The document is malformed.</exception>
-    public static PolicyDefinition FromJson(string json)
-    {
-        try
-        {
-            return JsonSerializer.Deserialize<PolicyDefinition>(json, JsonOptions)
-                ?? throw new PolicyLoadException("A policy document must be a JSON object.");
-        }
-        catch (JsonException e)
-        {
-            throw new PolicyLoadException($"Invalid policy document: {e.Message}", e);
-        }
-    }
-
-    /// <summary>Serializes this definition to JSON.</summary>
-    public string ToJson(bool indented = false) =>
-        JsonSerializer.Serialize(this, new JsonSerializerOptions(JsonOptions) { WriteIndented = indented });
 }
 
 /// <summary>A policy's <c>meta</c>: wildcard tokens, vocabulary catalogs, and opaque application data.</summary>
 public sealed class PolicyMeta
 {
     /// <summary><c>null</c> means undeclared, so <c>"_ANY_"</c> applies.</summary>
-    [JsonPropertyName("anyAction")]
-    [JsonConverter(typeof(WildcardTokenConverter))]
     public WildcardToken? AnyAction { get; set; }
 
     /// <summary><c>null</c> means undeclared, so <c>"_ANY_"</c> applies.</summary>
-    [JsonPropertyName("anySubject")]
-    [JsonConverter(typeof(WildcardTokenConverter))]
     public WildcardToken? AnySubject { get; set; }
-
-    [JsonPropertyName("actions")]
     public IList<string>? Actions { get; set; }
-
-    [JsonPropertyName("subjects")]
     public IList<string>? Subjects { get; set; }
-
-    [JsonPropertyName("operators")]
     public IList<string>? Operators { get; set; }
 
     /// <summary>Opaque host data; never inspected or rejected.</summary>
-    [JsonPropertyName("application")]
-    [JsonConverter(typeof(PlainJsonConverter))]
     public object? Application { get; set; }
 }
 
@@ -103,7 +56,6 @@ public sealed class PolicyMeta
 /// positionally as an array. Immutable once created, so a <see cref="Policy"/>
 /// can't be bypassed by changing a rule after it was validated.
 /// </summary>
-[JsonConverter(typeof(RuleConverter))]
 public sealed class Rule
 {
     /// <param name="action">An action name, or the policy's action wildcard.</param>
@@ -162,30 +114,20 @@ public sealed class Rule
 /// <summary>A named group of embedded test cases.</summary>
 public sealed class PolicyTestSuite
 {
-    [JsonPropertyName("name")]
     public string Name { get; set; } = "";
-
-    [JsonPropertyName("description")]
     public string? Description { get; set; }
-
-    [JsonPropertyName("cases")]
     public IList<PolicyTestCase> Cases { get; set; } = new List<PolicyTestCase>();
 }
 
 /// <summary>One expected <c>can</c> outcome.</summary>
 public sealed class PolicyTestCase
 {
-    [JsonPropertyName("name")]
     public string? Name { get; set; }
 
     /// <summary><c>[Action, Subject]</c> or <c>[Action, Subject, SubjectClaims]</c>.</summary>
-    [JsonPropertyName("check")]
     public PolicyTestCheck Check { get; set; } = new("", "", null);
-
-    [JsonPropertyName("expected")]
     public bool Expected { get; set; }
 }
 
 /// <summary>The arguments of a test case's <c>can</c> call; <see cref="Claims"/> is <c>null</c> for a bare type check.</summary>
-[JsonConverter(typeof(PolicyTestCheckConverter))]
 public sealed record PolicyTestCheck(string Action, string Subject, object? Claims);

@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Keycard.Conditions;
 using Keycard.Errors;
 using Xunit;
@@ -15,7 +14,7 @@ public class TypedConditionTests
         List<int> Ids,
         string? Title = null)
     {
-        [JsonPropertyName("created_at")]
+        [ClaimName("created_at")]
         public long CreatedAt { get; init; }
     }
 
@@ -69,7 +68,7 @@ public class TypedConditionTests
     }
 
     [Fact]
-    public void UsesTheJsonPropertyNameWhenPresent()
+    public void UsesTheClaimNameWhenPresent()
     {
         var condition = Condition<Claims>.Eq(c => c.CreatedAt, 100L);
 
@@ -106,7 +105,7 @@ public class TypedConditionTests
             .Allow("Read", new Subject<Claims>("Article"), Condition<Claims>.In(c => c.Status, "open", "draft"))
             .BuildDef();
 
-        var policy = new Policy(PolicyDefinition.FromJson(def.ToJson()));
+        var policy = new Policy(PolicyJson.FromJson(PolicyJson.ToJson(def)));
 
         Assert.True(policy.Can("Read", Subject.Named("Article", Sample)));
         Assert.False(policy.Can("Read", Subject.Named("Article", Sample with { Status = "closed" })));

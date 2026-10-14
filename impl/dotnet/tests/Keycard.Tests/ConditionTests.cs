@@ -12,7 +12,7 @@ public class ConditionTests
     {
         public int owner_id = 7;
 
-        [System.Text.Json.Serialization.JsonPropertyName("display_name")]
+        [Keycard.Conditions.ClaimName("display_name")]
         public string DisplayName { get; init; } = "Ada";
     }
 

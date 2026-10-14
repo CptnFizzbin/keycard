@@ -73,31 +73,42 @@ Condition<ArticleClaims>.Or(
 Condition<ArticleClaims>.Eq(c => c.OwnerId, "1");   // compile error: OwnerId is an int
 ```
 
-A field is written into the policy under its `[JsonPropertyName]`, or else its
+A field is written into the policy under its `[ClaimName]`, or else its
 camelCased name (`OwnerId` becomes `ownerId`), which is the spelling the other
 implementations use. Plain strings still convert to actions and subjects, and
 the untyped `Condition` (`Condition.Eq("owner_id", 1)`) remains for conditions
 assembled dynamically.
 
-## Loading a policy document
+## Policy documents and serialization
 
-A policy is a plain, JSON-encodable `PolicyDefinition`, so it can be built
-server-side and evaluated anywhere.
+KeyCard does no serialization. A `PolicyDefinition` is a plain object model
+(`Version`, `Meta`, `Rules`, ...) that the application maps to and from
+whatever format and serializer it uses, so it can be built server-side and
+evaluated anywhere.
 
 ```csharp
-var json = new PolicyBuilder().Allow(Action.Read, ArticleSubject.Def).BuildDef().ToJson();
+PolicyDefinition definition = new PolicyBuilder().Allow(Action.Read, ArticleSubject.Def).BuildDef();
 
-var policy = new Policy(PolicyDefinition.FromJson(json));
+// Application code: write definition out in your format, read it back in, then:
+var policy = new Policy(MyPolicySerializer.Read(text));
 ```
 
-KeyCard reads and writes JSON only. To load a YAML document, parse it with the
-YAML library of your choice into the same shape first.
+A mapper has three details to get right:
+
+- A rule is the tuple `[effect, action, subject, condition?]`: `new Rule(effect, action, subject, conditions)`.
+- `meta.anyAction` / `meta.anySubject` distinguish absent (leave `null`) from an
+  explicit `null` or `false` (`WildcardToken.Off`); `WildcardToken.Of(raw)` does
+  this mapping for a parsed value.
+- Conditions are plain data: dictionaries, lists, strings, numbers, booleans, and `null`.
+
+[`tests/Keycard.Tests/PolicyJson.cs`](tests/Keycard.Tests/PolicyJson.cs) is a
+complete JSON example; a YAML parser's output maps the same way.
 
 ## Subject claims
 
 Field conditions read a subject's claims from a map (`IDictionary`) or from the
 public properties and fields of any object. A condition field matches a
-property by its exact name, its `[JsonPropertyName]`, or its camelCased name, so
+property by its exact name, its `[ClaimName]`, or its camelCased name, so
 `{ ownerId: 1 }` reads `OwnerId` on a C# record.
 
 ## Custom operators

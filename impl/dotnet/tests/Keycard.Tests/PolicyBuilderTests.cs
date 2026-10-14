@@ -91,7 +91,7 @@ public class PolicyBuilderTests
             .Allow(Action.Update, ArticleSubject.Def, Condition<ArticleClaims>.Eq(c => c.OwnerId, 1))
             .BuildDef();
 
-        Assert.Contains("""["allow","Update","Article",{"ownerId":{"$eq":1}}]""", def.ToJson());
+        Assert.Contains("""["allow","Update","Article",{"ownerId":{"$eq":1}}]""", PolicyJson.ToJson(def));
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class PolicyBuilderTests
         Assert.Equal(new WildcardToken.Named("*"), def.Meta!.AnyAction);
         Assert.Equal(WildcardToken.Off, def.Meta.AnySubject);
         Assert.Null(def.Meta.Actions);
-        Assert.Contains("\"anySubject\":null", def.ToJson());
+        Assert.Contains("\"anySubject\":null", PolicyJson.ToJson(def));
     }
 
     [Fact]

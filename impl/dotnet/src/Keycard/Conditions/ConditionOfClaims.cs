@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json.Serialization;
 using Keycard.Errors;
 
 namespace Keycard.Conditions;
@@ -9,7 +8,7 @@ namespace Keycard.Conditions;
 /// A condition over the claims type <typeparamref name="TClaims"/>. Fields are
 /// chosen with a lambda (<c>c =&gt; c.OwnerId</c>) and values are checked against
 /// the field's type, so a misspelled field or a mistyped value is a compile
-/// error. A field is written into the policy under its <see cref="JsonPropertyNameAttribute"/>
+/// error. A field is written into the policy under its <see cref="ClaimNameAttribute"/>
 /// name, or else its camelCased name (<c>OwnerId</c> becomes <c>ownerId</c>), the
 /// spelling other languages' implementations use.
 /// </summary>
@@ -101,7 +100,7 @@ public sealed class Condition<TClaims> : ICondition
                 "A condition field must be a direct property or field of the claims, e.g. c => c.OwnerId; got " + selector + ".");
         }
 
-        var jsonName = member.Member.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name;
-        return jsonName ?? char.ToLowerInvariant(member.Member.Name[0]) + member.Member.Name[1..];
+        var claimName = member.Member.GetCustomAttribute<ClaimNameAttribute>()?.Name;
+        return claimName ?? char.ToLowerInvariant(member.Member.Name[0]) + member.Member.Name[1..];
     }
 }
