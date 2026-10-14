@@ -1,0 +1,29 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "impl/dotnet/**"
+      - "test/fixtures/v0/**"
+  pull_request:
+    paths:
+      - "impl/dotnet/**"
+      - "test/fixtures/v0/**"
+
+defaults:
+  run:
+    working-directory: impl/dotnet
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build and test
+        run: dotnet test tests/Keycard.Tests --configuration Release
