@@ -6,7 +6,7 @@ namespace Keycard;
 /// <summary>
 /// Builds a <see cref="PolicyDefinition"/> rule by rule. <see cref="BuildDef"/>
 /// derives <c>meta.actions</c>, <c>meta.subjects</c>, and <c>meta.operators</c>
-/// from what <see cref="Allow(string, Subject, Condition?)"/>/<see cref="Deny(string, Subject, Condition?)"/>
+/// from what <c>Allow</c>/<c>Deny</c>
 /// used and what the config registered, so there is no hand-maintained catalog
 /// to keep in sync. Rules keep the order they were added in; the last matching
 /// rule wins, so add general rules first and the rules that override them later.
@@ -22,25 +22,59 @@ public sealed class PolicyBuilder
 
     public PolicyBuilder(KeycardConfig? config = null) => _config = config ?? new KeycardConfig();
 
-    /// <summary>Adds a rule allowing <paramref name="action"/> on <paramref name="subject"/>, where <paramref name="condition"/> holds if given.</summary>
+    /// <summary>
+    /// Adds a rule allowing <paramref name="action"/> on <paramref name="subject"/>, where
+    /// <paramref name="condition"/> holds if given. The condition's claims type must be the subject's.
+    /// </summary>
     /// <exception cref="PolicyArgumentException">The rule is wildcarded on both sides and carries a condition.</exception>
-    public PolicyBuilder Allow(string action, Subject subject, Condition? condition = null) =>
+    public PolicyBuilder Allow<TClaims>(PolicyAction action, Subject<TClaims> subject, Condition<TClaims>? condition = null)
+        where TClaims : class =>
+        AddRule("allow", action, subject, condition);
+
+    /// <summary>Adds an <c>allow</c> rule with an untyped condition.</summary>
+    /// <exception cref="PolicyArgumentException">The rule is wildcarded on both sides and carries a condition.</exception>
+    public PolicyBuilder Allow(PolicyAction action, Subject subject, Condition? condition = null) =>
         AddRule("allow", action, subject, condition);
 
     /// <summary>Adds one <c>allow</c> rule per action, in order.</summary>
-    public PolicyBuilder Allow(IEnumerable<string> actions, Subject subject, Condition? condition = null)
+    public PolicyBuilder Allow<TClaims>(IEnumerable<PolicyAction> actions, Subject<TClaims> subject, Condition<TClaims>? condition = null)
+        where TClaims : class
     {
         foreach (var action in actions) Allow(action, subject, condition);
         return this;
     }
 
-    /// <summary>Adds a rule denying <paramref name="action"/> on <paramref name="subject"/>, where <paramref name="condition"/> holds if given.</summary>
+    /// <summary>Adds one <c>allow</c> rule per action, in order, with an untyped condition.</summary>
+    public PolicyBuilder Allow(IEnumerable<PolicyAction> actions, Subject subject, Condition? condition = null)
+    {
+        foreach (var action in actions) Allow(action, subject, condition);
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a rule denying <paramref name="action"/> on <paramref name="subject"/>, where
+    /// <paramref name="condition"/> holds if given. The condition's claims type must be the subject's.
+    /// </summary>
     /// <exception cref="PolicyArgumentException">The rule is wildcarded on both sides and carries a condition.</exception>
-    public PolicyBuilder Deny(string action, Subject subject, Condition? condition = null) =>
+    public PolicyBuilder Deny<TClaims>(PolicyAction action, Subject<TClaims> subject, Condition<TClaims>? condition = null)
+        where TClaims : class =>
+        AddRule("deny", action, subject, condition);
+
+    /// <summary>Adds a <c>deny</c> rule with an untyped condition.</summary>
+    /// <exception cref="PolicyArgumentException">The rule is wildcarded on both sides and carries a condition.</exception>
+    public PolicyBuilder Deny(PolicyAction action, Subject subject, Condition? condition = null) =>
         AddRule("deny", action, subject, condition);
 
     /// <summary>Adds one <c>deny</c> rule per action, in order.</summary>
-    public PolicyBuilder Deny(IEnumerable<string> actions, Subject subject, Condition? condition = null)
+    public PolicyBuilder Deny<TClaims>(IEnumerable<PolicyAction> actions, Subject<TClaims> subject, Condition<TClaims>? condition = null)
+        where TClaims : class
+    {
+        foreach (var action in actions) Deny(action, subject, condition);
+        return this;
+    }
+
+    /// <summary>Adds one <c>deny</c> rule per action, in order, with an untyped condition.</summary>
+    public PolicyBuilder Deny(IEnumerable<PolicyAction> actions, Subject subject, Condition? condition = null)
     {
         foreach (var action in actions) Deny(action, subject, condition);
         return this;
@@ -72,9 +106,9 @@ public sealed class PolicyBuilder
         return meta;
     }
 
-    private PolicyBuilder AddRule(string effect, string action, Subject subject, Condition? condition)
+    private PolicyBuilder AddRule(string effect, PolicyAction actionName, Subject subject, ICondition? condition)
     {
-        ArgumentNullException.ThrowIfNull(action);
+        var action = actionName.Name ?? throw new ArgumentNullException(nameof(actionName));
         ArgumentNullException.ThrowIfNull(subject);
 
         if (condition is not null)

@@ -131,7 +131,7 @@ public sealed class Rule
     {
         switch (value)
         {
-            case Condition condition:
+            case ICondition condition:
                 return Freeze(condition.ToMap());
             case IDictionary map:
             {

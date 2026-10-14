@@ -10,11 +10,11 @@ namespace Keycard;
 /// <example>
 /// <code>
 /// var policy = new PolicyBuilder()
-///     .Allow("Read", "Article")
-///     .Allow("Update", "Article", Condition.Eq("owner_id", 1))
+///     .Allow(Action.Read, ArticleSubject.Def)
+///     .Allow(Action.Update, ArticleSubject.Def, Condition&lt;ArticleClaims&gt;.Eq(c =&gt; c.OwnerId, 1))
 ///     .Build();
 ///
-/// policy.Can("Update", Subject.Of("Article", new { owner_id = 1 })); // true
+/// policy.Can(Action.Update, ArticleSubject.Of(article)); // true when article.OwnerId == 1
 /// </code>
 /// </example>
 public sealed class Policy
@@ -62,16 +62,16 @@ public sealed class Policy
     /// decides, and no match means deny. A subject without claims (a bare type
     /// check) never matches a conditional rule.
     /// </summary>
-    public bool Can(string action, Subject subject)
+    public bool Can(PolicyAction action, Subject subject)
     {
-        ArgumentNullException.ThrowIfNull(action);
+        ArgumentNullException.ThrowIfNull(action.Name);
         ArgumentNullException.ThrowIfNull(subject);
 
         for (var i = _rules.Length - 1; i >= 0; i--)
         {
             var rule = _rules[i];
 
-            if (!WildcardToken.Matches(action, rule.Action, _anyAction)) continue;
+            if (!WildcardToken.Matches(action.Name, rule.Action, _anyAction)) continue;
             if (!WildcardToken.Matches(subject.Name, rule.Subject, _anySubject)) continue;
 
             if (rule.Conditions is not null)
@@ -89,15 +89,15 @@ public sealed class Policy
     }
 
     /// <summary>The exact negation of <see cref="Can"/>.</summary>
-    public bool Cannot(string action, Subject subject) => !Can(action, subject);
+    public bool Cannot(PolicyAction action, Subject subject) => !Can(action, subject);
 
     /// <summary>Returns normally when <see cref="Can"/> is <c>true</c>.</summary>
     /// <exception cref="PolicyException">The check is denied.</exception>
-    public void Require(string action, Subject subject)
+    public void Require(PolicyAction action, Subject subject)
     {
         if (!Can(action, subject))
         {
-            throw new PolicyException($"Access denied: cannot {action} on {subject.Name}");
+            throw new PolicyException($"Access denied: cannot {action.Name} on {subject.Name}");
         }
     }
 

@@ -5,12 +5,10 @@ namespace Keycard;
 /// one instance for a rule's conditions to inspect. A subject with no claims
 /// is a bare type check and never satisfies a conditional rule.
 /// </summary>
-/// <example>
-/// <code>
-/// policy.Can("Update", "Article");                                   // bare type
-/// policy.Can("Update", Subject.Of("Article").Wrap(new { owner_id = 1 })); // one instance
-/// </code>
-/// </example>
+/// <remarks>
+/// Applications normally derive from <see cref="Subject{TClaims}"/> rather than
+/// use this type directly.
+/// </remarks>
 public class Subject
 {
     protected Subject(string name, object? claims)
@@ -30,28 +28,52 @@ public class Subject
 
     public bool HasClaims => Claims is not null;
 
-    public static Subject Of(string name) => new(name, null);
+    /// <summary>A bare type check with no instance.</summary>
+    public static Subject Named(string name) => new(name, null);
 
-    public static Subject Of(string name, object claims) =>
+    /// <summary>A check against one instance whose claims are <paramref name="claims"/>.</summary>
+    public static Subject Named(string name, object claims) =>
         new(name, claims ?? throw new ArgumentNullException(nameof(claims)));
 
-    /// <summary>Returns a copy of this subject wrapping <paramref name="claims"/>.</summary>
-    public Subject Wrap(object claims) => Of(Name, claims);
-
-    public static implicit operator Subject(string name) => Of(name);
+    public static implicit operator Subject(string name) => Named(name);
 
     public override string ToString() => Name;
 }
 
-/// <summary>A <see cref="Subject"/> whose claims have a known shape, so wrapping checks the type at compile time.</summary>
+/// <summary>
+/// A <see cref="Subject"/> whose claims have a known shape. Derive from it to
+/// give each kind of subject its own name and a factory that maps a domain
+/// entity to claims, so call sites read <c>policy.Can(Action.Update, ArticleSubject.Of(article))</c>
+/// and conditions on it are checked against <typeparamref name="TClaims"/>.
+/// </summary>
+/// <example>
+/// <code>
+/// public sealed record ArticleClaims(int OwnerId, string Status);
+///
+/// public sealed class ArticleSubject : Subject&lt;ArticleClaims&gt;
+/// {
+///     public static readonly ArticleSubject Def = new();
+///
+///     private ArticleSubject() : base("Article") { }
+///
+///     private ArticleSubject(ArticleClaims claims) : base("Article", claims) { }
+///
+///     public static ArticleSubject Of(Article article) => new(new ArticleClaims(article.OwnerId, article.Status));
+/// }
+/// </code>
+/// </example>
 /// <typeparam name="TClaims">The shape of this subject's claims.</typeparam>
-public sealed class Subject<TClaims> : Subject where TClaims : notnull
+public class Subject<TClaims> : Subject where TClaims : class
 {
+    /// <summary>Creates the bare type: a subject with a name and no instance.</summary>
     public Subject(string name) : base(name, null) { }
 
-    private Subject(string name, TClaims claims) : base(name, claims) { }
+    /// <summary>Creates a subject wrapping one instance's claims.</summary>
+    protected Subject(string name, TClaims claims)
+        : base(name, claims ?? throw new ArgumentNullException(nameof(claims))) { }
+
+    public new TClaims? Claims => (TClaims?)base.Claims;
 
     /// <summary>Returns a copy of this subject wrapping <paramref name="claims"/>.</summary>
-    public Subject<TClaims> Wrap(TClaims claims) =>
-        new(Name, claims ?? throw new ArgumentNullException(nameof(claims)));
+    public Subject<TClaims> Wrap(TClaims claims) => new(Name, claims);
 }

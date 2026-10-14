@@ -6,46 +6,115 @@ namespace Keycard.Tests;
 
 public class PolicyBuilderTests
 {
-    private static readonly Subject<ArticleClaims> Article = new("Article");
+    private static class Action
+    {
+        public static readonly PolicyAction Read = new("Read");
+        public static readonly PolicyAction Create = new("Create");
+        public static readonly PolicyAction Update = new("Update");
+        public static readonly PolicyAction Delete = new("Delete");
+    }
 
     private sealed record ArticleClaims(int OwnerId, string Status);
 
+    private sealed record Article(int AuthorId, bool Archived);
+
+    private sealed class ArticleSubject : Subject<ArticleClaims>
+    {
+        public static readonly ArticleSubject Def = new();
+
+        private ArticleSubject() : base("Article") { }
+
+        private ArticleSubject(ArticleClaims claims) : base("Article", claims) { }
+
+        public static ArticleSubject Of(Article article) =>
+            new(new ArticleClaims(article.AuthorId, article.Archived ? "archived" : "open"));
+    }
+
+    private sealed class CommentSubject : Subject<ArticleClaims>
+    {
+        public static readonly CommentSubject Def = new();
+
+        private CommentSubject() : base("Comment") { }
+    }
+
+    private static readonly Subject<ArticleClaims> Plain = new("Article");
+
     [Fact]
-    public void BuildsAPolicyThatEvaluatesItsRules()
+    public void BuildsAPolicyFromTypedSubjectsAndConditions()
     {
         var policy = new PolicyBuilder()
-            .Allow("Read", "Article")
-            .Allow("Update", Article, Condition.Eq("ownerId", 1))
-            .Deny("Delete", Article, Condition.Eq("status", "archived"))
+            .Allow(Action.Read, ArticleSubject.Def)
+            .Allow(Action.Update, ArticleSubject.Def, Condition<ArticleClaims>.Eq(c => c.OwnerId, 1))
+            .Deny(Action.Delete, ArticleSubject.Def, Condition<ArticleClaims>.Eq(c => c.Status, "archived"))
             .Build();
 
+        Assert.True(policy.Can(Action.Read, ArticleSubject.Def));
+        Assert.True(policy.Can(Action.Update, ArticleSubject.Of(new Article(1, false))));
+        Assert.False(policy.Can(Action.Update, ArticleSubject.Of(new Article(2, false))));
+        Assert.False(policy.Can(Action.Update, ArticleSubject.Def));
+    }
+
+    [Fact]
+    public void ASubclassMapsADomainEntityToClaims()
+    {
+        var subject = ArticleSubject.Of(new Article(7, true));
+
+        Assert.Equal("Article", subject.Name);
+        Assert.Equal(new ArticleClaims(7, "archived"), subject.Claims);
+        Assert.False(ArticleSubject.Def.HasClaims);
+    }
+
+    [Fact]
+    public void WrapsClaimsWithoutASubclass()
+    {
+        var policy = new PolicyBuilder()
+            .Allow(Action.Update, Plain, Condition<ArticleClaims>.Eq(c => c.OwnerId, 1))
+            .Build();
+
+        Assert.True(policy.Can(Action.Update, Plain.Wrap(new ArticleClaims(1, "open"))));
+        Assert.False(policy.Can(Action.Update, Plain.Wrap(new ArticleClaims(2, "open"))));
+    }
+
+    [Fact]
+    public void StringsConvertToActionsAndSubjects()
+    {
+        var policy = new PolicyBuilder().Allow("Read", "Article").Build();
+
         Assert.True(policy.Can("Read", "Article"));
-        Assert.True(policy.Can("Update", Article.Wrap(new ArticleClaims(1, "open"))));
-        Assert.False(policy.Can("Update", Article.Wrap(new ArticleClaims(2, "open"))));
-        Assert.False(policy.Can("Update", Article));
+        Assert.False(policy.Can("Delete", "Article"));
+    }
+
+    [Fact]
+    public void WritesTypedConditionsUnderTheirCamelCasedFieldNames()
+    {
+        var def = new PolicyBuilder()
+            .Allow(Action.Update, ArticleSubject.Def, Condition<ArticleClaims>.Eq(c => c.OwnerId, 1))
+            .BuildDef();
+
+        Assert.Contains("""["allow","Update","Article",{"ownerId":{"$eq":1}}]""", def.ToJson());
     }
 
     [Fact]
     public void TheLastMatchingRuleWins()
     {
         var policy = new PolicyBuilder()
-            .Allow("Delete", Article, Condition.Eq("ownerId", 1))
-            .Deny("Delete", Article, Condition.Eq("status", "archived"))
-            .Allow("Delete", Article, Condition.Eq("ownerId", 99))
+            .Allow(Action.Delete, ArticleSubject.Def, Condition<ArticleClaims>.Eq(c => c.OwnerId, 1))
+            .Deny(Action.Delete, ArticleSubject.Def, Condition<ArticleClaims>.Eq(c => c.Status, "archived"))
+            .Allow(Action.Delete, ArticleSubject.Def, Condition<ArticleClaims>.Eq(c => c.OwnerId, 99))
             .Build();
 
-        Assert.False(policy.Can("Delete", Article.Wrap(new ArticleClaims(1, "archived"))));
-        Assert.True(policy.Can("Delete", Article.Wrap(new ArticleClaims(99, "archived"))));
+        Assert.False(policy.Can(Action.Delete, ArticleSubject.Of(new Article(1, true))));
+        Assert.True(policy.Can(Action.Delete, ArticleSubject.Of(new Article(99, true))));
     }
 
     [Fact]
     public void AllowsEveryActionInAList()
     {
-        var policy = new PolicyBuilder().Allow(new[] { "Read", "Create" }, "Article").Build();
+        var policy = new PolicyBuilder().Allow(new[] { Action.Read, Action.Create }, ArticleSubject.Def).Build();
 
-        Assert.True(policy.Can("Read", "Article"));
-        Assert.True(policy.Can("Create", "Article"));
-        Assert.False(policy.Can("Delete", "Article"));
+        Assert.True(policy.Can(Action.Read, ArticleSubject.Def));
+        Assert.True(policy.Can(Action.Create, ArticleSubject.Def));
+        Assert.False(policy.Can(Action.Delete, ArticleSubject.Def));
     }
 
     [Fact]
@@ -55,8 +124,8 @@ public class PolicyBuilderTests
         config.Actions.Add("Archive");
 
         var def = new PolicyBuilder(config)
-            .Allow("Read", "Article")
-            .Allow("Read", "Comment")
+            .Allow(Action.Read, ArticleSubject.Def)
+            .Allow(Action.Read, CommentSubject.Def)
             .Build().Definition;
 
         Assert.Equal(new[] { "Read", "Archive" }, def.Meta!.Actions);

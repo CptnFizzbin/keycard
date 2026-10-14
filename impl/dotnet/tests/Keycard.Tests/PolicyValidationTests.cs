@@ -77,7 +77,7 @@ public class PolicyValidationTests
     {
         var policy = Load("""{ "version": "0.1", "rules": [["allow", "_ANY_", "Article", { "x": 1 }]] }""");
 
-        Assert.True(policy.Can("Read", Subject.Of("Article", new { x = 1 })));
+        Assert.True(policy.Can("Read", Subject.Named("Article", new { x = 1 })));
     }
 
     // --- wildcards ---
@@ -196,8 +196,8 @@ public class PolicyValidationTests
             """{ "version": "0.1", "rules": [["allow", "Read", "Article", { "$allOf": [{ "a": 1 }, { "b": 2 }] }]] }""",
             new KeycardConfig { Operators = operators });
 
-        Assert.True(policy.Can("Read", Subject.Of("Article", new Dictionary<string, object?> { ["a"] = 1, ["b"] = 2 })));
-        Assert.False(policy.Can("Read", Subject.Of("Article", new Dictionary<string, object?> { ["a"] = 1, ["b"] = 3 })));
+        Assert.True(policy.Can("Read", Subject.Named("Article", new Dictionary<string, object?> { ["a"] = 1, ["b"] = 2 })));
+        Assert.False(policy.Can("Read", Subject.Named("Article", new Dictionary<string, object?> { ["a"] = 1, ["b"] = 3 })));
     }
 
     // --- evaluation ---

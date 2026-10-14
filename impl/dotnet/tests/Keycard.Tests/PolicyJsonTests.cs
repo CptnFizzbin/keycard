@@ -83,9 +83,9 @@ public class PolicyJsonTests
         var policy = new Policy(PolicyDefinition.FromJson(
             """{ "version": "0.1", "rules": [["allow", "Read", "Article", { "n": { "$gte": 2 }, "id": 7 }]] }"""));
 
-        Assert.True(policy.Can("Read", Subject.Of("Article", new { n = 2.5, id = 7L })));
-        Assert.True(policy.Can("Read", Subject.Of("Article", new { n = 2m, id = (short)7 })));
-        Assert.False(policy.Can("Read", Subject.Of("Article", new { n = 1, id = 7 })));
+        Assert.True(policy.Can("Read", Subject.Named("Article", new { n = 2.5, id = 7L })));
+        Assert.True(policy.Can("Read", Subject.Named("Article", new { n = 2m, id = (short)7 })));
+        Assert.False(policy.Can("Read", Subject.Named("Article", new { n = 1, id = 7 })));
     }
 
     [Fact]

@@ -51,7 +51,7 @@ public sealed class ConditionResolver
 
     private bool Evaluate(object? subject, object? condition, bool canNarrowField)
     {
-        if (condition is Condition wrapped) condition = wrapped.ToMap();
+        if (condition is ICondition wrapped) condition = wrapped.ToMap();
 
         // A bare value is shorthand for $eq; an explicit null means "equals null", not a wildcard.
         if (condition is null or string or bool || Equality.IsNumber(condition))

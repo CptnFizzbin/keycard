@@ -41,7 +41,7 @@ public class ConformanceFixtureTests
         var policy = new Policy(definition, config);
 
         var check = (List<object?>)testCase["check"]!;
-        var subject = check.Count == 3 ? Subject.Of((string)check[1]!, check[2]!) : Subject.Of((string)check[1]!);
+        var subject = check.Count == 3 ? Subject.Named((string)check[1]!, check[2]!) : Subject.Named((string)check[1]!);
         var expected = (bool)testCase["expected"]!;
 
         Assert.Equal(expected, policy.Can((string)check[0]!, subject));
