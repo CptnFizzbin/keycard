@@ -81,28 +81,26 @@ assembled dynamically.
 
 ## Policy documents and serialization
 
-KeyCard does no serialization. A `PolicyDefinition` is a plain object model
-(`Version`, `Meta`, `Rules`, ...) that the application maps to and from
-whatever format and serializer it uses, so it can be built server-side and
-evaluated anywhere.
+A `PolicyDefinition` is a plain object model that can be built server-side and
+evaluated anywhere. KeyCard converts it to and from a `System.Text.Json.Nodes`
+`JsonObject`, and leaves everything else about serialization to the application:
+parsing text, writing text, and any other format.
 
 ```csharp
-PolicyDefinition definition = new PolicyBuilder().Allow(Action.Read, ArticleSubject.Def).BuildDef();
+// Server: build, then hand the application a JsonObject to send however it likes.
+JsonObject node = new PolicyBuilder().Allow(Action.Read, ArticleSubject.Def).BuildDef().ToJsonObject();
+string text = node.ToJsonString();
 
-// Application code: write definition out in your format, read it back in, then:
-var policy = new Policy(MyPolicySerializer.Read(text));
+// Client: parse, then construct.
+var policy = new Policy(PolicyDefinition.FromJsonObject((JsonObject)JsonNode.Parse(text)!));
 ```
 
-A mapper has three details to get right:
-
-- A rule is the tuple `[effect, action, subject, condition?]`: `new Rule(effect, action, subject, conditions)`.
-- `meta.anyAction` / `meta.anySubject` distinguish absent (leave `null`) from an
-  explicit `null` or `false` (`WildcardToken.Off`); `WildcardToken.Of(raw)` does
-  this mapping for a parsed value.
-- Conditions are plain data: dictionaries, lists, strings, numbers, booleans, and `null`.
-
-[`tests/Keycard.Tests/PolicyJson.cs`](tests/Keycard.Tests/PolicyJson.cs) is a
-complete JSON example; a YAML parser's output maps the same way.
+`FromJsonObject` throws `PolicyLoadException` for a malformed document and does
+not modify the object it is given. For YAML or another format, build the
+`PolicyDefinition` yourself: a rule is `new Rule(effect, action, subject, conditions)`,
+`meta.anyAction`/`meta.anySubject` distinguish absent (leave `null`) from an explicit
+`null` or `false` (`WildcardToken.Off`; `WildcardToken.Of(raw)` maps a parsed value),
+and conditions are plain data (dictionaries, lists, strings, numbers, booleans, `null`).
 
 ## Subject claims
 

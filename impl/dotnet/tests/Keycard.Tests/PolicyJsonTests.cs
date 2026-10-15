@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Keycard.Tests;
 
-/// <summary>Exercises <see cref="PolicyJson"/>, the sample mapper a host application would write.</summary>
+/// <summary>Round-trips and validates policy documents through <see cref="PolicyDefinition.FromJsonObject"/> and <see cref="PolicyDefinition.ToJsonObject"/>.</summary>
 public class PolicyJsonTests
 {
     private const string Document = """

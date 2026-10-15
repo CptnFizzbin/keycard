@@ -9,7 +9,7 @@ namespace Keycard;
 /// reads or writes policy text: the host application maps this model to and
 /// from whatever format and serializer it uses.
 /// </summary>
-public sealed class PolicyDefinition
+public sealed partial class PolicyDefinition
 {
     private IList<Rule> _rules = new List<Rule>();
 
