@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Keycard.Json</RootNamespace>
+    <AssemblyName>Keycard.Json</AssemblyName>
+    <PackageId>CptnFizzbin.Keycard.Json</PackageId>
+    <Description>Reads and writes KeyCard policy documents as JSON (System.Text.Json), including a JsonConverter for PolicyDefinition.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Keycard/Keycard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>
