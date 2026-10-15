@@ -102,6 +102,10 @@ not modify the object it is given. For YAML or another format, build the
 `null` or `false` (`WildcardToken.Off`; `WildcardToken.Of(raw)` maps a parsed value),
 and conditions are plain data (dictionaries, lists, strings, numbers, booleans, `null`).
 
+[`FormatSmokeTests`](tests/Keycard.Tests/FormatSmokeTests.cs) round-trips a policy through
+JSON, YAML, and XML as examples: YAML and XML are read into plain data and handed to
+`FromJsonObject`, and written from `ToJsonObject`.
+
 ## Subject claims
 
 Field conditions read a subject's claims from a map (`IDictionary`) or from the
