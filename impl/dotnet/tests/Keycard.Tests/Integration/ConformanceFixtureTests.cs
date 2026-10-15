@@ -37,7 +37,7 @@ public class ConformanceFixtureTests
         var testCase = (Dictionary<string, object?>)((List<object?>)suite["tests"]!)[fixture.Test]!;
 
         // A fixture's own "tests" are conformance cases, not a policy's embedded test suites.
-        var definition = PolicyJson.FromPlain(suite.Where(kv => kv.Key != "tests").ToDictionary(kv => kv.Key, kv => kv.Value));
+        var definition = PolicyDefinition.FromData(suite.Where(kv => kv.Key != "tests").ToDictionary(kv => kv.Key, kv => kv.Value));
         var config = new KeycardConfig { Operators = OperatorsFor(Path.GetFileName(fixture.File)) };
         var policy = new Policy(definition, config);
 

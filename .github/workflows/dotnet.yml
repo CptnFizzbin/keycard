@@ -26,4 +26,4 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Build and test
-        run: dotnet test tests/Keycard.Tests --configuration Release
+        run: dotnet test --configuration Release

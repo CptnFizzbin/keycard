@@ -1,22 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Keycard</RootNamespace>
     <AssemblyName>Keycard</AssemblyName>
     <PackageId>CptnFizzbin.Keycard</PackageId>
-    <Version>0.0.1</Version>
     <Description>A cross-language access-control library: one policy format, evaluated in any language.</Description>
-    <Authors>cptnfizzbin</Authors>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/cptnfizzbin/keycard</RepositoryUrl>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>12</LangVersion>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

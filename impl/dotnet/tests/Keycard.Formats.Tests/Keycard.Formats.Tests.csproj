@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Lets the suite run on a newer installed runtime when .NET 8 isn't present. -->
+    <RollForward>Major</RollForward>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Keycard.Json/Keycard.Json.csproj" />
+    <ProjectReference Include="../../src/Keycard.Xml/Keycard.Xml.csproj" />
+    <ProjectReference Include="../../src/Keycard.Yaml/Keycard.Yaml.csproj" />
+  </ItemGroup>
+
+</Project>

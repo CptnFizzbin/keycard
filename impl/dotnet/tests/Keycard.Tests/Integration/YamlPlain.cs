@@ -20,47 +20,6 @@ internal static class YamlPlain
         return stream.Documents.Select(d => Convert(d.RootNode)).ToList();
     }
 
-    /// <summary>Writes plain data (maps, lists, strings, numbers, bools, null) as one YAML document.</summary>
-    public static string Dump(object? value)
-    {
-        var stream = new YamlStream(new YamlDocument(ToNode(value)));
-        using var writer = new StringWriter();
-        stream.Save(writer, assignAnchors: false);
-        return writer.ToString();
-    }
-
-    private static YamlNode ToNode(object? value)
-    {
-        switch (value)
-        {
-            case null:
-                return new YamlScalarNode("null");
-            case string s:
-                // Quoted, so a string like "1" or "true" is read back as a string.
-                return new YamlScalarNode(s) { Style = ScalarStyle.DoubleQuoted };
-            case bool b:
-                return new YamlScalarNode(b ? "true" : "false");
-            case System.Collections.IDictionary map:
-            {
-                var node = new YamlMappingNode();
-                foreach (System.Collections.DictionaryEntry entry in map)
-                {
-                    node.Add(new YamlScalarNode((string)entry.Key) { Style = ScalarStyle.DoubleQuoted }, ToNode(entry.Value));
-                }
-
-                return node;
-            }
-            case System.Collections.IEnumerable sequence:
-            {
-                var node = new YamlSequenceNode();
-                foreach (var item in sequence) node.Add(ToNode(item));
-                return node;
-            }
-            default:
-                return new YamlScalarNode(System.Convert.ToString(value, CultureInfo.InvariantCulture));
-        }
-    }
-
     private static object? Convert(YamlNode node) => node switch
     {
         YamlMappingNode map => map.Children.ToDictionary(

@@ -82,29 +82,28 @@ assembled dynamically.
 ## Policy documents and serialization
 
 A `PolicyDefinition` is a plain object model that can be built server-side and
-evaluated anywhere. KeyCard converts it to and from a `System.Text.Json.Nodes`
-`JsonObject`, and leaves everything else about serialization to the application:
-parsing text, writing text, and any other format.
+evaluated anywhere. KeyCard itself does no serialization; format packages convert
+a definition to and from text:
+
+| Package | Format |
+|---------|--------|
+| [`CptnFizzbin.Keycard.Json`](src/Keycard.Json/README.md) | JSON (`PolicyJson`, plus a `JsonConverter`) |
+| [`CptnFizzbin.Keycard.Xml`](src/Keycard.Xml/README.md) | XML (`PolicyXml`) |
+| [`CptnFizzbin.Keycard.Yaml`](src/Keycard.Yaml/README.md) | YAML (`PolicyYaml`) |
 
 ```csharp
-// Server: build, then hand the application a JsonObject to send however it likes.
-JsonObject node = new PolicyBuilder().Allow(Action.Read, ArticleSubject.Def).BuildDef().ToJsonObject();
-string text = node.ToJsonString();
+// Server: build, then write the definition out in your format.
+string text = PolicyJson.Serialize(new PolicyBuilder().Allow(Action.Read, ArticleSubject.Def).BuildDef());
 
 // Client: parse, then construct.
-var policy = new Policy(PolicyDefinition.FromJsonObject((JsonObject)JsonNode.Parse(text)!));
+var policy = new Policy(PolicyJson.Parse(text));
 ```
 
-`FromJsonObject` throws `PolicyLoadException` for a malformed document and does
-not modify the object it is given. For YAML or another format, build the
-`PolicyDefinition` yourself: a rule is `new Rule(effect, action, subject, conditions)`,
-`meta.anyAction`/`meta.anySubject` distinguish absent (leave `null`) from an explicit
-`null` or `false` (`WildcardToken.Off`; `WildcardToken.Of(raw)` maps a parsed value),
-and conditions are plain data (dictionaries, lists, strings, numbers, booleans, `null`).
-
-[`FormatSmokeTests`](tests/Keycard.Tests/FormatSmokeTests.cs) round-trips a policy through
-JSON, YAML, and XML as examples: YAML and XML are read into plain data and handed to
-`FromJsonObject`, and written from `ToJsonObject`.
+To support another format, read it into plain data (maps, lists, strings, numbers, booleans,
+`null`) and call `PolicyDefinition.FromData`; `definition.ToData()` returns the same shape for writing.
+`FromData` throws `PolicyLoadException` for a malformed document and does not modify what it is given.
+A document's `meta.anyAction`/`meta.anySubject` distinguish absent from an explicit `null` or `false`
+(`WildcardToken.Off`), so a format must keep an explicit `null` distinct from a missing key.
 
 ## Subject claims
 
@@ -143,5 +142,5 @@ reported at `Error` level; by default they are discarded.
 ## Development
 
 ```bash
-dotnet test tests/Keycard.Tests
+dotnet test
 ```

@@ -5,9 +5,9 @@ using Keycard.Errors;
 namespace Keycard.Tests;
 
 /// <summary>
-/// What a host application adds around <see cref="PolicyDefinition.FromJsonObject"/>
-/// and <see cref="PolicyDefinition.ToJsonObject"/>: Keycard converts to and from
-/// <see cref="JsonObject"/>, and the application owns turning that into text.
+/// A minimal JSON reader and writer for these tests, so they can state policy
+/// documents as JSON text without depending on a format package. It reads JSON
+/// into plain data and hands that to <see cref="PolicyDefinition.FromData"/>.
 /// </summary>
 internal static class PolicyJson
 {
@@ -15,8 +15,7 @@ internal static class PolicyJson
     {
         try
         {
-            return PolicyDefinition.FromJsonObject(
-                JsonNode.Parse(json) as JsonObject ?? throw new PolicyLoadException("A policy document must be an object."));
+            return PolicyDefinition.FromData(PlainTree.FromNode(JsonNode.Parse(json)));
         }
         catch (JsonException e)
         {
@@ -24,9 +23,5 @@ internal static class PolicyJson
         }
     }
 
-    public static string ToJson(PolicyDefinition definition) => definition.ToJsonObject().ToJsonString();
-
-    /// <summary>Reads a document held as plain dictionaries and lists, the shape a YAML parser produces.</summary>
-    public static PolicyDefinition FromPlain(object document) =>
-        PolicyDefinition.FromJsonObject((JsonObject)JsonSerializer.SerializeToNode(document)!);
+    public static string ToJson(PolicyDefinition definition) => JsonSerializer.Serialize(definition.ToData());
 }

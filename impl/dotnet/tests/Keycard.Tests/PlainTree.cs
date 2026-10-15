@@ -7,7 +7,7 @@ namespace Keycard.Tests;
 /// <summary>
 /// Converts a <see cref="JsonNode"/> to plain data (dictionaries, lists,
 /// strings, longs, doubles, bools, null): the common shape a YAML or XML codec
-/// reads and writes, and what <see cref="PolicyJson.FromPlain"/> turns back
+/// reads and writes, and what <see cref="PolicyDefinition.FromData"/> turns back
 /// into a definition.
 /// </summary>
 internal static class PlainTree
