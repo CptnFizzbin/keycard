@@ -1,7 +1,6 @@
 using System.Text.Json.Nodes;
 using Keycard.Conditions;
 using Keycard.Json;
-using Keycard.Xml;
 using Keycard.Yaml;
 using Xunit;
 
@@ -19,8 +18,6 @@ public class FormatSmokeTests
     {
         yield return new object[] { new Format("JSON", d => PolicyJson.Serialize(d), PolicyJson.Parse) };
         yield return new object[] { new Format("JSON (indented)", d => PolicyJson.Serialize(d, indented: true), PolicyJson.Parse) };
-        yield return new object[] { new Format("XML", d => PolicyXml.Serialize(d), PolicyXml.Parse) };
-        yield return new object[] { new Format("XML (indented)", d => PolicyXml.Serialize(d, indented: true), PolicyXml.Parse) };
         yield return new object[] { new Format("YAML", PolicyYaml.Serialize, PolicyYaml.Parse) };
     }
 

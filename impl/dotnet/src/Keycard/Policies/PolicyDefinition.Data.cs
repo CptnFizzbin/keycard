@@ -9,7 +9,7 @@ public sealed partial class PolicyDefinition
     /// Reads a definition from plain data in the policy document shape: maps
     /// (<see cref="IDictionary{TKey,TValue}"/> of string keys), lists, strings,
     /// numbers, booleans, and <c>null</c>. This is the shape every format
-    /// package (JSON, XML, YAML) reads a document into; <paramref name="document"/>
+    /// package (JSON, YAML) reads a document into; <paramref name="document"/>
     /// is not modified.
     /// </summary>
     /// <exception cref="PolicyLoadException">The document is malformed.</exception>

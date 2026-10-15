@@ -88,7 +88,6 @@ a definition to and from text:
 | Package | Format |
 |---------|--------|
 | [`CptnFizzbin.Keycard.Json`](src/Keycard.Json/README.md) | JSON (`PolicyJson`, plus a `JsonConverter`) |
-| [`CptnFizzbin.Keycard.Xml`](src/Keycard.Xml/README.md) | XML (`PolicyXml`) |
 | [`CptnFizzbin.Keycard.Yaml`](src/Keycard.Yaml/README.md) | YAML (`PolicyYaml`) |
 
 ```csharp

@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Keycard.Json/Keycard.Json.csproj" />
-    <ProjectReference Include="../../src/Keycard.Xml/Keycard.Xml.csproj" />
     <ProjectReference Include="../../src/Keycard.Yaml/Keycard.Yaml.csproj" />
   </ItemGroup>
 
