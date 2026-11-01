@@ -55,6 +55,7 @@ independently on its own version number.
 |------------|-------------------------------------------------------------------|---------------|
 | JavaScript | [`@cptn-fizzbin/keycard`](https://www.npmjs.com/package/@cptn-fizzbin/keycard) (npm) | [`impl/js`](impl/js)     |
 | Java       | `com.cptnfizzbin:keycard` (Maven Central)                          | [`impl/java`](impl/java) |
+| C#         | `CptnFizzbin.Keycard` (NuGet, not yet published), plus `.Json` and `.Yaml` format packages | [`impl/dotnet`](impl/dotnet) |
 
 See [`RELEASING.md`](RELEASING.md) for release mechanics, including how to
 add a new language implementation.
