@@ -1,0 +1,54 @@
+name: JS Knex
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "impl/js/**"
+      - "impl/js-knex/**"
+      - "test/fixtures/v0/**"
+      - "package.json"
+      - "eslint.config.ts"
+      - "yarn.lock"
+      - ".yarnrc.yml"
+  pull_request:
+    paths:
+      - "impl/js/**"
+      - "impl/js-knex/**"
+      - "test/fixtures/v0/**"
+      - "package.json"
+      - "eslint.config.ts"
+      - "yarn.lock"
+      - ".yarnrc.yml"
+
+defaults:
+  run:
+    working-directory: impl/js-knex
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Build
+        run: yarn build
+
+      - name: Test
+        run: yarn test run

@@ -11,6 +11,7 @@ see [Adding a new implementation](#adding-a-new-implementation).
 |----------------|-----------------------------------|---------------|
 | Java           | Maven - `com.cptnfizzbin:keycard` | `java-vX.Y.Z` |
 | JS/TS          | NPM - `@cptn-fizzbin/keycard`     | `js-vX.Y.Z`   | 
+| JS/TS (Knex)   | NPM - `@cptn-fizzbin/keycard-knex` | `js-knex-vX.Y.Z` |
 
 ## Adding a new implementation
 
@@ -115,6 +116,7 @@ git add -A && git commit -m "Release: <summary>"
 # open a PR, merge to main, then on main:
 git tag java-v1.2.3 && git push origin java-v1.2.3   # if Java changed
 git tag js-v1.2.3   && git push origin js-v1.2.3     # if JS changed
+git tag js-knex-v1.2.3 && git push origin js-knex-v1.2.3  # if JS Knex changed
 ```
 
 Pushing a tag is what actually triggers that implementation's
@@ -186,6 +188,9 @@ needed to release it.
 2. Sets the `package.json` version from the tag.
 3. Runs `yarn npm publish --access public` (package is scoped, so publish access
    must be explicit).
+
+**`publish-js-knex.yml`** (on `js-knex-v*` tag push) does the same for
+`impl/js-knex`, using the same `NPM_AUTH_TOKEN` secret.
 
 A future `publish-<lang>.yml` follows the same three-part shape: derive the
 version from the tag, set it in the implementation's build file, run that
