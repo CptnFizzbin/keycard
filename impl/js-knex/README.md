@@ -63,6 +63,12 @@ callers that want to short-circuit the query.
 | `logger`    | Receives warnings about malformed conditions, which translate to `FALSE`.                                                                                                                |
 | `dialect`   | The SQL dialect to translate for. Defaults to the query builder's own dialect.                                                                                                           |
 
+A `columns` record is type-checked against the subject: when the subject is
+created with a claims type (`createSubject<{ ownerId: number }>("Article")`),
+every key must be one of its fields, so a misspelled or stale field name is a
+compile error. A subject passed by name, or created without a claims type,
+accepts any key.
+
 A field that `columns` doesn't map is treated as **missing** from the subject:
 every condition on it fails, except a bare `{ $ne: value }`, which matches - the
 same rule `Policy.can` applies to a missing field. List every field the policy

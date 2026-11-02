@@ -1,4 +1,4 @@
-export type { KnexPolicyOptions, NameOrNamed } from "./accessibleBy.ts"
+export type { ClaimsOf, ColumnMap, KnexPolicyOptions, NameOrNamed } from "./accessibleBy.ts"
 export { accessibleBy, policyToSqlCondition } from "./accessibleBy.ts"
 
 export type { ColumnResolver } from "./conditionTranslator.ts"

@@ -1,4 +1,4 @@
-import type { Logger, Policy, PolicyDefinition } from "@cptn-fizzbin/keycard"
+import type { Logger, Policy, PolicyDefinition, Subject } from "@cptn-fizzbin/keycard"
 import { PolicyLoadException } from "@cptn-fizzbin/keycard"
 import type { Knex } from "knex"
 
@@ -13,8 +13,30 @@ import { Sql } from "./sqlCondition.ts"
 /** An Action or Subject, by name or as the object `createAction`/`createSubject` returns. */
 export type NameOrNamed = string | { readonly name: string }
 
-/** Options for {@link accessibleBy} and {@link policyToSqlCondition}. */
-export interface KnexPolicyOptions {
+/**
+ * The claims type of `TSubject`: what `createSubject<TClaims>()` was given, or
+ * `unknown` for a subject named by string or created without a claims type.
+ */
+export type ClaimsOf<TSubject> = TSubject extends string
+  ? unknown
+  : TSubject extends Subject<infer TClaims, infer _TArgs>
+    ? [TClaims] extends [never] ? unknown : TClaims
+    : unknown
+
+/**
+ * A field-to-column record for a subject with claims `TClaims`: its keys
+ * MUST be fields of `TClaims`, and any of them may be left out. Any string
+ * key is accepted when `TClaims` is `unknown`.
+ */
+export type ColumnMap<TClaims> = unknown extends TClaims
+  ? Readonly<Record<string, string>>
+  : { readonly [Field in Extract<keyof TClaims, string>]?: string }
+
+/**
+ * Options for {@link accessibleBy} and {@link policyToSqlCondition}, for a
+ * subject with claims `TClaims`.
+ */
+export interface KnexPolicyOptions<TClaims = unknown> {
   /**
    * Maps subject field names to columns. A record lists every field the
    * table has: a field it doesn't list is treated as missing from the
@@ -29,7 +51,7 @@ export interface KnexPolicyOptions {
    * { columns: { ownerId: "articles.owner_id", status: "articles.status" } }
    * ```
    */
-  columns?: Readonly<Record<string, string>> | ColumnResolver
+  columns?: ColumnMap<TClaims> | ColumnResolver
 
   /** Translations for custom operators, or overrides of the built-in ones (e.g. `$has` or `$substr` for a dialect). */
   operators?: KnexOperatorsRecord
@@ -82,6 +104,12 @@ function dialectOf(builder: Knex.QueryBuilder): string {
  * @throws KeycardKnexError if a condition uses an operator with no Knex
  *   translation for `dialect`
  */
+export function policyToSqlCondition<TSubject extends NameOrNamed>(
+  policy: Policy | PolicyDefinition,
+  action: NameOrNamed,
+  subject: TSubject,
+  options: KnexPolicyOptions<ClaimsOf<TSubject>> & { dialect: string },
+): SqlCondition
 export function policyToSqlCondition(
   policy: Policy | PolicyDefinition,
   action: NameOrNamed,
@@ -135,6 +163,12 @@ export function policyToSqlCondition(
  * @throws KeycardKnexError when the query is built, if a condition uses an
  *   operator with no Knex translation for the query's dialect
  */
+export function accessibleBy<TSubject extends NameOrNamed>(
+  policy: Policy | PolicyDefinition,
+  action: NameOrNamed,
+  subject: TSubject,
+  options?: KnexPolicyOptions<ClaimsOf<TSubject>>,
+): (builder: Knex.QueryBuilder) => void
 export function accessibleBy(
   policy: Policy | PolicyDefinition,
   action: NameOrNamed,
