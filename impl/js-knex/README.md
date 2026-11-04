@@ -44,8 +44,11 @@ select * from "articles" where ((
 ))
 ```
 
-`accessibleBy` takes a `Policy` or a `PolicyDefinition`, and an action and
-subject either by name (`"Read"`) or as `createAction`/`createSubject` objects.
+`accessibleBy` takes a `Policy`, and an action and subject either by name
+(`"Read"`) or as `createAction`/`createSubject` objects. It translates
+`policy.getCondition(action, subject)` - the policy's rules for that action
+and subject, already combined into one condition - so rule matching and
+ordering behave exactly as in `Policy.can`.
 Always pass its result to `.where()` - it groups its own clauses, so it can be
 combined with other `where`/`orWhere` calls safely.
 

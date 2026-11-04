@@ -1,8 +1,7 @@
 // The @ts-expect-error and expectTypeOf assertions here are checked by
 // `yarn typecheck` (tsc), not at runtime: a directive whose line stops
 // erroring fails the typecheck.
-import type { PolicyDefinition } from "@cptn-fizzbin/keycard"
-import { createSubject } from "@cptn-fizzbin/keycard"
+import { createSubject, Policy } from "@cptn-fizzbin/keycard"
 import knex from "knex"
 import { afterAll, describe, expect, expectTypeOf, test } from "vitest"
 
@@ -17,10 +16,10 @@ interface ArticleClaims {
 const Article = createSubject<ArticleClaims>("Article")
 const Untyped = createSubject("Untyped")
 
-const policy: PolicyDefinition = {
+const policy = Policy.from({
   version: "0.1",
   rules: [["allow", "Read", "Article", { ownerId: 1 }]],
-}
+})
 
 const pg = knex({ client: "pg" })
 

@@ -1,6 +1,8 @@
-import type { PolicyDefinition } from "./policyDefinition.ts"
+import type { PolicyDefinition, RuleTuple } from "./policyDefinition.ts"
 import type { AnyAction } from "../action/action.ts"
 import type { Action } from "../action/index.ts"
+import { allOf, anyOf, ALWAYS, negate, NEVER } from "../conditions/combineConditions.ts"
+import type { AnyCondition, Condition } from "../conditions/condition.ts"
 import { ConditionResolver } from "../conditions/index.ts"
 import type { AnyOperator } from "../conditions/operators/operator.ts"
 import { PolicyError } from "../errors/index.ts"
@@ -12,7 +14,7 @@ import { KeycardContext } from "../keycardContext.ts"
 import type { Catalog } from "../lib/catalog.ts"
 import type { JsonObject } from "../lib/json.ts"
 import type { Subject } from "../subject/index.ts"
-import type { AnySubject } from "../subject/subject.ts"
+import type { AnySubject, InferClaims } from "../subject/subject.ts"
 
 /** Returns a deep copy of `definition`, except `meta.application`, which is kept by reference: it's opaque application data that may not be structured-cloneable. */
 function cloneDefinition(definition: PolicyDefinition): PolicyDefinition {
@@ -88,20 +90,39 @@ export class Policy<
     return catalog.get(item.name)?.name ?? item.name
   }
 
-  private checkPermission(action: TActions, subject: TSubjects): boolean {
-    this.warnIfUnregisteredDynamic(action, this.ctx.actions, "Action", "createAction")
-    this.warnIfUnregisteredDynamic(subject, this.ctx.subjects, "Subject", "createSubject")
+  /**
+   * Returns the condition a `subject` instance's claims must satisfy for
+   * `action` to be allowed on it: evaluating it against `claims` gives the
+   * same result as `can(action, subject.wrap(claims))`. Matching rules are
+   * combined with `$and`/`$or`/`$not` so the last matching rule still wins.
+   *
+   * When the outcome doesn't depend on the instance, the result is
+   * `{ $and: [] }` (always allowed) or `{ $or: [] }` (never allowed).
+   *
+   * ```ts
+   * policy.getCondition(Read, Article)
+   * // => { $or: [{ status: "published" }, { ownerId: 7 }] }
+   * ```
+   */
+  getCondition<TSubject extends TSubjects>(action: TActions, subject: TSubject): Condition<InferClaims<TSubject>> {
+    let allowed: AnyCondition = NEVER
+    for (const [effect, , , ruleConditions] of this.matchingRules(action, subject)) {
+      // Truthiness, as in checkPermission, decides whether a rule is conditional.
+      const matches = ruleConditions ? ruleConditions : ALWAYS
+      // Each rule overrides everything before it, but only for the instances
+      // its condition matches - last-matching-rule-wins as one condition.
+      allowed = effect === "allow"
+        ? anyOf(allowed, matches)
+        : allOf(allowed, negate(matches))
+    }
+    return allowed
+  }
 
-    const actionName = this.nameOf(this.ctx.actions, action)
-    const subjectName = this.nameOf(this.ctx.subjects, subject)
-    const { anyAction, anySubject } = this
-    const rules = this.definition.rules
+  private checkPermission(action: TActions, subject: TSubjects): boolean {
+    const rules = this.matchingRules(action, subject)
 
     for (let i = rules.length - 1; i >= 0; i--) {
-      const [effect, ruleAction, ruleSubject, ruleConditions] = rules[i]
-
-      if (ruleAction !== actionName && ruleAction !== anyAction) continue
-      if (ruleSubject !== subjectName && ruleSubject !== anySubject) continue
+      const [effect, , , ruleConditions] = rules[i]
 
       if (ruleConditions) {
         // A bare check has no instance for the conditions to inspect; without
@@ -114,6 +135,20 @@ export class Policy<
     }
 
     return false
+  }
+
+  /** Returns the rules whose action and subject match, wildcards included, in declaration order. */
+  private matchingRules(action: TActions, subject: TSubjects): RuleTuple[] {
+    this.warnIfUnregisteredDynamic(action, this.ctx.actions, "Action", "createAction")
+    this.warnIfUnregisteredDynamic(subject, this.ctx.subjects, "Subject", "createSubject")
+
+    const actionName = this.nameOf(this.ctx.actions, action)
+    const subjectName = this.nameOf(this.ctx.subjects, subject)
+    const { anyAction, anySubject } = this
+
+    return this.definition.rules.filter(([, ruleAction, ruleSubject]) =>
+      (ruleAction === actionName || ruleAction === anyAction)
+      && (ruleSubject === subjectName || ruleSubject === anySubject))
   }
 
   private warnIfUnregisteredDynamic(

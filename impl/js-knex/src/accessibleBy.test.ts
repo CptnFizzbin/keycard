@@ -1,5 +1,5 @@
-import type { PolicyDefinition, RuleTuple, Policy } from "@cptn-fizzbin/keycard"
-import { createAction, createSubject, PolicyBuilder } from "@cptn-fizzbin/keycard"
+import type { RuleTuple } from "@cptn-fizzbin/keycard"
+import { createAction, createSubject, Policy, PolicyBuilder } from "@cptn-fizzbin/keycard"
 import knex from "knex"
 import { afterAll, describe, expect, test, vi } from "vitest"
 
@@ -16,12 +16,12 @@ afterAll(async () => {
   await sqlite.destroy()
 })
 
-function definition(...rules: RuleTuple[]): PolicyDefinition {
-  return { version: "0.1", rules }
+function policyOf(...rules: RuleTuple[]): Policy {
+  return Policy.from({ version: "0.1", rules })
 }
 
 /** Returns the SQL inside the group `.where(accessibleBy(...))` adds, and its bindings. */
-function whereSql(policy: Policy | PolicyDefinition, options: KnexPolicyOptions = {}, db = pg) {
+function whereSql(policy: Policy, options: KnexPolicyOptions = {}, db = pg) {
   const { sql, bindings } = db("articles").where(accessibleBy(policy, "Read", "Article", options)).toSQL().toNative()
   const prefix = /^select \* from .articles. where \(/
   expect(sql).toMatch(prefix)
@@ -32,7 +32,7 @@ function whereSql(policy: Policy | PolicyDefinition, options: KnexPolicyOptions 
 describe("accessibleBy", () => {
   test("a policy with no matching rule selects nothing", () => {
     // Arrange
-    const policy = definition(["allow", "Update", "Article"], ["allow", "Read", "Comment"])
+    const policy = policyOf(["allow", "Update", "Article"], ["allow", "Read", "Comment"])
 
     // Act
     const { sql } = whereSql(policy)
@@ -42,13 +42,13 @@ describe("accessibleBy", () => {
   })
 
   test("an unconditional allow selects everything", () => {
-    const { sql } = whereSql(definition(["allow", "Read", "Article"]))
+    const { sql } = whereSql(policyOf(["allow", "Read", "Article"]))
 
     expect(sql).toBe(`1 = 1`)
   })
 
   test("a later unconditional deny overrides every earlier rule", () => {
-    const policy = definition(["allow", "Read", "Article", { ownerId: 1 }], ["deny", "Read", "_ANY_"])
+    const policy = policyOf(["allow", "Read", "Article", { ownerId: 1 }], ["deny", "Read", "_ANY_"])
 
     const { sql } = whereSql(policy)
 
@@ -57,7 +57,7 @@ describe("accessibleBy", () => {
 
   test("translates conditions, guarding comparisons against NULL", () => {
     // Arrange
-    const policy = definition(
+    const policy = policyOf(
       ["allow", "Read", "Article", { ownerId: 1 }],
       ["allow", "Read", "Article", { status: { $in: ["published", null] } }],
     )
@@ -75,7 +75,7 @@ describe("accessibleBy", () => {
 
   test("a deny rule excludes the rows its condition matches from earlier allows", () => {
     // Arrange
-    const policy = definition(
+    const policy = policyOf(
       ["allow", "Read", "Article"],
       ["deny", "Read", "Article", { status: "archived" }],
       ["allow", "Read", "Article", { ownerId: 7 }],
@@ -110,11 +110,11 @@ describe("accessibleBy", () => {
 
   test("honors a custom subject wildcard and ignores a disabled action wildcard", () => {
     // Arrange
-    const policy: PolicyDefinition = {
+    const policy = Policy.from({
       version: "0.1",
       meta: { anyAction: null, anySubject: "*" },
       rules: [["allow", "_ANY_", "Article"], ["allow", "Read", "*", { ownerId: 1 }]],
-    }
+    })
 
     // Act
     const { sql } = whereSql(policy)
@@ -126,7 +126,7 @@ describe("accessibleBy", () => {
 
 describe("columns", () => {
   test("maps field names through a record", () => {
-    const policy = definition(["allow", "Read", "Article", { ownerId: 1 }])
+    const policy = policyOf(["allow", "Read", "Article", { ownerId: 1 }])
 
     const { sql } = whereSql(policy, { columns: { ownerId: "articles.owner_id" } })
 
@@ -135,7 +135,7 @@ describe("columns", () => {
 
   test("treats a field missing from the record as a missing field", () => {
     // Arrange
-    const policy = definition(
+    const policy = policyOf(
       ["allow", "Read", "Article", { secret: 1 }],
       ["allow", "Read", "Article", { $field: ["secret", { $gt: 1 }] }],
     )
@@ -148,7 +148,7 @@ describe("columns", () => {
   })
 
   test("a bare $ne on a missing field matches every row", () => {
-    const policy = definition(["allow", "Read", "Article", { secret: { $ne: 1 } }])
+    const policy = policyOf(["allow", "Read", "Article", { secret: { $ne: 1 } }])
 
     const { sql } = whereSql(policy, { columns: () => undefined })
 
@@ -156,7 +156,7 @@ describe("columns", () => {
   })
 
   test("by default, a field naming another table is a missing field", () => {
-    const policy = definition(["allow", "Read", "Article", { "users.password": "x" }])
+    const policy = policyOf(["allow", "Read", "Article", { "users.password": "x" }])
 
     const { sql } = whereSql(policy)
 
@@ -166,14 +166,14 @@ describe("columns", () => {
 
 describe("operators", () => {
   test("throws for an operator with no Knex translation", () => {
-    const policy = definition(["allow", "Read", "Article", { $hasRole: "admin" }])
+    const policy = policyOf(["allow", "Read", "Article", { $hasRole: "admin" }])
 
     expect(() => whereSql(policy)).toThrow(KeycardKnexError)
   })
 
   test("uses a custom operator translation", () => {
     // Arrange
-    const policy = definition(["allow", "Read", "Article", { $hasRole: "admin" }])
+    const policy = policyOf(["allow", "Read", "Article", { $hasRole: "admin" }])
     const $hasRole = vi.fn(() => Sql.raw("? = ANY(??)", ["admin", "roles"]))
 
     // Act
@@ -186,7 +186,7 @@ describe("operators", () => {
   })
 
   test("$has translates to array_position on Postgres", () => {
-    const policy = definition(["allow", "Read", "Article", { tags: { $has: "news" } }])
+    const policy = policyOf(["allow", "Read", "Article", { tags: { $has: "news" } }])
 
     const { sql } = whereSql(policy)
 
@@ -195,7 +195,7 @@ describe("operators", () => {
 
   test("$has throws on dialects without array columns, unless overridden", () => {
     // Arrange
-    const policy = definition(["allow", "Read", "Article", { tags: { $has: "news" } }])
+    const policy = policyOf(["allow", "Read", "Article", { tags: { $has: "news" } }])
     const options: KnexPolicyOptions = {
       operators: { $has: (value, { column }) => Sql.raw("?? LIKE ?", [column!, `%,${String(value)},%`]) },
     }
@@ -209,7 +209,7 @@ describe("operators", () => {
   })
 
   test("$substr uses GLOB on SQLite and LIKE elsewhere", () => {
-    const policy = definition(["allow", "Read", "Article", { title: { $substr: "^Draft:*" } }])
+    const policy = policyOf(["allow", "Read", "Article", { title: { $substr: "^Draft:*" } }])
 
     const sqliteSql = whereSql(policy, {}, sqlite)
     const pgSql = whereSql(policy)
@@ -221,7 +221,7 @@ describe("operators", () => {
   })
 
   test("the dialect option overrides the query builder's dialect", () => {
-    const policy = definition(["allow", "Read", "Article", { tags: { $has: "news" } }])
+    const policy = policyOf(["allow", "Read", "Article", { tags: { $has: "news" } }])
 
     const { sql } = whereSql(policy, { dialect: "postgresql" }, sqlite)
 
@@ -230,7 +230,7 @@ describe("operators", () => {
 
   test("a nested field condition translates to FALSE with a warning", () => {
     // Arrange
-    const policy = definition(["allow", "Read", "Article", { author: { name: "Alice" } }])
+    const policy = policyOf(["allow", "Read", "Article", { author: { name: "Alice" } }])
     const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 
     // Act
@@ -244,8 +244,8 @@ describe("operators", () => {
 
 describe("policyToSqlCondition", () => {
   test("returns Sql.TRUE and Sql.FALSE for policies that don't depend on the row", () => {
-    const allowAll = definition(["allow", "Read", "Article"])
-    const denyAll = definition(["allow", "Read", "Article"], ["deny", "Read", "Article"])
+    const allowAll = policyOf(["allow", "Read", "Article"])
+    const denyAll = policyOf(["allow", "Read", "Article"], ["deny", "Read", "Article"])
 
     expect(policyToSqlCondition(allowAll, "Read", "Article", { dialect: "postgresql" })).toBe(Sql.TRUE)
     expect(policyToSqlCondition(denyAll, "Read", "Article", { dialect: "postgresql" })).toBe(Sql.FALSE)

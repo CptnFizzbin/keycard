@@ -169,6 +169,9 @@ config?)`. `config` is an optional `KeycardConfig` (see below), shared with
 - `can(action, subject)` - Check if action is allowed
 - `cannot(action, subject)` - Check if action is denied
 - `require(action, subject)` - Throw if not allowed
+- `getCondition(action, subject)` - The single condition a subject instance's
+  claims must satisfy to be allowed, with the matching rules combined so the
+  last one still wins (`{ $and: [] }` = always, `{ $or: [] }` = never)
 - `def()` - Get underlying definition (a fresh copy on every call)
 
 ### KeycardConfig<TOperators>

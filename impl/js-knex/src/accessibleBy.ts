@@ -1,5 +1,5 @@
-import type { Logger, Policy, PolicyDefinition, Subject } from "@cptn-fizzbin/keycard"
-import { PolicyLoadException } from "@cptn-fizzbin/keycard"
+import type { Action, Logger, Policy, Subject } from "@cptn-fizzbin/keycard"
+import { createAction, createSubject } from "@cptn-fizzbin/keycard"
 import type { Knex } from "knex"
 
 import type { ColumnResolver } from "./conditionTranslator.ts"
@@ -8,10 +8,13 @@ import type { JsonValue } from "./json.ts"
 import type { KnexOperatorsRecord } from "./knexOperator.ts"
 import { renderSqlCondition } from "./renderSqlCondition.ts"
 import type { SqlCondition } from "./sqlCondition.ts"
-import { Sql } from "./sqlCondition.ts"
 
-/** An Action or Subject, by name or as the object `createAction`/`createSubject` returns. */
-export type NameOrNamed = string | { readonly name: string }
+/** An Action, by name or as the object `createAction` returns. */
+export type ActionArg = string | Action
+
+/** A Subject, by name or as the object `createSubject` returns. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SubjectArg = string | Subject<any, any>
 
 /**
  * The claims type of `TSubject`: what `createSubject<TClaims>()` was given, or
@@ -65,19 +68,6 @@ export interface KnexPolicyOptions<TClaims = unknown> {
 
 const noopLogger: Logger = { info: () => {}, warn: () => {}, error: () => {} }
 
-const DISABLED: unique symbol = Symbol("keycard-knex:wildcard-disabled")
-
-function resolveWildcard(declared: unknown, field: string): string | typeof DISABLED {
-  if (declared === undefined) return "_ANY_"
-  if (declared === null || declared === false) return DISABLED
-  if (typeof declared === "string") return declared
-  throw new PolicyLoadException(`${field} must be a string, null, or false - got ${JSON.stringify(declared)}.`)
-}
-
-function nameOf(value: NameOrNamed): string {
-  return typeof value === "string" ? value : value.name
-}
-
 function defaultColumnFor(field: string): string | undefined {
   return field.includes(".") ? undefined : field
 }
@@ -96,33 +86,30 @@ function dialectOf(builder: Knex.QueryBuilder): string {
 
 /**
  * Returns the condition a row of `subject` must satisfy for `policy` to
- * allow `action` on it: the same last-matching-rule-wins outcome as
- * `policy.can(action, subject.wrap(row))`, as a {@link SqlCondition} for the
- * given `dialect`. A policy that never allows the action translates to
- * `Sql.FALSE`, and one that always does to `Sql.TRUE`.
+ * allow `action` on it - `policy.getCondition(action, subject)` translated
+ * into a {@link SqlCondition} for the given `dialect`. A policy that never
+ * allows the action translates to `Sql.FALSE`, and one that always does to
+ * `Sql.TRUE`.
  *
  * @throws KeycardKnexError if a condition uses an operator with no Knex
  *   translation for `dialect`
  */
-export function policyToSqlCondition<TSubject extends NameOrNamed>(
-  policy: Policy | PolicyDefinition,
-  action: NameOrNamed,
+export function policyToSqlCondition<TSubject extends SubjectArg>(
+  policy: Policy,
+  action: ActionArg,
   subject: TSubject,
   options: KnexPolicyOptions<ClaimsOf<TSubject>> & { dialect: string },
 ): SqlCondition
 export function policyToSqlCondition(
-  policy: Policy | PolicyDefinition,
-  action: NameOrNamed,
-  subject: NameOrNamed,
+  policy: Policy,
+  action: ActionArg,
+  subject: SubjectArg,
   options: KnexPolicyOptions & { dialect: string },
 ): SqlCondition {
-  // Duck-typed rather than instanceof, which fails when the app and this
-  // package resolve different copies of @cptn-fizzbin/keycard.
-  const definition = typeof policy.def === "function" ? (policy as Policy).def() : policy as PolicyDefinition
-  const anyAction = resolveWildcard(definition.meta?.anyAction, "meta.anyAction")
-  const anySubject = resolveWildcard(definition.meta?.anySubject, "meta.anySubject")
-  const actionName = nameOf(action)
-  const subjectName = nameOf(subject)
+  const condition = policy.getCondition(
+    typeof action === "string" ? createAction(action) : action,
+    typeof subject === "string" ? createSubject(subject) : subject,
+  )
 
   const translator = new ConditionTranslator({
     dialect: options.dialect,
@@ -130,23 +117,7 @@ export function policyToSqlCondition(
     operators: options.operators ?? {},
     logger: options.logger ?? noopLogger,
   })
-
-  // Folding the rules in declaration order, each one overriding those
-  // before it where its condition holds, gives last-matching-rule-wins.
-  let allowed: SqlCondition = Sql.FALSE
-  for (const [effect, ruleAction, ruleSubject, ruleCondition] of definition.rules) {
-    if (ruleAction !== actionName && ruleAction !== anyAction) continue
-    if (ruleSubject !== subjectName && ruleSubject !== anySubject) continue
-
-    // Truthiness, not presence, matches how Policy.can decides whether a
-    // rule is conditional.
-    const matches = ruleCondition ? translator.translate(ruleCondition as JsonValue) : Sql.TRUE
-    allowed = effect === "allow"
-      ? Sql.or(allowed, matches)
-      : Sql.and(allowed, Sql.not(matches))
-  }
-
-  return allowed
+  return translator.translate(condition as JsonValue)
 }
 
 /**
@@ -163,16 +134,16 @@ export function policyToSqlCondition(
  * @throws KeycardKnexError when the query is built, if a condition uses an
  *   operator with no Knex translation for the query's dialect
  */
-export function accessibleBy<TSubject extends NameOrNamed>(
-  policy: Policy | PolicyDefinition,
-  action: NameOrNamed,
+export function accessibleBy<TSubject extends SubjectArg>(
+  policy: Policy,
+  action: ActionArg,
   subject: TSubject,
   options?: KnexPolicyOptions<ClaimsOf<TSubject>>,
 ): (builder: Knex.QueryBuilder) => void
 export function accessibleBy(
-  policy: Policy | PolicyDefinition,
-  action: NameOrNamed,
-  subject: NameOrNamed,
+  policy: Policy,
+  action: ActionArg,
+  subject: SubjectArg,
   options: KnexPolicyOptions = {},
 ): (builder: Knex.QueryBuilder) => void {
   return (builder) => {

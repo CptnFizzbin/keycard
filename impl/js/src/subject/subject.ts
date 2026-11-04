@@ -27,3 +27,6 @@ export type AnySubject = Subject<any, any>
 
 /** A keyed collection of Subjects - see `ActionCatalog`'s doc, symmetric for Subjects. Handed to `PolicyBuilder`/`Policy` via `KeycardConfig.subjects`. */
 export type SubjectsRecord = Record<string, AnySubject>
+
+/** The claims type a Subject carries - what `createSubject<TClaims>()` was given. */
+export type InferClaims<TSubject> = TSubject extends Subject<infer TClaims, infer _TArgs> ? TClaims : never

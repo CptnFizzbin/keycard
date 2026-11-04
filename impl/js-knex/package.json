@@ -33,7 +33,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@cptn-fizzbin/keycard": ">=0.0.4",
+    "@cptn-fizzbin/keycard": "workspace:^",
     "knex": "^3.0.0"
   },
   "devDependencies": {
