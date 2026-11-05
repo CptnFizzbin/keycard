@@ -87,7 +87,7 @@ Thrown when a permission check fails with `require()`.
 ## Condition operators
 
 `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$has`, `$substr`, `$or`,
-`$and`, `$not`, `$field`, and plain field conditions are all supported — see the
+`$and`, `$not`, `$always`, `$never`, `$field`, and plain field conditions are all supported — see the
 language-agnostic [Condition Operators](/docs/condition-operators)
 reference for the full semantics.
 

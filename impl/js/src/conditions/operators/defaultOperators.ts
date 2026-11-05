@@ -1,5 +1,6 @@
 import { HasOperator } from "./collection/hasOperator.ts"
 import { InOperator } from "./collection/inOperator.ts"
+import { AlwaysOperator, NeverOperator } from "./constant/constantOperator.ts"
 import { EqOperator } from "./equality/eqOperator.ts"
 import { NeOperator } from "./equality/neOperator.ts"
 import { FieldOperator } from "./field/fieldOperator.ts"
@@ -26,6 +27,8 @@ export const DefaultOperators: AnyOperator[] = [
   OrOperator,
   AndOperator,
   NotOperator,
+  AlwaysOperator,
+  NeverOperator,
   FieldOperator,
 ]
 

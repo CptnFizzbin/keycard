@@ -109,6 +109,8 @@ See [TYPE_SAFETY.md](../TYPE_SAFETY.md) for detailed examples.
 - `$or` - Logical OR
 - `$and` - Logical AND
 - `$not` - Logical NOT
+- `$always` - Always matches (`{ $always: true }`; `true` is the only valid operand)
+- `$never` - Never matches (`{ $never: true }`; `true` is the only valid operand)
 - `$field` - Explicit field access, for a field whose name itself starts with "$
   "
 - Field conditions - Check nested properties

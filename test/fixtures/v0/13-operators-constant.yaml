@@ -1,0 +1,68 @@
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#always
+version: "0.1"
+name: "$always"
+rules:
+  - [ allow, Read, Article, { $always: true } ]
+
+tests:
+  - name: "matches any instance: allowed"
+    check: [ Read, Article, { status: draft } ]
+    expected: true
+
+  - name: "matches an instance with no fields: allowed"
+    check: [ Read, Article, { } ]
+    expected: true
+
+---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#always
+version: "0.1"
+name: "$always under a field still requires the field to exist"
+rules:
+  - [ allow, Read, Article, { status: { $always: true } } ]
+
+tests:
+  - name: "field present, even as null: allowed"
+    check: [ Read, Article, { status: null } ]
+    expected: true
+
+  - name: "field missing: denied"
+    check: [ Read, Article, { } ]
+    expected: false
+
+---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#always
+version: "0.1"
+name: "$always: false is malformed, always false"
+rules:
+  - [ allow, Read, Article, { $always: false } ]
+
+tests:
+  - name: "operand is not true: never matches"
+    check: [ Read, Article, { status: draft } ]
+    expected: false
+
+---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#never
+version: "0.1"
+name: "$never"
+rules:
+  - [ allow, Read, Article ]
+  - [ deny, Read, Article, { $never: true } ]
+
+tests:
+  - name: "never matches, so the earlier allow decides: allowed"
+    check: [ Read, Article, { status: draft } ]
+    expected: true
+
+---
+# Spec: https://keycard.cptnfizzbin.dev/spec/v0#never
+version: "0.1"
+name: "$never: false is malformed, always false"
+rules:
+  - [ allow, Read, Article, { $never: false } ]
+
+tests:
+  - name: "operand is not true: never matches, so still denied"
+    check: [ Read, Article, { status: draft } ]
+    expected: false
+

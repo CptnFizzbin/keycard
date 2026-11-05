@@ -475,6 +475,27 @@ Token `\`
 - **MUST** be the exact negation of evaluating `Condition` against the same
   `subject`.
 
+#### `$always`
+
+`{ $always: true }`. Matches every subject, without inspecting it.
+
+**Requirements:**
+
+- The only valid operand is `true`. Any other operand, including `false`, is
+  malformed and the condition **MUST** evaluate to `false`.
+- Under a field condition, the usual missing-field rule still applies:
+  `{ field: { $always: true } }` evaluates to `false` when `field` is missing.
+
+#### `$never`
+
+`{ $never: true }`. Matches no subject.
+
+**Requirements:**
+
+- **MUST** evaluate to `false` for every subject.
+- The only valid operand is `true`. Any other operand, including `false`, is
+  malformed (and, like every malformed condition, evaluates to `false`).
+
 #### Field condition
 
 `{ fieldName: Condition }` — any object key that does not start with `$`.
