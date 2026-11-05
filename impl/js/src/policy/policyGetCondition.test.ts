@@ -17,13 +17,13 @@ describe("Policy.getCondition", () => {
   test("is never-true when no rule matches", () => {
     const policy = policyOf(["allow", "Update", "Article"], ["allow", "Read", "Comment"])
 
-    expect(policy.getCondition(Read, Article)).toEqual({ $or: [] })
+    expect(policy.getCondition(Read, Article)).toEqual({ $never: true })
   })
 
   test("is always-true for an unconditional allow", () => {
     const policy = policyOf(["allow", "Read", "Article"])
 
-    expect(policy.getCondition(Read, Article)).toEqual({ $and: [] })
+    expect(policy.getCondition(Read, Article)).toEqual({ $always: true })
   })
 
   test("is a single matching rule's own condition", () => {
@@ -64,6 +64,16 @@ describe("Policy.getCondition", () => {
     )
 
     expect(policy.getCondition(Read, Article)).toEqual({ status: "published" })
+  })
+
+  test("treats an empty $and/$or rule condition like $always/$never", () => {
+    const policy = policyOf(
+      ["allow", "Read", "Article", { ownerId: 7 }],
+      ["deny", "Read", "Article", { $and: [] }],
+      ["allow", "Read", "Article", { $or: [] }],
+    )
+
+    expect(policy.getCondition(Read, Article)).toEqual({ $never: true })
   })
 
   test("includes wildcard rules and honors a disabled wildcard", () => {

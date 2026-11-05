@@ -97,7 +97,7 @@ export class Policy<
    * combined with `$and`/`$or`/`$not` so the last matching rule still wins.
    *
    * When the outcome doesn't depend on the instance, the result is
-   * `{ $and: [] }` (always allowed) or `{ $or: [] }` (never allowed).
+   * `{ $always: true }` (always allowed) or `{ $never: true }` (never allowed).
    *
    * ```ts
    * policy.getCondition(Read, Article)

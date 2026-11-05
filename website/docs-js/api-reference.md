@@ -74,7 +74,8 @@ config?)`. `config` is an optional `KeycardConfig` (see below), shared with
   matching rules are combined with `$or`/`$and`/`$not` so the last matching
   rule still wins, which lets a query builder (such as
   `@cptn-fizzbin/keycard-knex`) translate one condition instead of the rule
-  list. `{ $and: [] }` means always allowed and `{ $or: [] }` never allowed.
+  list. `{ $always: true }` means always allowed and `{ $never: true }` never
+  allowed.
 - `def()` — get the underlying definition, with its own `version`. Returns a
   fresh copy each call; the `Policy` also copies the definition it's
   constructed from, so neither the caller's object nor a `def()` result can

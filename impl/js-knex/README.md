@@ -88,6 +88,7 @@ may reference.
 | `$has`                       | Postgres only: `array_position(f, v) IS NOT NULL` on an array column                    |
 | `$substr`                    | `GLOB` on SQLite, `LIKE ... ESCAPE '!'` elsewhere                                       |
 | `$and` `$or` `$not` `$field` | the matching boolean combination                                                        |
+| `$always` / `$never`         | `1 = 1` / `1 = 0`                                                                       |
 
 Every translated condition evaluates to `TRUE` or `FALSE`, never SQL `NULL`, so
 `not (...)` and deny rules behave exactly like `Policy.can` on rows with `NULL`

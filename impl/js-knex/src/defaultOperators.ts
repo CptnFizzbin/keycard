@@ -97,6 +97,16 @@ const $substr: KnexOperator = (value, ctx) => {
   return Sql.and(Sql.isNotNull(column), match)
 }
 
+function constant(name: "$always" | "$never", result: SqlCondition): KnexOperator {
+  return (value, ctx) => {
+    if (value !== true) {
+      ctx.logger.warn(`${name} expects true, received ${JSON.stringify(value)}; it translates to FALSE.`)
+      return Sql.FALSE
+    }
+    return result
+  }
+}
+
 const $field: KnexOperator = (value, ctx) => {
   if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== "string") {
     ctx.logger.warn(`$field expects a [name, condition] tuple, received ${JSON.stringify(value)}; it translates to FALSE.`)
@@ -120,5 +130,7 @@ export const DefaultKnexOperators: Readonly<KnexOperatorsRecord> = Object.freeze
   $or: logicalList("$or"),
   $and: logicalList("$and"),
   $not: (value, ctx) => Sql.not(ctx.translate(value)),
+  $always: constant("$always", Sql.TRUE),
+  $never: constant("$never", Sql.FALSE),
   $field,
 })

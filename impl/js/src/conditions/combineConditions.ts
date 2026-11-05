@@ -1,10 +1,17 @@
 import type { AnyCondition } from "./condition.ts"
 
 /** A condition every subject instance satisfies. */
-export const ALWAYS: AnyCondition = Object.freeze({ $and: Object.freeze([]) })
+export const ALWAYS: AnyCondition = Object.freeze({ $always: true })
 
 /** A condition no subject instance satisfies. */
-export const NEVER: AnyCondition = Object.freeze({ $or: Object.freeze([]) })
+export const NEVER: AnyCondition = Object.freeze({ $never: true })
+
+/** Returns `true` when `condition` is exactly `{ [operator]: true }`. */
+function isConstant(condition: AnyCondition, operator: "$always" | "$never"): boolean {
+  if (typeof condition !== "object" || condition === null || Array.isArray(condition)) return false
+  const keys = Object.keys(condition)
+  return keys.length === 1 && keys[0] === operator && condition[operator] === true
+}
 
 /** Returns the operand of `condition` when it's exactly `{ [operator]: [...] }`, otherwise `undefined`. */
 function listOperand(condition: AnyCondition, operator: "$and" | "$or"): AnyCondition[] | undefined {
@@ -15,12 +22,14 @@ function listOperand(condition: AnyCondition, operator: "$and" | "$or"): AnyCond
   return Array.isArray(operand) ? operand : undefined
 }
 
+/** Returns `true` for `{ $always: true }` and its equivalent `{ $and: [] }`. */
 export function isAlways(condition: AnyCondition): boolean {
-  return listOperand(condition, "$and")?.length === 0
+  return isConstant(condition, "$always") || listOperand(condition, "$and")?.length === 0
 }
 
+/** Returns `true` for `{ $never: true }` and its equivalent `{ $or: [] }`. */
 export function isNever(condition: AnyCondition): boolean {
-  return listOperand(condition, "$or")?.length === 0
+  return isConstant(condition, "$never") || listOperand(condition, "$or")?.length === 0
 }
 
 /** `{ $and: conditions }`, with {@link ALWAYS} items dropped, nested `$and`s flattened, and {@link NEVER} absorbing the rest. */

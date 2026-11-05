@@ -228,6 +228,20 @@ describe("operators", () => {
     expect(sql).toBe("array_position(`tags`, ?) IS NOT NULL")
   })
 
+  test.each([
+    [{ $always: true }, "1 = 1"],
+    [{ $never: true }, "1 = 0"],
+    [{ $not: { $never: true } }, "1 = 1"],
+    [{ $always: false }, "1 = 0"],
+    [{ $never: false }, "1 = 0"],
+  ])("translates %j to %s", (condition, expected) => {
+    const policy = policyOf(["allow", "Read", "Article", condition])
+
+    const { sql } = whereSql(policy)
+
+    expect(sql).toBe(expected)
+  })
+
   test("a nested field condition translates to FALSE with a warning", () => {
     // Arrange
     const policy = policyOf(["allow", "Read", "Article", { author: { name: "Alice" } }])
