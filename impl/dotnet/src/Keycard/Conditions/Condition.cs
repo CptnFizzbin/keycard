@@ -49,6 +49,12 @@ public sealed class Condition : ICondition
 
     public static Condition Not(Condition condition) => new(ConditionMaps.Not(condition));
 
+    /// <summary>Matches every subject: <c>{ $always: true }</c>.</summary>
+    public static Condition Always() => new(ConditionMaps.Whole("$always", true));
+
+    /// <summary>Matches no subject: <c>{ $never: true }</c>.</summary>
+    public static Condition Never() => new(ConditionMaps.Whole("$never", true));
+
     /// <summary>A custom (or built-in) operator applied to the whole subject.</summary>
     public static Condition Op(string operatorName, object? value) => new(ConditionMaps.Whole(operatorName, value));
 

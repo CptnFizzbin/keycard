@@ -105,6 +105,16 @@ public class Condition<S> {
         return new Condition<>("$not", condition);
     }
 
+    /** Matches every subject - {@code { $always: true }}. */
+    public static <S> Condition<S> always() {
+        return new Condition<>("$always", Boolean.TRUE);
+    }
+
+    /** Matches no subject - {@code { $never: true }}. */
+    public static <S> Condition<S> never() {
+        return new Condition<>("$never", Boolean.TRUE);
+    }
+
     public static <S> Condition<S> op(String operator, Object value) {
         return new Condition<>(operator, value);
     }

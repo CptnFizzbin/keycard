@@ -68,6 +68,15 @@ public class TypedConditionTests
     }
 
     [Fact]
+    public void MatchesConstantConditions()
+    {
+        Assert.True(Matches(Condition<Claims>.Always()));
+        Assert.False(Matches(Condition<Claims>.Never()));
+        Assert.False(Matches(Condition<Claims>.Not(Condition<Claims>.Always())));
+        Assert.True(Matches(Condition<Claims>.Not(Condition<Claims>.Never())));
+    }
+
+    [Fact]
     public void UsesTheClaimNameWhenPresent()
     {
         var condition = Condition<Claims>.Eq(c => c.CreatedAt, 100L);

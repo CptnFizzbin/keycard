@@ -68,6 +68,8 @@ Condition =
   | OrCondition = { $or: Condition[] } //=> Condition[].any(TSubject)
   | AndCondition = { $and: Condition[] } //=> Condition[].all(TSubject)
   | NotCondition = { $not: Condition } //=> !Condition(TSubject)
+  | AlwaysCondition = { $always: true } //=> true; `true` is the only valid operand
+  | NeverCondition = { $never: true } //=> false; `true` is the only valid operand
   | FieldCondition = { [key]: Condition } //=> Condition(TSubject[key]), key MUST NOT start with "$"
   | ExplicitFieldCondition = { $field: [key, Condition] } //=> Condition(TSubject[key]), required when key starts with "$"
 

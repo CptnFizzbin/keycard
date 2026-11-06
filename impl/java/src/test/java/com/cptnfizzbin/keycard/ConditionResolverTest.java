@@ -58,6 +58,28 @@ public class ConditionResolverTest {
     }
 
     @Test
+    public void testAlwaysCondition() {
+        assertTrue(resolver.evaluate("draft", Condition.always()));
+        assertTrue(resolver.evaluate(null, Condition.always()));
+        assertFalse(resolver.evaluate("draft", Condition.not(Condition.always())));
+    }
+
+    @Test
+    public void testNeverCondition() {
+        assertFalse(resolver.evaluate("draft", Condition.never()));
+        assertFalse(resolver.evaluate(null, Condition.never()));
+        assertTrue(resolver.evaluate("draft", Condition.not(Condition.never())));
+    }
+
+    @Test
+    public void testConstantConditionsRejectNonTrueOperands() {
+        for (Object operand : new Object[] { false, "true", 1, null }) {
+            assertFalse(resolver.evaluate("draft", Condition.op("$always", operand)));
+            assertFalse(resolver.evaluate("draft", Condition.op("$never", operand)));
+        }
+    }
+
+    @Test
     public void testFieldCondition() {
         Article article = new Article(1, 42, "published");
         assertTrue(resolver.evaluate(article, Condition.eq(Article::getOwnerId, 42)));

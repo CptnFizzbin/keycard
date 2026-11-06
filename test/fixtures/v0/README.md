@@ -139,3 +139,5 @@ below.
   `"1.1.0"`, so it's skipped by a compliance suite whose
   `COMPLIANT_VERSION` hasn't caught up yet — see "Filtering by version"
   below.
+- `13-operators-constant.yaml` — `$always`, `$never`, and their only valid
+  operand, `true`.

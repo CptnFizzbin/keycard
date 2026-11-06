@@ -10,6 +10,12 @@ export type LogicCondition<TSubject, TCustom> =
   | { $or: Condition<TSubject, TCustom>[] }
   | { $and: Condition<TSubject, TCustom>[] }
   | { $not: TSubject | Condition<TSubject, TCustom> }
+  | ConstantCondition
+
+/** A condition that ignores the subject: `$always` matches everything, `$never` nothing. */
+export type ConstantCondition =
+  | { $always: true }
+  | { $never: true }
 
 export type ValueCondition<TSubject, TCustom> =
   TSubject extends unknown[] ? ArrayCondition<TSubject> // must be first, as arrays are objects
@@ -45,6 +51,7 @@ export type FieldLogicCondition<TSubject, TCustom> =
   | { $or: FieldValueCondition<TSubject, TCustom>[] }
   | { $and: FieldValueCondition<TSubject, TCustom>[] }
   | { $not: TSubject | FieldValueCondition<TSubject, TCustom> }
+  | ConstantCondition
 
 export type FieldLeafCondition<TSubject> =
   TSubject extends unknown[] ? ArrayCondition<TSubject>

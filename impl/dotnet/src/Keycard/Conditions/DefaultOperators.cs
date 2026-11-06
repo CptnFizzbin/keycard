@@ -19,6 +19,8 @@ internal static class DefaultOperators
         ("$or", OrCheck),
         ("$and", AndCheck),
         ("$not", (s, v, c) => !c.ResolveSubcondition(s, v)),
+        ("$always", (_, v, c) => ConstantCheck(c, "$always", v, true)),
+        ("$never", (_, v, c) => ConstantCheck(c, "$never", v, false)),
         ("$field", FieldOpCheck),
     };
 
@@ -124,6 +126,16 @@ internal static class DefaultOperators
 
         if (!any) ctx.ReportTypeIssue("$and", "empty $and is vacuously true - likely an authoring mistake");
         return true;
+    }
+
+    // true is the only valid operand, so a policy can't read as "$always: false"
+    // and silently mean "never".
+    private static bool ConstantCheck(IOperatorContext ctx, string op, object? operand, bool result)
+    {
+        if (operand is true) return result;
+
+        ctx.ReportTypeIssue(op, $"expected the operand true, got {(operand is bool ? "false" : Diagnostics.TypeName(operand))}");
+        return false;
     }
 
     // Explicit field access, for a field whose own name starts with "$".

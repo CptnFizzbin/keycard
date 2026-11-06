@@ -22,6 +22,8 @@ final class DefaultOperators {
         Operator.of("$or", (s, v, ctx) -> orCheck(ctx, s, v)),
         Operator.of("$and", (s, v, ctx) -> andCheck(ctx, s, v)),
         Operator.of("$not", (s, v, ctx) -> LogicConditions.not(ctx, s, v)),
+        Operator.of("$always", (s, v, ctx) -> constantCheck(ctx, "$always", v, true)),
+        Operator.of("$never", (s, v, ctx) -> constantCheck(ctx, "$never", v, false)),
         Operator.of("$field", (s, v, ctx) -> fieldOpCheck(ctx, s, v))
     );
 
@@ -96,6 +98,16 @@ final class DefaultOperators {
             return true;
         }
         return LogicConditions.and(ctx, subject, list);
+    }
+
+    /** $always/$never - ignore the subject; {@code true} is the only valid operand, and any other is false. */
+    private static boolean constantCheck(OperatorContext ctx, String op, Object operand, boolean result) {
+        if (!Boolean.TRUE.equals(operand)) {
+            ctx.reportTypeIssue(op, "expected the operand true, got "
+                + (operand instanceof Boolean ? operand : Diagnostics.typeName(operand)));
+            return false;
+        }
+        return result;
     }
 
     /** $field - explicit field access, for a field whose name itself starts with "$". */

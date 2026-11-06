@@ -83,7 +83,7 @@ non-string/`null`/`false` wildcard, a duplicate catalog entry, a
 ## Condition operators
 
 `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$has`, `$substr`,
-`$or`, `$and`, `$not`, `$field`, and plain field condition are all supported —
+`$or`, `$and`, `$not`, `$always`, `$never`, `$field`, and plain field condition are all supported —
 see the language-agnostic [Condition Operators](/docs/condition-operators)
 reference for the full semantics.
 

@@ -36,6 +36,17 @@ public class ConditionTests
         Assert.True(Eval(new { owner_id = 1 }, Condition.Eq("owner_id", 1).ToMap()));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData("true")]
+    [InlineData(1)]
+    [InlineData(null)]
+    public void ConstantOperatorsRejectAnyOperandButTrue(object? operand)
+    {
+        Assert.False(Eval("draft", Condition.Op("$always", operand).ToMap()));
+        Assert.False(Eval("draft", Condition.Op("$never", operand).ToMap()));
+    }
+
     [Fact]
     public void AMissingFieldFailsEverythingButABareNe()
     {

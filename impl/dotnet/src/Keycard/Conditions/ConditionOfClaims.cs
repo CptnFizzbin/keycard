@@ -75,6 +75,12 @@ public sealed class Condition<TClaims> : ICondition
 
     public static Condition<TClaims> Not(Condition<TClaims> condition) => new(ConditionMaps.Not(condition));
 
+    /// <summary>Matches every subject: <c>{ $always: true }</c>.</summary>
+    public static Condition<TClaims> Always() => new(ConditionMaps.Whole("$always", true));
+
+    /// <summary>Matches no subject: <c>{ $never: true }</c>.</summary>
+    public static Condition<TClaims> Never() => new(ConditionMaps.Whole("$never", true));
+
     /// <summary>A custom (or built-in) operator applied to the whole claims object.</summary>
     public static Condition<TClaims> Op(string operatorName, object? value) =>
         new(ConditionMaps.Whole(operatorName, value));

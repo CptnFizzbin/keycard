@@ -99,6 +99,23 @@ for the exact decomposition rules.
 } ]
 ```
 
+## Constant operators
+
+| Operator         | Matches when                    |
+|------------------|---------------------------------|
+| `$always: true`  | always - the subject is ignored |
+| `$never: true`   | never - the subject is ignored  |
+
+`true` is the only valid operand for both: `{ $always: false }` doesn't mean
+"never", it's malformed and evaluates to `false` like any other malformed
+condition. Use them to make a rule's intent explicit, or to switch a branch of
+a condition tree on or off:
+
+```yaml
+- [ allow, Read, Article, { $always: true } ]
+- [ deny, Read, Article, { $or: [ { $never: true }, { status: "archived" } ] } ]
+```
+
 ## Field access
 
 By default, a key in a condition object that isn't an operator (doesn't start
