@@ -54,6 +54,7 @@ independently on its own version number.
 | Language   | Package                                                          | Source        |
 |------------|-------------------------------------------------------------------|---------------|
 | JavaScript | [`@cptn-fizzbin/keycard`](https://www.npmjs.com/package/@cptn-fizzbin/keycard) (npm) | [`impl/js`](impl/js)     |
+| JavaScript (Knex) | `@cptn-fizzbin/keycard-knex` (npm) - translates policies into Knex `where` clauses | [`impl/js-knex`](impl/js-knex) |
 | Java       | `com.cptnfizzbin:keycard` (Maven Central)                          | [`impl/java`](impl/java) |
 | C#         | `CptnFizzbin.Keycard` (NuGet, not yet published), plus `.Json` and `.Yaml` format packages | [`impl/dotnet`](impl/dotnet) |
 

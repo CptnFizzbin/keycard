@@ -64,6 +64,11 @@ const IMPLS: Impl[] = [
     label: "@cptn-fizzbin/keycard (JS, published to npm)",
     tagPrefix: "js-v",
   },
+  {
+    dir: "impl/js-knex",
+    label: "@cptn-fizzbin/keycard-knex (JS Knex integration, published to npm)",
+    tagPrefix: "js-knex-v",
+  },
 ]
 
 function versionOf(impl: Impl): string {

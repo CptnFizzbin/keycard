@@ -1,0 +1,54 @@
+{
+  "name": "@cptn-fizzbin/keycard-knex",
+  "version": "0.0.0",
+  "description": "Translate KeyCard policy conditions into Knex where clauses",
+  "author": "Cptn Fizzbin",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "authorization",
+    "access-control",
+    "permissions",
+    "policy",
+    "knex",
+    "sql"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./package.json": "./package.json"
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "types": "dist/index.d.mts",
+  "scripts": {
+    "changeset": "yarn --cwd ../.. run changeset",
+    "prepack": "yarn build",
+    "build": "tsdown",
+    "test": "vitest",
+    "lint": "eslint src tests *.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@cptn-fizzbin/keycard": "workspace:^",
+    "knex": "^3.0.0"
+  },
+  "devDependencies": {
+    "@cptn-fizzbin/keycard": "workspace:^",
+    "@electric-sql/pglite": "^0.5.14",
+    "@types/node": "^26.5.0",
+    "eslint": "^10.10.0",
+    "knex": "^3.3.0",
+    "tsdown": "^0.23.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0",
+    "yaml": "^2.9.0"
+  },
+  "files": [
+    "dist"
+  ]
+}
