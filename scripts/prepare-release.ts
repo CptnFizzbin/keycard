@@ -16,12 +16,10 @@ interface Impl {
   /** Directory relative to the repo root. */
   dir: string
   label: string
-  /** Tag prefix used by the matching .github/workflows/publish-*.yml. */
-  tagPrefix: string
   syncVersionInto?: (version: string) => void
 }
 
-function readJson(path: string): { version: string } {
+function readJson(path: string): { name: string, version: string } {
   return JSON.parse(readFileSync(path, "utf8"))
 }
 
@@ -56,23 +54,25 @@ const IMPLS: Impl[] = [
   {
     dir: "impl/java",
     label: "com.cptnfizzbin:keycard (Java, published to Maven Central)",
-    tagPrefix: "java-v",
     syncVersionInto: syncJavaVersion,
   },
   {
     dir: "impl/js",
     label: "@cptn-fizzbin/keycard (JS, published to npm)",
-    tagPrefix: "js-v",
   },
   {
     dir: "impl/js-knex",
     label: "@cptn-fizzbin/keycard-knex (JS Knex integration, published to npm)",
-    tagPrefix: "js-knex-v",
   },
 ]
 
 function versionOf(impl: Impl): string {
   return readJson(resolve(ROOT, impl.dir, "package.json")).version
+}
+
+/** The release tag for `impl` at `version`: `<package.json name>@<version>`, which its publish-*.yml triggers on. */
+function tagOf(impl: Impl, version: string): string {
+  return `${readJson(resolve(ROOT, impl.dir, "package.json")).name}@${version}`
 }
 
 const before = new Map(IMPLS.map((impl) => [impl.dir, versionOf(impl)]))
@@ -104,7 +104,8 @@ console.log("  1. Review the diff (version bumps + CHANGELOG.md entries).")
 console.log("  2. Commit it and merge to main.")
 console.log("  3. Push the tag(s) below to trigger each package's publish workflow:\n")
 for (const { impl, to } of changed) {
-  console.log(`     git tag ${impl.tagPrefix}${to} && git push origin ${impl.tagPrefix}${to}`)
+  const tag = tagOf(impl, to)
+  console.log(`     git tag ${tag} && git push origin ${tag}`)
   console.log(`       # ${impl.label}`)
 }
 console.log()
