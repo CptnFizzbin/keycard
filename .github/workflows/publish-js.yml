@@ -1,16 +1,14 @@
 name: Publish JS (npm)
 
-# Triggered by pushing a tag like `js-core@1.2.3`. The version after `js-core@`
-# becomes the released package version (it does not need to match the
-# version committed in package.json — that value is overwritten below).
+# Triggered by pushing a tag like `js-core@1.2.3` or `js-knex@1.2.3`: the part
+# before `@` names the package (`js-core` is impl/js, any other `js-<name>` is
+# impl/js-<name>), and the version after it becomes the released package
+# version (it does not need to match the version committed in package.json —
+# that value is overwritten below).
 on:
   push:
     tags:
-      - "js-core@*"
-
-defaults:
-  run:
-    working-directory: impl/js
+      - "js-*@*"
 
 jobs:
   publish:
@@ -18,15 +16,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Derive release version from tag
-        id: version
+      - name: Derive package and release version from tag
+        id: release
         run: |
           TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#js-core@}"
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Tag '$TAG' does not match js-core@X.Y.Z" >&2
+          NAME="${TAG%@*}"
+          VERSION="${TAG#*@}"
+          if [[ ! "$NAME" =~ ^js-[a-z0-9-]+$ || ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag '$TAG' does not match js-<package>@X.Y.Z" >&2
             exit 1
           fi
+          if [[ "$NAME" == "js-core" ]]; then DIR="impl/js"; else DIR="impl/$NAME"; fi
+          if [[ ! -f "$DIR/package.json" ]]; then
+            echo "Tag '$TAG' names no JS package: $DIR/package.json doesn't exist" >&2
+            exit 1
+          fi
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v7
@@ -40,15 +45,19 @@ jobs:
         run: yarn install --immutable
 
       - name: Build
+        working-directory: ${{ steps.release.outputs.dir }}
         run: yarn build
 
       - name: Test
+        working-directory: ${{ steps.release.outputs.dir }}
         run: yarn test run
 
       - name: Set release version
-        run: npm pkg set version=${{ steps.version.outputs.version }}
+        working-directory: ${{ steps.release.outputs.dir }}
+        run: npm pkg set version=${{ steps.release.outputs.version }}
 
       - name: Publish to npm
+        working-directory: ${{ steps.release.outputs.dir }}
         run: yarn npm publish --access public
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

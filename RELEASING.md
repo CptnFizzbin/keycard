@@ -35,15 +35,21 @@ driven by a per-implementation checklist:
    discovers it.
 4. **Pick its tag name** (`<lang>-core`, or `<lang>-<integration>` for an
    add-on package), add an entry with that `tagName` to the `IMPLS` array in
-   [`scripts/prepare-release.ts`](scripts/prepare-release.ts), and add
-   `.github/workflows/publish-<lang>.yml`, triggered by `<tag name>@*` tags,
-   modeled on
-   [`publish-java.yml`](.github/workflows/publish-java.yml) /
-   [`publish-js.yml`](.github/workflows/publish-js.yml): parse the version out
-   of the pushed tag, set it in the implementation's real build file, and run
-   that ecosystem's native publish command (`cargo publish`,
-   `dotnet nuget push`, `twine upload`, ...) using registry credentials from
-   repository secrets.
+   [`scripts/prepare-release.ts`](scripts/prepare-release.ts), and wire it into
+   its language's two workflows - each language has exactly one test workflow
+   (`<lang>.yml`) and one publish workflow (`publish-<lang>.yml`), shared by all
+   of that language's packages:
+    - **A new package in an existing language** (e.g. `impl/js-express`): add
+      its directory to the `matrix.package` list in `<lang>.yml`.
+      `publish-<lang>.yml` already triggers on every `<lang>-*@*` tag and
+      finds the package directory from the tag name.
+    - **A new language**: add `<lang>.yml` and `publish-<lang>.yml`, modeled on
+      [`js.yml`](.github/workflows/js.yml) /
+      [`publish-js.yml`](.github/workflows/publish-js.yml): parse the package
+      and version out of the pushed tag, set the version in the package's real
+      build file, and run that ecosystem's native publish command
+      (`cargo publish`, `dotnet nuget push`, `twine upload`, ...) using registry
+      credentials from repository secrets.
 5. **If the implementation's build file carries its own version separate from
    `package.json`** (a Java `pom.xml`, a Rust `Cargo.toml`, a C#
    `.csproj`, a Python `pyproject.toml`, ...), add a sync step to
@@ -187,21 +193,21 @@ needed to release it.
    three with GPG, and uploads + auto-publishes them to Maven Central via the
    `central-publishing-maven-plugin`.
 
-**`publish-js.yml`** (on `js-core@*` tag push):
+**`publish-js.yml`** (on any `js-*@*` tag push - `js-core@*`, `js-knex@*`, ...):
 
-1. Installs, builds, and runs the test suite as a release gate.
+1. Resolves the package directory from the tag name (`js-core` is `impl/js`,
+   any other `js-<name>` is `impl/js-<name>`), then installs, builds, and runs
+   that package's test suite as a release gate.
 2. Sets the `package.json` version from the tag.
 3. Runs `yarn npm publish --access public` (package is scoped, so publish access
    must be explicit).
-
-**`publish-js-knex.yml`** (on `js-knex@*` tag push) does the same for
-`impl/js-knex`, using the same `NPM_AUTH_TOKEN` secret.
 
 A future `publish-<lang>.yml` follows the same three-part shape: derive the
 version from the tag, set it in the implementation's build file, run that
 ecosystem's native publish command.
 
-Everyday CI (`java.yml`, `js.yml`, and any future `<lang>.yml`) is unaffected by
+Everyday CI (`java.yml`, `js.yml`, `dotnet.yml`, and any future `<lang>.yml`;
+`js.yml` tests every JS package as one job per package) is unaffected by
 any of this - the `release` Maven profile and every
 `publish-<lang>.yml` only run from their own tag-triggered workflow, never on a
 normal push or PR.
