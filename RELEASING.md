@@ -1,18 +1,19 @@
 # Releasing
 
 Each KeyCard implementation is released independently, on its own version
-number, by pushing a `<package name>@X.Y.Z` tag (the `name` in its
-`package.json`). Adding a new implementation (Rust, C#,
+number, by pushing a `<lang>-<package>@X.Y.Z` tag: `<package>` is `core` for
+the core library (`java-core`, `js-core`) and the integration's name for an
+add-on package (`js-knex`, `js-express`, ...). Adding a new implementation (Rust, C#,
 Python, ...) means following the same shape, not inventing a new one -
 see [Adding a new implementation](#adding-a-new-implementation).
 
 ## Implementations
 
-| Implementation | Package                            | Tag format                              |
-|----------------|------------------------------------|-----------------------------------------|
-| Java           | Maven - `com.cptnfizzbin:keycard`  | `@cptn-fizzbin/keycard-impl-java@X.Y.Z` |
-| JS/TS          | NPM - `@cptn-fizzbin/keycard`      | `@cptn-fizzbin/keycard@X.Y.Z`           |
-| JS/TS (Knex)   | NPM - `@cptn-fizzbin/keycard-knex` | `@cptn-fizzbin/keycard-knex@X.Y.Z`      |
+| Implementation | Package                            | Tag format        |
+|----------------|------------------------------------|-------------------|
+| Java           | Maven - `com.cptnfizzbin:keycard`  | `java-core@X.Y.Z` |
+| JS/TS          | NPM - `@cptn-fizzbin/keycard`      | `js-core@X.Y.Z`   |
+| JS/TS (Knex)   | NPM - `@cptn-fizzbin/keycard-knex` | `js-knex@X.Y.Z`   |
 
 ## Adding a new implementation
 
@@ -32,8 +33,11 @@ driven by a per-implementation checklist:
    one - use that instead, as `impl/js` does.)
 3. **Add it to the root `package.json`'s `"workspaces"` array** so changesets
    discovers it.
-4. **Add `.github/workflows/publish-<lang>.yml`**, triggered by its
-   `<package.json name>@*` tags (the tag `prepare-release` prints), modeled on
+4. **Pick its tag name** (`<lang>-core`, or `<lang>-<integration>` for an
+   add-on package), add an entry with that `tagName` to the `IMPLS` array in
+   [`scripts/prepare-release.ts`](scripts/prepare-release.ts), and add
+   `.github/workflows/publish-<lang>.yml`, triggered by `<tag name>@*` tags,
+   modeled on
    [`publish-java.yml`](.github/workflows/publish-java.yml) /
    [`publish-js.yml`](.github/workflows/publish-js.yml): parse the version out
    of the pushed tag, set it in the implementation's real build file, and run
@@ -57,8 +61,8 @@ driven by a per-implementation checklist:
 
 - Keep the **major.minor** in sync across every implementation.
 - **Patch** versions can advance independently per implementation (e.g. a
-  Java-only bugfix can go out as `@cptn-fizzbin/keycard-impl-java@1.2.4` while
-  JS stays at `@cptn-fizzbin/keycard@1.2.3`).
+  Java-only bugfix can go out as `java-core@1.2.4` while JS stays at
+  `js-core@1.2.3`).
 - The version baked into a release comes from the **tag**, not from the
   implementation's own build file - every `publish-<lang>.yml` overwrites the
   committed version with the one parsed out of the tag before publishing. The
@@ -115,9 +119,9 @@ Then:
 ```bash
 git add -A && git commit -m "Release: <summary>"
 # open a PR, merge to main, then on main:
-git tag @cptn-fizzbin/keycard-impl-java@1.2.3 && git push origin @cptn-fizzbin/keycard-impl-java@1.2.3  # if Java changed
-git tag @cptn-fizzbin/keycard@1.2.3           && git push origin @cptn-fizzbin/keycard@1.2.3            # if JS changed
-git tag @cptn-fizzbin/keycard-knex@1.2.3      && git push origin @cptn-fizzbin/keycard-knex@1.2.3       # if JS Knex changed
+git tag java-core@1.2.3 && git push origin java-core@1.2.3   # if Java changed
+git tag js-core@1.2.3   && git push origin js-core@1.2.3     # if JS changed
+git tag js-knex@1.2.3   && git push origin js-knex@1.2.3     # if JS Knex changed
 ```
 
 Pushing a tag is what actually triggers that implementation's
@@ -175,7 +179,7 @@ needed to release it.
 
 ## What each publish workflow does
 
-**`publish-java.yml`** (on `@cptn-fizzbin/keycard-impl-java@*` tag push):
+**`publish-java.yml`** (on `java-core@*` tag push):
 
 1. Sets the Maven project version from the tag.
 2. Runs `mvn -B -Prelease deploy`, which (via the `release` profile in
@@ -183,14 +187,14 @@ needed to release it.
    three with GPG, and uploads + auto-publishes them to Maven Central via the
    `central-publishing-maven-plugin`.
 
-**`publish-js.yml`** (on `@cptn-fizzbin/keycard@*` tag push):
+**`publish-js.yml`** (on `js-core@*` tag push):
 
 1. Installs, builds, and runs the test suite as a release gate.
 2. Sets the `package.json` version from the tag.
 3. Runs `yarn npm publish --access public` (package is scoped, so publish access
    must be explicit).
 
-**`publish-js-knex.yml`** (on `@cptn-fizzbin/keycard-knex@*` tag push) does the same for
+**`publish-js-knex.yml`** (on `js-knex@*` tag push) does the same for
 `impl/js-knex`, using the same `NPM_AUTH_TOKEN` secret.
 
 A future `publish-<lang>.yml` follows the same three-part shape: derive the

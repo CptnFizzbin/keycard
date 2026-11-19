@@ -1,13 +1,12 @@
 name: Publish JS (npm)
 
-# Triggered by pushing a tag like `@cptn-fizzbin/keycard@1.2.3` (the package.json name, then
-# `@` and the version). The version becomes the released package version (it
-# does not need to match the version committed in package.json — that value is
-# overwritten below).
+# Triggered by pushing a tag like `js-core@1.2.3`. The version after `js-core@`
+# becomes the released package version (it does not need to match the
+# version committed in package.json — that value is overwritten below).
 on:
   push:
     tags:
-      - "@cptn-fizzbin/keycard@*"
+      - "js-core@*"
 
 defaults:
   run:
@@ -23,9 +22,9 @@ jobs:
         id: version
         run: |
           TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#@cptn-fizzbin/keycard@}"
+          VERSION="${TAG#js-core@}"
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Tag '$TAG' does not match @cptn-fizzbin/keycard@X.Y.Z" >&2
+            echo "Tag '$TAG' does not match js-core@X.Y.Z" >&2
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
