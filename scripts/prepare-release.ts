@@ -16,8 +16,8 @@ interface Impl {
   /** Directory relative to the repo root. */
   dir: string
   label: string
-  /** Tag prefix used by the matching .github/workflows/publish-*.yml. */
-  tagPrefix: string
+  /** Release tag name, `<lang>-<package>`; its publish-*.yml triggers on `<tagName>@<version>`. */
+  tagName: string
   syncVersionInto?: (version: string) => void
 }
 
@@ -56,13 +56,18 @@ const IMPLS: Impl[] = [
   {
     dir: "impl/java",
     label: "com.cptnfizzbin:keycard (Java, published to Maven Central)",
-    tagPrefix: "java-v",
+    tagName: "java-core",
     syncVersionInto: syncJavaVersion,
   },
   {
     dir: "impl/js",
-    label: "@cptn-fizzbin/keycard (JS, published to npm)",
-    tagPrefix: "js-v",
+    label: "@cptn-fizzbin/keycard-js-core (JS, published to npm)",
+    tagName: "js-core",
+  },
+  {
+    dir: "impl/js-knex",
+    label: "@cptn-fizzbin/keycard-js-knex (JS Knex integration, published to npm)",
+    tagName: "js-knex",
   },
 ]
 
@@ -99,7 +104,8 @@ console.log("  1. Review the diff (version bumps + CHANGELOG.md entries).")
 console.log("  2. Commit it and merge to main.")
 console.log("  3. Push the tag(s) below to trigger each package's publish workflow:\n")
 for (const { impl, to } of changed) {
-  console.log(`     git tag ${impl.tagPrefix}${to} && git push origin ${impl.tagPrefix}${to}`)
+  const tag = `${impl.tagName}@${to}`
+  console.log(`     git tag ${tag} && git push origin ${tag}`)
   console.log(`       # ${impl.label}`)
 }
 console.log()

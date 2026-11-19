@@ -35,14 +35,14 @@ every implementation.
 ## Installation
 
 ```bash
-npm install @cptn-fizzbin/keycard
+npm install @cptn-fizzbin/keycard-js-core
 ```
 
 ## Quick start
 
 ```typescript
-import { createAction, createSubject, PolicyBuilder, Policy } from '@cptn-fizzbin/keycard';
-import type { InferActions, InferSubjects, KeycardConfig } from '@cptn-fizzbin/keycard';
+import { createAction, createSubject, PolicyBuilder, Policy } from '@cptn-fizzbin/keycard-js-core';
+import type { InferActions, InferSubjects, KeycardConfig } from '@cptn-fizzbin/keycard-js-core';
 
 // Define your action and subject types
 const Actions = {

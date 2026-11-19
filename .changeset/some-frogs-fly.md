@@ -1,5 +1,5 @@
 ---
-"@cptn-fizzbin/keycard-impl-java": patch
+"@cptn-fizzbin/keycard-java-core": patch
 ---
 
 Update dependencies

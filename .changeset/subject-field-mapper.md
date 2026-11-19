@@ -1,6 +1,6 @@
 ---
-"@cptn-fizzbin/keycard": minor
-"@cptn-fizzbin/keycard-impl-java": minor
+"@cptn-fizzbin/keycard-js-core": minor
+"@cptn-fizzbin/keycard-java-core": minor
 ---
 
 Add `SubjectFieldMapper`: an optional, per-field getter map for a subject's

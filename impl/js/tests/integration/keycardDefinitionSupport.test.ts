@@ -8,7 +8,8 @@ import * as YAML from "yaml"
 import { actionArgFor, listYamlFiles, subjectArgFor } from "./fixtureUtils.ts"
 import { KEYCARD_COMPLIANCE_FIXTURES } from "../../paths.ts"
 import type { KeycardConfig, PolicyDefinition } from "../../src/index.ts"
-import { createOperator, Policy } from "../../src/index.ts"
+import { ConditionResolver, createOperator, Policy } from "../../src/index.ts"
+import { KeycardContext } from "../../src/keycardContext.ts"
 import type { JsonObject } from "../../src/lib/json.ts"
 import { KEYCARD_POLICY_SUPPORTED_VERSIONS } from "../../src/version.ts"
 
@@ -91,6 +92,12 @@ describe.each(fixtureFiles)("conformance fixture: $fileName", ({ filePath }) => 
       const subjectRef = subjectArgFor(subject, claims)
 
       expect(policy.can(actionRef, subjectRef)).toBe(testCase.expected)
+
+      // getCondition must agree with can() for every instance it could be evaluated against.
+      if (claims !== undefined) {
+        const resolver = new ConditionResolver(KeycardContext.from(config))
+        expect(resolver.evaluate(claims, policy.getCondition(actionRef, subjectRef))).toBe(testCase.expected)
+      }
     })
   })
 })

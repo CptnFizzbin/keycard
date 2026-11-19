@@ -1,6 +1,6 @@
 ---
-"@cptn-fizzbin/keycard": minor
-"@cptn-fizzbin/keycard-impl-java": minor
+"@cptn-fizzbin/keycard-js-core": minor
+"@cptn-fizzbin/keycard-java-core": minor
 ---
 
 Adds the built-in `$always` and `$never` condition operators: `{ $always: true }`

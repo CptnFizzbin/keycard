@@ -1,5 +1,5 @@
 ---
-"@cptn-fizzbin/keycard-impl-java": minor
+"@cptn-fizzbin/keycard-java-core": minor
 ---
 
 Follow-up to the Java code review: robustness fixes, a tighter public API, and

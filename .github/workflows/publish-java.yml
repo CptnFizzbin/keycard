@@ -1,12 +1,12 @@
 name: Publish Java (Maven Central)
 
-# Triggered by pushing a tag like `java-v1.2.3`. The version after `java-v`
+# Triggered by pushing a tag like `java-core@1.2.3`. The version after `java-core@`
 # becomes the released artifact version (it does not need to match the
 # version committed in pom.xml — that value is overwritten below).
 on:
   push:
     tags:
-      - "java-v*"
+      - "java-core@*"
 
 defaults:
   run:
@@ -22,9 +22,9 @@ jobs:
         id: version
         run: |
           TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#java-v}"
+          VERSION="${TAG#java-core@}"
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Tag '$TAG' does not match java-vX.Y.Z" >&2
+            echo "Tag '$TAG' does not match java-core@X.Y.Z" >&2
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"

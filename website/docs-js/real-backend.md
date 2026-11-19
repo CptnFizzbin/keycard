@@ -21,7 +21,7 @@ code (Express routes, a database layer, React) is illustrative only —
 // Every Action/Subject/operator below is dynamic - createAction() takes
 // no name - because the catalog's own key is what actually gets
 // serialized into a PolicyDefinition's rule tuples.
-import { createAction, createSubject, type ActionCatalog, type KeycardConfig, type OperatorCatalog, type SubjectCatalog } from "@cptn-fizzbin/keycard";
+import { createAction, createSubject, type ActionCatalog, type KeycardConfig, type OperatorCatalog, type SubjectCatalog } from "@cptn-fizzbin/keycard-js-core";
 import type { Project, Task } from "../db/models";
 
 export const Actions: ActionCatalog = {
@@ -109,7 +109,7 @@ the [Java version](/java/vision-real-backend), so there's no standalone
 ### `policy/buildPolicy.ts`
 
 ```typescript
-import { PolicyBuilder } from "@cptn-fizzbin/keycard";
+import { PolicyBuilder } from "@cptn-fizzbin/keycard-js-core";
 import { Actions, Subjects, config } from "./catalog";
 import type { PolicyClaims } from "./claims";
 
@@ -145,7 +145,7 @@ export function buildPolicy(claims: PolicyClaims) {
 
 ```typescript
 import type { Request, Response, NextFunction } from "express";
-import { PolicyError, type Action, type Subject } from "@cptn-fizzbin/keycard";
+import { PolicyError, type Action, type Subject } from "@cptn-fizzbin/keycard-js-core";
 import { verifyJwt } from "./auth";
 import { policyClaimsFromJwt } from "../policy/claims";
 import { buildPolicy } from "../policy/buildPolicy";
@@ -206,7 +206,7 @@ tasks.patch(
 // Cross-language payoff: ship the same PolicyDefinition the server built
 // to the browser, so the UI can gate controls without a round trip - the
 // server still re-checks on every write, this is UX only.
-import { Policy } from "@cptn-fizzbin/keycard";
+import { Policy } from "@cptn-fizzbin/keycard-js-core";
 import { config, Actions, Subjects } from "../policy/catalog";
 
 export async function loadClientPolicy() {

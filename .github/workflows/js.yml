@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - "impl/js/**"
+      - "impl/js-*/**"
       - "test/fixtures/v0/**"
       - "package.json"
       - "eslint.config.ts"
@@ -13,19 +14,26 @@ on:
   pull_request:
     paths:
       - "impl/js/**"
+      - "impl/js-*/**"
       - "test/fixtures/v0/**"
       - "package.json"
       - "eslint.config.ts"
       - "yarn.lock"
       - ".yarnrc.yml"
 
-defaults:
-  run:
-    working-directory: impl/js
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      # Every package is tested even when another fails, so one red package
+      # doesn't hide the state of the rest.
+      fail-fast: false
+      matrix:
+        # One entry per JS package directory under impl/.
+        package: [ js, js-knex ]
+    defaults:
+      run:
+        working-directory: impl/${{ matrix.package }}
     steps:
       - uses: actions/checkout@v7
 

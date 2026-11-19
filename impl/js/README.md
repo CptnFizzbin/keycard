@@ -18,7 +18,7 @@ runtimes).
 ## Installation
 
 ```bash
-npm install @cptn-fizzbin/keycard
+npm install @cptn-fizzbin/keycard-js-core
 ```
 
 ## Quick Start
@@ -29,8 +29,8 @@ import {
   createSubject,
   PolicyBuilder,
   Policy
-} from '@cptn-fizzbin/keycard';
-import type {InferActions, InferSubjects, KeycardConfig} from '@cptn-fizzbin/keycard';
+} from '@cptn-fizzbin/keycard-js-core';
+import type {InferActions, InferSubjects, KeycardConfig} from '@cptn-fizzbin/keycard-js-core';
 
 // Define your action and subject types
 const Actions = {
@@ -169,6 +169,10 @@ config?)`. `config` is an optional `KeycardConfig` (see below), shared with
 - `can(action, subject)` - Check if action is allowed
 - `cannot(action, subject)` - Check if action is denied
 - `require(action, subject)` - Throw if not allowed
+- `getCondition(action, subject)` - The single condition a subject instance's
+  claims must satisfy to be allowed, with the matching rules combined so the
+  last one still wins (`{ $always: true }` or `{ $never: true }` when the
+  answer doesn't depend on the instance)
 - `def()` - Get underlying definition (a fresh copy on every call)
 
 ### KeycardConfig<TOperators>

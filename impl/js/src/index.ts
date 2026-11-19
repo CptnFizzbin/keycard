@@ -1,7 +1,7 @@
 export type { Action, ActionsRecord, InferActions } from "./action/index.ts"
 export { createAction } from "./action/index.ts"
 
-export type { CreateSubjectOptions, Subject, SubjectsRecord, InferSubjects } from "./subject/index.ts"
+export type { CreateSubjectOptions, InferClaims, Subject, SubjectsRecord, InferSubjects } from "./subject/index.ts"
 export { createSubject } from "./subject/index.ts"
 
 export type { Condition, Operator, OperatorsRecord, OperatorContext, OperatorResolver } from "./conditions/index.ts"

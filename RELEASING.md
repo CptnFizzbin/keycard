@@ -1,16 +1,19 @@
 # Releasing
 
 Each KeyCard implementation is released independently, on its own version
-number, by pushing a `<lang>-vX.Y.Z` tag. Adding a new implementation (Rust, C#,
+number, by pushing a `<lang>-<package>@X.Y.Z` tag: `<package>` is `core` for
+the core library (`java-core`, `js-core`) and the integration's name for an
+add-on package (`js-knex`, `js-express`, ...). Adding a new implementation (Rust, C#,
 Python, ...) means following the same shape, not inventing a new one -
 see [Adding a new implementation](#adding-a-new-implementation).
 
 ## Implementations
 
-| Implementation | Package                           | Tag format    | 
-|----------------|-----------------------------------|---------------|
-| Java           | Maven - `com.cptnfizzbin:keycard` | `java-vX.Y.Z` |
-| JS/TS          | NPM - `@cptn-fizzbin/keycard`     | `js-vX.Y.Z`   | 
+| Implementation | Package                                    | Tag format        |
+|----------------|--------------------------------------------|-------------------|
+| Java           | Maven - `com.cptnfizzbin:keycard`          | `java-core@X.Y.Z` |
+| JS/TS          | NPM - `@cptn-fizzbin/keycard-js-core`      | `js-core@X.Y.Z`   |
+| JS/TS (Knex)   | NPM - `@cptn-fizzbin/keycard-js-knex`      | `js-knex@X.Y.Z`   |
 
 ## Adding a new implementation
 
@@ -30,14 +33,23 @@ driven by a per-implementation checklist:
    one - use that instead, as `impl/js` does.)
 3. **Add it to the root `package.json`'s `"workspaces"` array** so changesets
    discovers it.
-4. **Pick its tag prefix** (`<lang>-v`) and add
-   `.github/workflows/publish-<lang>.yml`, modeled on
-   [`publish-java.yml`](.github/workflows/publish-java.yml) /
-   [`publish-js.yml`](.github/workflows/publish-js.yml): parse the version out
-   of the pushed tag, set it in the implementation's real build file, and run
-   that ecosystem's native publish command (`cargo publish`,
-   `dotnet nuget push`, `twine upload`, ...) using registry credentials from
-   repository secrets.
+4. **Pick its tag name** (`<lang>-core`, or `<lang>-<integration>` for an
+   add-on package), add an entry with that `tagName` to the `IMPLS` array in
+   [`scripts/prepare-release.ts`](scripts/prepare-release.ts), and wire it into
+   its language's two workflows - each language has exactly one test workflow
+   (`<lang>.yml`) and one publish workflow (`publish-<lang>.yml`), shared by all
+   of that language's packages:
+    - **A new package in an existing language** (e.g. `impl/js-express`): add
+      its directory to the `matrix.package` list in `<lang>.yml`.
+      `publish-<lang>.yml` already triggers on every `<lang>-*@*` tag and
+      finds the package directory from the tag name.
+    - **A new language**: add `<lang>.yml` and `publish-<lang>.yml`, modeled on
+      [`js.yml`](.github/workflows/js.yml) /
+      [`publish-js.yml`](.github/workflows/publish-js.yml): parse the package
+      and version out of the pushed tag, set the version in the package's real
+      build file, and run that ecosystem's native publish command
+      (`cargo publish`, `dotnet nuget push`, `twine upload`, ...) using registry
+      credentials from repository secrets.
 5. **If the implementation's build file carries its own version separate from
    `package.json`** (a Java `pom.xml`, a Rust `Cargo.toml`, a C#
    `.csproj`, a Python `pyproject.toml`, ...), add a sync step to
@@ -55,8 +67,8 @@ driven by a per-implementation checklist:
 
 - Keep the **major.minor** in sync across every implementation.
 - **Patch** versions can advance independently per implementation (e.g. a
-  Java-only bugfix can go out as `java-v1.2.4` while JS stays at
-  `js-v1.2.3`).
+  Java-only bugfix can go out as `java-core@1.2.4` while JS stays at
+  `js-core@1.2.3`).
 - The version baked into a release comes from the **tag**, not from the
   implementation's own build file - every `publish-<lang>.yml` overwrites the
   committed version with the one parsed out of the tag before publishing. The
@@ -113,8 +125,9 @@ Then:
 ```bash
 git add -A && git commit -m "Release: <summary>"
 # open a PR, merge to main, then on main:
-git tag java-v1.2.3 && git push origin java-v1.2.3   # if Java changed
-git tag js-v1.2.3   && git push origin js-v1.2.3     # if JS changed
+git tag java-core@1.2.3 && git push origin java-core@1.2.3   # if Java changed
+git tag js-core@1.2.3   && git push origin js-core@1.2.3     # if JS changed
+git tag js-knex@1.2.3   && git push origin js-knex@1.2.3     # if JS Knex changed
 ```
 
 Pushing a tag is what actually triggers that implementation's
@@ -172,7 +185,7 @@ needed to release it.
 
 ## What each publish workflow does
 
-**`publish-java.yml`** (on `java-v*` tag push):
+**`publish-java.yml`** (on `java-core@*` tag push):
 
 1. Sets the Maven project version from the tag.
 2. Runs `mvn -B -Prelease deploy`, which (via the `release` profile in
@@ -180,9 +193,11 @@ needed to release it.
    three with GPG, and uploads + auto-publishes them to Maven Central via the
    `central-publishing-maven-plugin`.
 
-**`publish-js.yml`** (on `js-v*` tag push):
+**`publish-js.yml`** (on any `js-*@*` tag push - `js-core@*`, `js-knex@*`, ...):
 
-1. Installs, builds, and runs the test suite as a release gate.
+1. Resolves the package directory from the tag name (`js-core` is `impl/js`,
+   any other `js-<name>` is `impl/js-<name>`), then installs, builds, and runs
+   that package's test suite as a release gate.
 2. Sets the `package.json` version from the tag.
 3. Runs `yarn npm publish --access public` (package is scoped, so publish access
    must be explicit).
@@ -191,7 +206,8 @@ A future `publish-<lang>.yml` follows the same three-part shape: derive the
 version from the tag, set it in the implementation's build file, run that
 ecosystem's native publish command.
 
-Everyday CI (`java.yml`, `js.yml`, and any future `<lang>.yml`) is unaffected by
+Everyday CI (`java.yml`, `js.yml`, `dotnet.yml`, and any future `<lang>.yml`;
+`js.yml` tests every JS package as one job per package) is unaffected by
 any of this - the `release` Maven profile and every
 `publish-<lang>.yml` only run from their own tag-triggered workflow, never on a
 normal push or PR.

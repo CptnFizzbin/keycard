@@ -1,5 +1,5 @@
 ---
-"@cptn-fizzbin/keycard": minor
+"@cptn-fizzbin/keycard-js-core": minor
 ---
 
 Type-safe conditions: `Condition` and `Operator` are now generic over the
