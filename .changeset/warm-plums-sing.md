@@ -1,5 +1,5 @@
 ---
-"@cptn-fizzbin/keycard": minor
+"@cptn-fizzbin/keycard-js-core": minor
 ---
 
 Align the JS API with the "Vision: Quickstart"/"Vision: A Real Backend" docs:

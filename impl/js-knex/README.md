@@ -9,14 +9,14 @@ and no match means deny.
 ## Installation
 
 ```bash
-npm install @cptn-fizzbin/keycard @cptn-fizzbin/keycard-knex knex
+npm install @cptn-fizzbin/keycard-js-core @cptn-fizzbin/keycard-js-knex knex
 ```
 
 ## Usage
 
 ```typescript
-import { createAction, createSubject, PolicyBuilder } from "@cptn-fizzbin/keycard"
-import { accessibleBy } from "@cptn-fizzbin/keycard-knex"
+import { createAction, createSubject, PolicyBuilder } from "@cptn-fizzbin/keycard-js-core"
+import { accessibleBy } from "@cptn-fizzbin/keycard-js-knex"
 
 const Read = createAction("Read")
 const Article = createSubject<{ ownerId: number, status: string }>("Article")
@@ -117,8 +117,8 @@ It receives the operator's value and a context with the current `column`
 and returns a condition built with `Sql`:
 
 ```typescript
-import { accessibleBy, Sql } from "@cptn-fizzbin/keycard-knex"
-import type { KnexOperator } from "@cptn-fizzbin/keycard-knex"
+import { accessibleBy, Sql } from "@cptn-fizzbin/keycard-js-knex"
+import type { KnexOperator } from "@cptn-fizzbin/keycard-js-knex"
 
 // { $hasRole: "admin" } - the row's `roles` array contains the role.
 const $hasRole: KnexOperator = (role, ctx) =>

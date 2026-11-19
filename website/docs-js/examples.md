@@ -72,7 +72,7 @@ no dynamic (no-name) Actions/Subjects in play, `PolicyBuilder` doesn't need a
 `KeycardConfig` at all.
 
 ```typescript
-import { createAction, createSubject, PolicyBuilder } from "@cptn-fizzbin/keycard";
+import { createAction, createSubject, PolicyBuilder } from "@cptn-fizzbin/keycard-js-core";
 
 const Actions = {
   create: createAction("create"),

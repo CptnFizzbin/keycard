@@ -1,5 +1,5 @@
-import type { RuleTuple } from "@cptn-fizzbin/keycard"
-import { createAction, createSubject, Policy, PolicyBuilder } from "@cptn-fizzbin/keycard"
+import type { RuleTuple } from "@cptn-fizzbin/keycard-js-core"
+import { createAction, createSubject, Policy, PolicyBuilder } from "@cptn-fizzbin/keycard-js-core"
 import knex from "knex"
 import { afterAll, describe, expect, test, vi } from "vitest"
 

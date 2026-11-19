@@ -1,4 +1,4 @@
-import type { Logger } from "@cptn-fizzbin/keycard"
+import type { Logger } from "@cptn-fizzbin/keycard-js-core"
 
 import type { JsonValue } from "./json.ts"
 import type { SqlCondition } from "./sqlCondition.ts"

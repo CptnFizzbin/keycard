@@ -61,12 +61,12 @@ const IMPLS: Impl[] = [
   },
   {
     dir: "impl/js",
-    label: "@cptn-fizzbin/keycard (JS, published to npm)",
+    label: "@cptn-fizzbin/keycard-js-core (JS, published to npm)",
     tagName: "js-core",
   },
   {
     dir: "impl/js-knex",
-    label: "@cptn-fizzbin/keycard-knex (JS Knex integration, published to npm)",
+    label: "@cptn-fizzbin/keycard-js-knex (JS Knex integration, published to npm)",
     tagName: "js-knex",
   },
 ]

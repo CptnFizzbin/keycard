@@ -1,5 +1,5 @@
 ---
-"@cptn-fizzbin/keycard": minor
+"@cptn-fizzbin/keycard-js-core": minor
 ---
 
 Fixes and spec-conformance changes from a full review of the JS implementation:

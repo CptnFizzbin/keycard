@@ -5,8 +5,8 @@
   "updateInternalDependencies": "patch",
   "linked": [
     [
-      "@cptn-fizzbin/keycard",
-      "@cptn-fizzbin/keycard-impl-java"
+      "@cptn-fizzbin/keycard-js-core",
+      "@cptn-fizzbin/keycard-java-core"
     ]
   ],
   "privatePackages": {

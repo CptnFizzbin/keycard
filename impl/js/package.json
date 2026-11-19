@@ -1,5 +1,5 @@
 {
-  "name": "@cptn-fizzbin/keycard",
+  "name": "@cptn-fizzbin/keycard-js-core",
   "version": "0.0.4",
   "description": "Cross-language access control library",
   "author": "Cptn Fizzbin",

@@ -9,11 +9,11 @@ see [Adding a new implementation](#adding-a-new-implementation).
 
 ## Implementations
 
-| Implementation | Package                            | Tag format        |
-|----------------|------------------------------------|-------------------|
-| Java           | Maven - `com.cptnfizzbin:keycard`  | `java-core@X.Y.Z` |
-| JS/TS          | NPM - `@cptn-fizzbin/keycard`      | `js-core@X.Y.Z`   |
-| JS/TS (Knex)   | NPM - `@cptn-fizzbin/keycard-knex` | `js-knex@X.Y.Z`   |
+| Implementation | Package                                    | Tag format        |
+|----------------|--------------------------------------------|-------------------|
+| Java           | Maven - `com.cptnfizzbin:keycard`          | `java-core@X.Y.Z` |
+| JS/TS          | NPM - `@cptn-fizzbin/keycard-js-core`      | `js-core@X.Y.Z`   |
+| JS/TS (Knex)   | NPM - `@cptn-fizzbin/keycard-js-knex`      | `js-knex@X.Y.Z`   |
 
 ## Adding a new implementation
 

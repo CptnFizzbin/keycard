@@ -1,5 +1,5 @@
 ---
-"@cptn-fizzbin/keycard-impl-java": minor
+"@cptn-fizzbin/keycard-java-core": minor
 ---
 
 Align the Java API with the `vision-quickstart`/`vision-real-backend` design

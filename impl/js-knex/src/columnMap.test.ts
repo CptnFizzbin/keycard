@@ -1,7 +1,7 @@
 // The @ts-expect-error and expectTypeOf assertions here are checked by
 // `yarn typecheck` (tsc), not at runtime: a directive whose line stops
 // erroring fails the typecheck.
-import { createSubject, Policy } from "@cptn-fizzbin/keycard"
+import { createSubject, Policy } from "@cptn-fizzbin/keycard-js-core"
 import knex from "knex"
 import { afterAll, describe, expect, expectTypeOf, test } from "vitest"
 

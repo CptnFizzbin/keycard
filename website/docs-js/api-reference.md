@@ -73,7 +73,7 @@ config?)`. `config` is an optional `KeycardConfig` (see below), shared with
   `claims` gives the same answer as `can(action, subject.wrap(claims))`. The
   matching rules are combined with `$or`/`$and`/`$not` so the last matching
   rule still wins, which lets a query builder (such as
-  `@cptn-fizzbin/keycard-knex`) translate one condition instead of the rule
+  `@cptn-fizzbin/keycard-js-knex`) translate one condition instead of the rule
   list. `{ $always: true }` means always allowed and `{ $never: true }` never
   allowed.
 - `def()` — get the underlying definition, with its own `version`. Returns a

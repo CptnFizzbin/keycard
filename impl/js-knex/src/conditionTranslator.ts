@@ -1,4 +1,4 @@
-import type { Logger } from "@cptn-fizzbin/keycard"
+import type { Logger } from "@cptn-fizzbin/keycard-js-core"
 
 import { DefaultKnexOperators } from "./defaultOperators.ts"
 import type { JsonValue } from "./json.ts"

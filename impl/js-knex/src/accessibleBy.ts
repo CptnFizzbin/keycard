@@ -1,5 +1,5 @@
-import type { Action, Logger, Policy, Subject } from "@cptn-fizzbin/keycard"
-import { createAction, createSubject } from "@cptn-fizzbin/keycard"
+import type { Action, Logger, Policy, Subject } from "@cptn-fizzbin/keycard-js-core"
+import { createAction, createSubject } from "@cptn-fizzbin/keycard-js-core"
 import type { Knex } from "knex"
 
 import type { ColumnResolver } from "./conditionTranslator.ts"

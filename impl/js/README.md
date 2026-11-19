@@ -18,7 +18,7 @@ runtimes).
 ## Installation
 
 ```bash
-npm install @cptn-fizzbin/keycard
+npm install @cptn-fizzbin/keycard-js-core
 ```
 
 ## Quick Start
@@ -29,8 +29,8 @@ import {
   createSubject,
   PolicyBuilder,
   Policy
-} from '@cptn-fizzbin/keycard';
-import type {InferActions, InferSubjects, KeycardConfig} from '@cptn-fizzbin/keycard';
+} from '@cptn-fizzbin/keycard-js-core';
+import type {InferActions, InferSubjects, KeycardConfig} from '@cptn-fizzbin/keycard-js-core';
 
 // Define your action and subject types
 const Actions = {

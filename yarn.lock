@@ -1745,17 +1745,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cptn-fizzbin/keycard-impl-java@workspace:impl/java":
+"@cptn-fizzbin/keycard-java-core@workspace:impl/java":
   version: 0.0.0-use.local
-  resolution: "@cptn-fizzbin/keycard-impl-java@workspace:impl/java"
+  resolution: "@cptn-fizzbin/keycard-java-core@workspace:impl/java"
   languageName: unknown
   linkType: soft
 
-"@cptn-fizzbin/keycard-knex@workspace:impl/js-knex":
+"@cptn-fizzbin/keycard-js-core@workspace:^, @cptn-fizzbin/keycard-js-core@workspace:impl/js":
   version: 0.0.0-use.local
-  resolution: "@cptn-fizzbin/keycard-knex@workspace:impl/js-knex"
+  resolution: "@cptn-fizzbin/keycard-js-core@workspace:impl/js"
   dependencies:
-    "@cptn-fizzbin/keycard": "workspace:^"
+    "@types/node": "npm:^26.5.0"
+    "@types/semver": "npm:^7.8.0"
+    "@vitest/ui": "npm:^5.0.0"
+    eslint: "npm:^10.10.0"
+    semver: "npm:^7.8.5"
+    tsdown: "npm:^0.23.0"
+    typescript: "npm:@typescript/typescript6@^6.0.0"
+    typescript-7: "npm:typescript@^7.0.0"
+    vite: "npm:^8.2.2"
+    vitest: "npm:^5.0.0"
+    yaml: "npm:^2.9.0"
+  languageName: unknown
+  linkType: soft
+
+"@cptn-fizzbin/keycard-js-knex@workspace:impl/js-knex":
+  version: 0.0.0-use.local
+  resolution: "@cptn-fizzbin/keycard-js-knex@workspace:impl/js-knex"
+  dependencies:
+    "@cptn-fizzbin/keycard-js-core": "workspace:^"
     "@electric-sql/pglite": "npm:^0.5.14"
     "@types/node": "npm:^26.5.0"
     eslint: "npm:^10.10.0"
@@ -1767,7 +1785,7 @@ __metadata:
     vitest: "npm:^5.0.0"
     yaml: "npm:^2.9.0"
   peerDependencies:
-    "@cptn-fizzbin/keycard": "workspace:^"
+    "@cptn-fizzbin/keycard-js-core": "workspace:^"
     knex: ^3.0.0
   languageName: unknown
   linkType: soft
@@ -1796,24 +1814,6 @@ __metadata:
       built: true
     core-js:
       built: true
-  languageName: unknown
-  linkType: soft
-
-"@cptn-fizzbin/keycard@workspace:^, @cptn-fizzbin/keycard@workspace:impl/js":
-  version: 0.0.0-use.local
-  resolution: "@cptn-fizzbin/keycard@workspace:impl/js"
-  dependencies:
-    "@types/node": "npm:^26.5.0"
-    "@types/semver": "npm:^7.8.0"
-    "@vitest/ui": "npm:^5.0.0"
-    eslint: "npm:^10.10.0"
-    semver: "npm:^7.8.5"
-    tsdown: "npm:^0.23.0"
-    typescript: "npm:@typescript/typescript6@^6.0.0"
-    typescript-7: "npm:typescript@^7.0.0"
-    vite: "npm:^8.2.2"
-    vitest: "npm:^5.0.0"
-    yaml: "npm:^2.9.0"
   languageName: unknown
   linkType: soft
 

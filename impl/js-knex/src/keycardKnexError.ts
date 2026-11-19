@@ -1,4 +1,4 @@
-import { PolicyError } from "@cptn-fizzbin/keycard"
+import { PolicyError } from "@cptn-fizzbin/keycard-js-core"
 
 /** Thrown when a policy's conditions can't be translated to SQL for the query's dialect - an operator with no Knex translation, for example. */
 export class KeycardKnexError extends PolicyError {

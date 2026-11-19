@@ -1,5 +1,5 @@
 {
-  "name": "@cptn-fizzbin/keycard-knex",
+  "name": "@cptn-fizzbin/keycard-js-knex",
   "version": "0.0.0",
   "description": "Translate KeyCard policy conditions into Knex where clauses",
   "author": "Cptn Fizzbin",
@@ -33,11 +33,11 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@cptn-fizzbin/keycard": "workspace:^",
+    "@cptn-fizzbin/keycard-js-core": "workspace:^",
     "knex": "^3.0.0"
   },
   "devDependencies": {
-    "@cptn-fizzbin/keycard": "workspace:^",
+    "@cptn-fizzbin/keycard-js-core": "workspace:^",
     "@electric-sql/pglite": "^0.5.14",
     "@types/node": "^26.5.0",
     "eslint": "^10.10.0",
